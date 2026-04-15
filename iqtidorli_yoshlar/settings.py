@@ -1,17 +1,17 @@
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+# .env faylni yuklash
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-change-this-in-production-xyz123'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-this')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    'yoshiqtidorlar.uz',
-    'www.yoshiqtidorlar.uz',
-    'localhost',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -54,16 +54,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'iqtidorli_yoshlar.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# ── DATABASE ──────────────────────────────────────────────────────────────────
+DB_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
+
+if DB_ENGINE == 'django.db.backends.sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': DB_ENGINE,
+            'NAME':     os.getenv('DB_NAME'),
+            'USER':     os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST':     os.getenv('DB_HOST', 'localhost'),
+            'PORT':     os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+                'connect_timeout': 10,
+            },
+        }
+    }
 
 AUTH_USER_MODEL = 'core.User'
 
-LOGIN_URL = '/login/'
+LOGIN_URL          = '/login/'
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -77,16 +95,16 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'uz'
-TIME_ZONE = 'Asia/Tashkent'
-USE_I18N = True
-USE_TZ = True
+TIME_ZONE     = 'Asia/Tashkent'
+USE_I18N      = True
+USE_TZ        = True
 
-STATIC_URL = '/static/'
+STATIC_URL   = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'public' / 'static'
+STATIC_ROOT  = BASE_DIR / 'public' / 'static'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_URL = '/media/'
+MEDIA_URL  = '/media/'
 MEDIA_ROOT = BASE_DIR / 'public' / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
