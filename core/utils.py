@@ -98,6 +98,15 @@ def reset_failed_attempts(phone, ip):
     FailedLoginAttempt.objects.filter(phone=phone, ip_address=ip).delete()
 
 
-def log_activity(user, action, detail='', link=''):
+def log_activity(user, action, detail='', link='', request=None):
     from .models import ActivityLog
-    ActivityLog.objects.create(user=user, action=action, detail=detail, link=link)
+    ip = None
+    ua = ""
+    if request:
+        ip = get_client_ip(request)
+        ua = request.META.get('HTTP_USER_AGENT', '')
+
+    ActivityLog.objects.create(
+        user=user, action=action, detail=detail, link=link,
+        ip_address=ip, user_agent=ua[:500]
+    )

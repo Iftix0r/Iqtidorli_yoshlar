@@ -1,43 +1,44 @@
 {% extends 'tizim/base.html' %}
-{% block title %}Backup{% endblock %}
-{% block page_title %}backup{% endblock %}
+{% block title %}Ma'lumotlar Bazasi Zaxirasi{% endblock %}
+{% block page_title %}db-backup{% endblock %}
 {% block nav_backup %}active{% endblock %}
 
 {% block content %}
-<div style="max-width:600px;">
-
-  <div class="sys-card" style="margin-bottom:20px;">
-    <div class="label">JSON Backup</div>
-    <div style="color:var(--muted);font-size:.82rem;margin:10px 0 16px;line-height:1.6;">
-      Barcha modellardan ma'lumotlarni JSON formatda yuklab olish.<br/>
-      Foydalanuvchi parollari xavfsiz (hash) ko'rinishda saqlanadi.
-    </div>
-    <form method="post">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-green">
-        <i data-lucide="download" style="width:13px;"></i> JSON Backup Yuklab Olish
-      </button>
-    </form>
-  </div>
-
-  <div class="sys-card" style="margin-bottom:20px;">
-    <div class="label">PostgreSQL Dump</div>
-    <div style="color:var(--muted);font-size:.82rem;margin:10px 0 16px;line-height:1.6;">
-      To'liq DB dump uchun serverda quyidagi buyruqni ishlatib ko'ring:
-    </div>
-    <div class="code-block">pg_dump -U $DB_USER -h $DB_HOST $DB_NAME > backup_$(date +%Y%m%d).sql</div>
-  </div>
-
-  <div class="sys-card">
-    <div class="label">Avtomatik Backup (GitHub Actions)</div>
-    <div style="color:var(--muted);font-size:.82rem;margin:10px 0;line-height:1.6;">
-      <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;">.github/workflows/deploy.yml</code> ga qo'shish mumkin:
-    </div>
-    <div class="code-block">- name: Backup DB
-  run: |
-    pg_dump -U $DB_USER $DB_NAME | gzip > backup.sql.gz
-    # S3 yoki boshqa joyga yuklash</div>
-  </div>
-
+<div style="margin-bottom:16px;">
+    <h3 style="font-size:1rem; font-weight:800; margin-bottom:4px;">
+      <i data-lucide="database" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+      Database Backup (Zaxira)
+    </h3>
+    <p style="font-size:.75rem;color:var(--muted);">Ma'lumotlar bazasining to'liq SQL nusxasini yaratish va yuklab olish.</p>
 </div>
+
+<div class="sys-table-wrap">
+    <div class="sys-table-header">
+        <span>📦 Yangi zaxira nusxa yaratish</span>
+    </div>
+    <div style="padding: 30px; text-align: center;">
+        <div style="background: rgba(108, 99, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+            <i data-lucide="shield-check" style="width: 40px; height: 40px; color: var(--primary); margin-bottom: 12px;"></i>
+            <p style="font-size: 0.9rem; color: var(--text);">
+                Zaxira nusxasi (backup) saytning barcha ma'lumotlarini o'z ichiga oladi. <br>
+                Uni xavfsiz joyda saqlashingiz tavsiya etiladi.
+            </p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <button type="submit" class="btn btn-blue" style="padding: 14px 40px;">
+                <i data-lucide="download" style="width: 18px; height: 18px;"></i> SQL Dump yaratish va yuklab olish
+            </button>
+        </form>
+    </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: rgba(255, 101, 132, 0.05); border: 1px dashed var(--danger); border-radius: 12px; font-size: 0.8rem; color: var(--muted);">
+    <i data-lucide="alert-triangle" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px; color: var(--danger);"></i>
+    Diqqat: Katta hajmli ma'lumotlar bazasida bu amal bir oz vaqt olishi va server yuklamasini oshirishi mumkin.
+</div>
+
+<script>lucide.createIcons();</script>
 {% endblock %}
