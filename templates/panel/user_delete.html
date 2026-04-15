@@ -1,0 +1,32 @@
+{% extends 'panel/base.html' %}
+{% block title %}O'chirish — {{ target.get_full_name }}{% endblock %}
+{% block page_title %}Foydalanuvchini O'chirish{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:500px;">
+  <div class="panel-card">
+    <div style="padding:32px;text-align:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,101,132,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+        <i data-lucide="trash-2" style="width:28px;height:28px;color:#FF6584;"></i>
+      </div>
+      <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:10px;">Foydalanuvchini o'chirish</h2>
+      <p style="color:var(--muted);margin-bottom:8px;">
+        <strong style="color:var(--text);">{{ target.get_full_name|default:target.phone }}</strong> foydalanuvchisini o'chirmoqchimisiz?
+      </p>
+      <p style="color:#FF6584;font-size:.85rem;margin-bottom:24px;">
+        Bu amal qaytarib bo'lmaydi. Barcha ma'lumotlar (loyihalar, sertifikatlar, xabarlar) o'chib ketadi.
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i data-lucide="trash-2"></i> Ha, O'chirish
+          </button>
+        </form>
+        <a href="{% url 'panel_user_detail' pk=target.pk %}" class="btn btn-outline">Bekor qilish</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

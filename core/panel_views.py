@@ -338,3 +338,87 @@ def user_detail_view(request, pk):
         'target': target, 'logins': logins, 'acts': acts,
         'projects': projects, 'certs': certs, 'course_certs': course_certs,
     })
+
+
+# ── FOYDALANUVCHI YARATISH ────────────────────────────────────────────────────
+@panel_required
+def user_create_view(request):
+    from .forms import RegisterForm
+    import re
+    error = ''
+    if request.method == 'POST':
+        phone    = request.POST.get('phone', '').strip()
+        fname    = request.POST.get('first_name', '').strip()
+        lname    = request.POST.get('last_name', '').strip()
+        role     = request.POST.get('role', 'yosh')
+        region   = request.POST.get('region', '')
+        password = request.POST.get('password', '')
+        is_staff = request.POST.get('is_staff') == 'on'
+
+        if not phone or not fname or not password:
+            error = 'Telefon, ism va parol majburiy.'
+        elif User.objects.filter(phone=phone).exists():
+            error = 'Bu telefon raqam allaqachon mavjud.'
+        else:
+            username = re.sub(r'\D', '', phone)
+            user = User.objects.create_user(
+                username   = username,
+                phone      = phone,
+                first_name = fname,
+                last_name  = lname,
+                role       = role,
+                region     = region,
+                password   = password,
+                is_staff   = is_staff,
+            )
+            return redirect('panel_user_detail', pk=user.pk)
+
+    from .models import REGIONS, ROLE_CHOICES
+    return render(request, 'panel/user_create.html', {
+        'error': error, 'regions': REGIONS, 'roles': ROLE_CHOICES,
+    })
+
+
+# ── FOYDALANUVCHI TAHRIRLASH ──────────────────────────────────────────────────
+@panel_required
+def user_edit_view(request, pk):
+    target = get_object_or_404(User, pk=pk)
+    error  = ''
+    if request.method == 'POST':
+        target.first_name = request.POST.get('first_name', target.first_name)
+        target.last_name  = request.POST.get('last_name', target.last_name)
+        target.bio        = request.POST.get('bio', target.bio)
+        target.role       = request.POST.get('role', target.role)
+        target.region     = request.POST.get('region', target.region)
+        target.score      = int(request.POST.get('score', target.score) or 0)
+        target.is_staff   = request.POST.get('is_staff') == 'on'
+        target.is_active  = request.POST.get('is_active') == 'on'
+
+        new_pass = request.POST.get('new_password', '').strip()
+        if new_pass:
+            if len(new_pass) < 6:
+                error = 'Parol kamida 6 ta belgi bo\'lishi kerak.'
+            else:
+                target.set_password(new_pass)
+
+        if not error:
+            if request.FILES.get('avatar'):
+                target.avatar = request.FILES['avatar']
+            target.save()
+            return redirect('panel_user_detail', pk=pk)
+
+    from .models import REGIONS, ROLE_CHOICES
+    return render(request, 'panel/user_edit.html', {
+        'target': target, 'error': error,
+        'regions': REGIONS, 'roles': ROLE_CHOICES,
+    })
+
+
+# ── FOYDALANUVCHI O'CHIRISH ───────────────────────────────────────────────────
+@panel_required
+def user_delete_view(request, pk):
+    target = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        target.delete()
+        return redirect('panel_users')
+    return render(request, 'panel/user_delete.html', {'target': target})

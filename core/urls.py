@@ -29,7 +29,10 @@ urlpatterns = [
     # Custom Admin Panel
     path('panel/',                            panel_views.dashboard,            name='panel_dashboard'),
     path('panel/users/',                      panel_views.users_view,           name='panel_users'),
+    path('panel/users/create/',               panel_views.user_create_view,     name='panel_user_create'),
     path('panel/users/<int:pk>/',             panel_views.user_detail_view,     name='panel_user_detail'),
+    path('panel/users/<int:pk>/edit/',        panel_views.user_edit_view,       name='panel_user_edit'),
+    path('panel/users/<int:pk>/delete/',      panel_views.user_delete_view,     name='panel_user_delete'),
     path('panel/activities/',                 panel_views.activities_view,      name='panel_activities'),
     path('panel/logins/',                     panel_views.logins_view,          name='panel_logins'),
     path('panel/contests/',                   panel_views.contests_view,        name='panel_contests'),
