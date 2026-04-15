@@ -295,7 +295,7 @@ class ContestAdmin(admin.ModelAdmin):
 
 @admin.register(ContestApplication)
 class ContestApplicationAdmin(admin.ModelAdmin):
-    list_display  = ('user', 'contest', 'status_badge', 'created_at')
+    list_display  = ('user', 'contest', 'status_badge', 'status', 'created_at')
     list_filter   = ('status', 'contest')
     list_editable = ('status',)
     search_fields = ('user__first_name', 'contest__title')
@@ -446,7 +446,7 @@ class CertificateAdmin(admin.ModelAdmin):
 
 @admin.register(MentorRequest)
 class MentorRequestAdmin(admin.ModelAdmin):
-    list_display  = ('sender', 'receiver', 'status_badge', 'created_at')
+    list_display  = ('sender', 'receiver', 'status_badge', 'status', 'created_at')
     list_filter   = ('status',)
     list_editable = ('status',)
     search_fields = ('sender__first_name', 'receiver__first_name')
