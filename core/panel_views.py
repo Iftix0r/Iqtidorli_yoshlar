@@ -3,8 +3,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-
-from .models import (User, Contest, Course, Job, Resource,
                      LoginHistory, ActivityLog, ContestApplication,
                      CourseEnrollment, CourseCertificate, Message)
 
