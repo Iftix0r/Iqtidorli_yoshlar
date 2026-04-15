@@ -56,9 +56,9 @@ class SecurityHeadersMiddleware:
         response['Permissions-Policy']        = 'geolocation=(), microphone=(), camera=()'
         
         csp = (
-            "default-src 'none'; "
-            f"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' 'unsafe-eval' https: http:; "
-            f"style-src 'self' 'nonce-{nonce}' https://fonts.googleapis.com; "
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: blob:; "
             "object-src 'none'; "
