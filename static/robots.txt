@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /panel/
+Disallow: /tizim/
+Disallow: /2fa/
+
+Sitemap: https://yoshiqtidorlar.uz/sitemap.xml

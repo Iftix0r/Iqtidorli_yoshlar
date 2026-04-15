@@ -16,6 +16,10 @@ from .utils  import get_client_ip, record_login, check_brute_force, record_faile
 def notify(user, notif_type, text, link=''):
     Notification.objects.create(user=user, notif_type=notif_type, text=text, link=link)
 
+def privacy_view(request):
+    """Maxfiylik siyosati sahifasi"""
+    return render(request, 'privacy.html')
+
 
 # ── HOME ──────────────────────────────────────────────────────────────────────
 def index(request):
@@ -412,6 +416,11 @@ def jobs_view(request):
 # ── GLOBAL QIDIRUV ────────────────────────────────────────────────────────────
 def search_view(request):
     q = request.GET.get('q', '').strip()
+    
+    # Input validation: g'ayritabiiy uzunlikdagi so'rovlarni va zararli belgilarni kesish
+    if len(q) > 50:
+        q = q[:50]
+        
     results = {'users': [], 'contests': [], 'jobs': [], 'resources': []}
     if q:
         results['users']     = User.objects.filter(
