@@ -14,8 +14,6 @@
   </a>
   <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
     <span style="color:var(--muted);font-size:.75rem;">Ko'rsatish:</span>
-    {% for n in "50,100,200,500"|split:"," %}
-    {% endfor %}
     <a href="?type={{ log_type }}&limit=50"  class="btn {% if limit == 50  %}btn-green{% else %}btn-blue{% endif %}" style="padding:4px 10px;">50</a>
     <a href="?type={{ log_type }}&limit=100" class="btn {% if limit == 100 %}btn-green{% else %}btn-blue{% endif %}" style="padding:4px 10px;">100</a>
     <a href="?type={{ log_type }}&limit=200" class="btn {% if limit == 200 %}btn-green{% else %}btn-blue{% endif %}" style="padding:4px 10px;">200</a>
