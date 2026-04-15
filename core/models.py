@@ -428,3 +428,94 @@ class TwoFactorCode(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.code}"
+
+
+# ── GAMIFICATION ──────────────────────────────────────────────────────────────
+
+BADGE_DEFINITIONS = {
+    # Ro'yxatdan o'tish
+    'first_login':      {'name': "Birinchi Qadam",      'icon': '🚀', 'desc': "Platformaga kirdi",                  'xp': 10},
+    'profile_complete': {'name': "To'liq Profil",        'icon': '✅', 'desc': "Profilni to'liq to'ldirdi",          'xp': 20},
+    # Loyihalar
+    'first_project':    {'name': "Birinchi Loyiha",      'icon': '💡', 'desc': "Birinchi loyihasini qo'shdi",        'xp': 30},
+    'five_projects':    {'name': "Loyiha Ustasi",        'icon': '🏗️', 'desc': "5 ta loyiha qo'shdi",               'xp': 50},
+    # Ko'nikmalar
+    'five_skills':      {'name': "Ko'p Qirrali",         'icon': '⚡', 'desc': "5 ta ko'nikma qo'shdi",             'xp': 20},
+    # Kurslar
+    'first_course':     {'name': "O'quvchi",             'icon': '📚', 'desc': "Birinchi kursni tugatdi",            'xp': 50},
+    'three_courses':    {'name': "Bilim Izlovchi",       'icon': '🎓', 'desc': "3 ta kursni tugatdi",               'xp': 100},
+    # Tanlovlar
+    'first_contest':    {'name': "Jangchi",              'icon': '⚔️', 'desc': "Birinchi tanlovga ariza topshirdi", 'xp': 30},
+    'contest_winner':   {'name': "G'olib",               'icon': '🏆', 'desc': "Tanlov g'olibi",                    'xp': 200},
+    # Streak
+    'streak_3':         {'name': "Izchil",               'icon': '🔥', 'desc': "3 kun ketma-ket kirdi",             'xp': 15},
+    'streak_7':         {'name': "Haftalik Chempion",    'icon': '🔥🔥', 'desc': "7 kun ketma-ket kirdi",           'xp': 50},
+    'streak_30':        {'name': "Oylik Qahramon",       'icon': '💎', 'desc': "30 kun ketma-ket kirdi",            'xp': 200},
+    # Ijtimoiy
+    'first_mentor_req': {'name': "Muloqotchi",           'icon': '🤝', 'desc': "Birinchi mentor so'rovi yubordi",   'xp': 20},
+    'first_message':    {'name': "Suhbatdosh",           'icon': '💬', 'desc': "Birinchi xabar yubordi",            'xp': 10},
+    # Reyting
+    'top_10':           {'name': "Top 10",               'icon': '🌟', 'desc': "Reytingda top 10 ga kirdi",         'xp': 100},
+    'top_1':            {'name': "Eng Yaxshi",           'icon': '👑', 'desc': "Reytingda 1-o'rin",                 'xp': 500},
+}
+
+
+class Badge(models.Model):
+    """Foydalanuvchiga berilgan nishonlar"""
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='badges')
+    badge_key  = models.CharField(max_length=50)
+    earned_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'badge_key')
+        ordering = ['-earned_at']
+
+    def __str__(self):
+        return f"{self.user} — {self.badge_key}"
+
+    @property
+    def info(self):
+        return BADGE_DEFINITIONS.get(self.badge_key, {
+            'name': self.badge_key, 'icon': '🎖️', 'desc': '', 'xp': 0
+        })
+
+
+class UserStreak(models.Model):
+    """Kunlik kirish streak tizimi"""
+    user           = models.OneToOneField(User, on_delete=models.CASCADE, related_name='streak')
+    current_streak = models.PositiveIntegerField(default=0)
+    longest_streak = models.PositiveIntegerField(default=0)
+    last_login_date = models.DateField(null=True, blank=True)
+    total_days     = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.user} — {self.current_streak} kun"
+
+    def update(self):
+        from django.utils import timezone
+        today = timezone.now().date()
+        if self.last_login_date == today:
+            return  # Bugun allaqachon hisoblangan
+        if self.last_login_date and (today - self.last_login_date).days == 1:
+            self.current_streak += 1
+        else:
+            self.current_streak = 1
+        self.total_days += 1
+        if self.current_streak > self.longest_streak:
+            self.longest_streak = self.current_streak
+        self.last_login_date = today
+        self.save()
+
+
+class XPLog(models.Model):
+    """XP (tajriba ballari) tarixi"""
+    user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='xp_logs')
+    amount    = models.IntegerField()  # manfiy bo'lishi mumkin
+    reason    = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} +{self.amount} XP — {self.reason}"

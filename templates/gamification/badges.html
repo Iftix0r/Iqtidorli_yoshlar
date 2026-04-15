@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Nishonlar va XP{% endblock %}
+{% block content %}
+<section style="padding-top:100px;padding-bottom:60px;">
+  <div style="max-width:900px;margin:0 auto;padding:0 20px;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;">
+      <div>
+        <h2 style="font-size:1.6rem;font-weight:900;">🎖️ Nishonlar <span style="color:var(--primary);">& XP</span></h2>
+        <p style="color:var(--muted);margin-top:4px;">{{ earned_count }} / {{ total_count }} nishon olindi</p>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <!-- Streak kartasi -->
+        {% if streak %}
+        <div style="background:var(--card);border:1px solid rgba(255,100,50,.3);border-radius:14px;padding:14px 20px;text-align:center;min-width:110px;">
+          <div style="font-size:1.8rem;">🔥</div>
+          <div style="font-size:1.4rem;font-weight:900;color:#ff6432;">{{ streak.current_streak }}</div>
+          <div style="font-size:.75rem;color:var(--muted);">kun streak</div>
+        </div>
+        {% endif %}
+        <!-- XP kartasi -->
+        <div style="background:var(--card);border:1px solid rgba(108,99,255,.3);border-radius:14px;padding:14px 20px;text-align:center;min-width:110px;">
+          <div style="font-size:1.8rem;">⚡</div>
+          <div style="font-size:1.4rem;font-weight:900;color:var(--primary);">{{ total_xp }}</div>
+          <div style="font-size:.75rem;color:var(--muted);">jami XP</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streak tafsiloti -->
+    {% if streak %}
+    <div class="profile-card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:16px;"><i data-lucide="flame"></i> Streak Holati</h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:1.5rem;font-weight:900;color:#ff6432;">{{ streak.current_streak }}</div>
+          <div style="font-size:.78rem;color:var(--muted);">Joriy streak</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:1.5rem;font-weight:900;color:var(--primary);">{{ streak.longest_streak }}</div>
+          <div style="font-size:.78rem;color:var(--muted);">Eng uzun</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:1.5rem;font-weight:900;color:var(--accent);">{{ streak.total_days }}</div>
+          <div style="font-size:.78rem;color:var(--muted);">Jami kun</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Badge lari -->
+    <div class="profile-card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:20px;"><i data-lucide="award"></i> Barcha Nishonlar</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+        {% for b in all_badges %}
+        <div style="background:var(--bg);border:1px solid {% if b.earned %}rgba(108,99,255,.4){% else %}var(--border){% endif %};
+             border-radius:12px;padding:16px;text-align:center;
+             {% if not b.earned %}opacity:.45;filter:grayscale(1);{% endif %}
+             transition:.2s;">
+          <div style="font-size:2rem;margin-bottom:8px;">{{ b.info.icon }}</div>
+          <div style="font-size:.85rem;font-weight:700;margin-bottom:4px;">{{ b.info.name }}</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;">{{ b.info.desc }}</div>
+          <div style="font-size:.75rem;font-weight:700;color:var(--primary);">+{{ b.info.xp }} XP</div>
+          {% if b.earned %}
+            <div style="margin-top:6px;font-size:.7rem;color:#43e97b;">✓ Olindi</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- XP tarixi -->
+    {% if xp_logs %}
+    <div class="profile-card">
+      <h3 style="margin-bottom:16px;"><i data-lucide="zap"></i> So'nggi XP Tarixi</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for log in xp_logs %}
+        <div style="display:flex;justify-content:space-between;align-items:center;
+             padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          <span style="font-size:.85rem;color:var(--text);">{{ log.reason }}</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:.82rem;font-weight:700;color:var(--primary);">+{{ log.amount }} XP</span>
+            <span style="font-size:.72rem;color:var(--muted);">{{ log.created_at|date:"d.m H:i" }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

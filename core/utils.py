@@ -120,3 +120,107 @@ def log_activity(user, action, detail='', link='', request=None):
         user=user, action=action, detail=detail, link=link,
         ip_address=ip, user_agent=ua[:500]
     )
+    # XP va badge avtomatik
+    process_action_xp(user, action)
+
+
+# ── GAMIFICATION ──────────────────────────────────────────────────────────────
+
+# Har bir harakat uchun XP miqdori
+XP_REWARDS = {
+    'login':         5,
+    'register':      20,
+    'profile_edit':  10,
+    'skill_add':     5,
+    'project_add':   15,
+    'cert_add':      10,
+    'contest_apply': 20,
+    'msg_send':      3,
+    'mentor_req':    10,
+    'course_enroll': 10,
+    'course_done':   50,
+    'job_post':      15,
+    'resource_add':  10,
+}
+
+
+def award_xp(user, amount, reason):
+    """Foydalanuvchiga XP berish va score yangilash"""
+    from .models import XPLog
+    XPLog.objects.create(user=user, amount=amount, reason=reason)
+    user.score = (user.score or 0) + amount
+    user.save(update_fields=['score'])
+
+
+def award_badge(user, badge_key):
+    """Badge berish — agar allaqachon yo'q bo'lsa"""
+    from .models import Badge, BADGE_DEFINITIONS, Notification
+    if Badge.objects.filter(user=user, badge_key=badge_key).exists():
+        return False
+    Badge.objects.create(user=user, badge_key=badge_key)
+    info = BADGE_DEFINITIONS.get(badge_key, {})
+    # XP ham berish
+    if info.get('xp'):
+        award_xp(user, info['xp'], f"Badge: {info.get('name', badge_key)}")
+    # Bildirishnoma
+    Notification.objects.create(
+        user=user, notif_type='score',
+        text=f"{info.get('icon', '🎖️')} Yangi nishon: {info.get('name', badge_key)}! +{info.get('xp', 0)} XP",
+        link='/profile/',
+    )
+    return True
+
+
+def update_streak(user):
+    """Login streak yangilash va badge tekshirish"""
+    from .models import UserStreak
+    streak, _ = UserStreak.objects.get_or_create(user=user)
+    streak.update()
+    # Streak badge lari
+    if streak.current_streak >= 3:
+        award_badge(user, 'streak_3')
+    if streak.current_streak >= 7:
+        award_badge(user, 'streak_7')
+    if streak.current_streak >= 30:
+        award_badge(user, 'streak_30')
+    return streak
+
+
+def check_badges(user):
+    """Foydalanuvchi holatiga qarab badge larni tekshirish"""
+    # Profil to'liqligi
+    if user.bio and user.avatar and user.region:
+        award_badge(user, 'profile_complete')
+    # Loyihalar
+    proj_count = user.projects.count()
+    if proj_count >= 1:
+        award_badge(user, 'first_project')
+    if proj_count >= 5:
+        award_badge(user, 'five_projects')
+    # Ko'nikmalar
+    if user.skills.count() >= 5:
+        award_badge(user, 'five_skills')
+    # Kurslar
+    from .models import CourseEnrollment
+    done = CourseEnrollment.objects.filter(user=user, completed=True).count()
+    if done >= 1:
+        award_badge(user, 'first_course')
+    if done >= 3:
+        award_badge(user, 'three_courses')
+    # Tanlovlar
+    if user.applications.exists():
+        award_badge(user, 'first_contest')
+    # Mentor so'rovi
+    if user.sent_requests.exists():
+        award_badge(user, 'first_mentor_req')
+    # Xabarlar
+    if user.sent_messages.exists():
+        award_badge(user, 'first_message')
+
+
+def process_action_xp(user, action):
+    """Harakat uchun XP berish va badge tekshirish"""
+    xp = XP_REWARDS.get(action, 0)
+    if xp:
+        award_xp(user, xp, action)
+    check_badges(user)

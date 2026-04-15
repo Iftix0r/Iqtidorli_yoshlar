@@ -1,15 +1,18 @@
 from django.urls import path
 from . import views
+from . import gamification_views
 
 urlpatterns = [
-    path('',                                  views.index,                 name='index'),
-    path('register/',                         views.register_view,         name='register'),
-    path('login/',                            views.login_view,            name='login'),
-    path('logout/',                           views.logout_view,           name='logout'),
-    path('profile/',                          views.profile_view,          name='profile'),
-    path('profile/user/<int:pk>/',            views.public_profile,        name='public_profile'),
-    path('talents/',                          views.talents_view,          name='talents'),
-    path('leaderboard/',                      views.leaderboard_view,      name='leaderboard'),
+    path('',                                  views.index,                        name='index'),
+    path('register/',                         views.register_view,                name='register'),
+    path('login/',                            views.login_view,                   name='login'),
+    path('logout/',                           views.logout_view,                  name='logout'),
+    path('profile/',                          views.profile_view,                 name='profile'),
+    path('profile/user/<int:pk>/',            views.public_profile,               name='public_profile'),
+    path('talents/',                          views.talents_view,                 name='talents'),
+    path('leaderboard/',                      gamification_views.leaderboard_view, name='leaderboard'),
+    path('badges/',                           gamification_views.my_badges,       name='my_badges'),
+    path('streak/checkin/',                   gamification_views.streak_checkin,  name='streak_checkin'),
     path('contests/',                         views.contests_view,         name='contests'),
     path('contests/add/',                     views.add_contest_view,      name='add_contest'),
     path('contests/<int:pk>/apply/',          views.apply_contest,         name='apply_contest'),

@@ -1,29 +1,83 @@
 {% extends 'base.html' %}
 {% block title %}Reyting — Leaderboard{% endblock %}
-
 {% block content %}
-<section style="padding-top:120px;max-width:900px;margin:0 auto;">
+<section style="padding-top:120px;max-width:960px;margin:0 auto;padding-bottom:60px;">
   <div class="section-title">
     <h2><span>Reyting</span> Jadvali</h2>
     <p>Eng faol va natijali foydalanuvchilar</p>
   </div>
 
+  <!-- Tabs -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+    <a href="?role={{ role }}&tab=global"
+       style="padding:8px 18px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;
+              {% if tab == 'global' or not tab %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+      🌍 Umumiy
+    </a>
+    <a href="?role={{ role }}&tab=region"
+       style="padding:8px 18px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;
+              {% if tab == 'region' %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+      🗺️ Hududiy
+    </a>
+    <a href="?role={{ role }}&tab=streak"
+       style="padding:8px 18px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;
+              {% if tab == 'streak' %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+      🔥 Streak
+    </a>
+  </div>
+
   <!-- Filter -->
-  <form method="get" class="filter-form" style="margin-bottom:32px;">
+  <form method="get" class="filter-form" style="margin-bottom:28px;">
+    <input type="hidden" name="tab" value="{{ tab }}">
     <select name="role" class="form-control" style="max-width:180px;">
       <option value="yosh"     {% if role == 'yosh' %}selected{% endif %}>Iqtidorli Yoshlar</option>
       <option value="mentor"   {% if role == 'mentor' %}selected{% endif %}>Mentorlar</option>
       <option value="investor" {% if role == 'investor' %}selected{% endif %}>Investorlar</option>
     </select>
+    {% if tab != 'region' %}
     <select name="region" class="form-control" style="max-width:220px;">
       <option value="">Barcha viloyatlar</option>
       {% for r in regions %}
         <option value="{{ r }}" {% if r == selected_region %}selected{% endif %}>{{ r }}</option>
       {% endfor %}
     </select>
+    {% endif %}
     <button type="submit" class="btn-primary"><i data-lucide="filter"></i> Filter</button>
   </form>
 
+  <!-- Mening reytingim -->
+  {% if my_rank and user.is_authenticated %}
+  <div style="background:var(--card);border:1px solid rgba(108,99,255,.3);border-radius:12px;padding:14px 20px;
+       display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px;">
+    <span style="color:var(--muted);font-size:.88rem;">Sizning o'rningiz:</span>
+    <span style="font-size:1.2rem;font-weight:900;color:var(--primary);">#{{ my_rank }}</span>
+    <a href="{% url 'my_badges' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;">
+      <i data-lucide="award"></i> Nishonlarim
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- HUDUDIY TAB -->
+  {% if tab == 'region' and region_leaders %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:32px;">
+    {% for item in region_leaders %}
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;">
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">{{ item.region }}</div>
+      <a href="{% url 'public_profile' pk=item.user.pk %}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;">
+          {{ item.user.initial }}
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.9rem;">{{ item.user.get_full_name }}</div>
+          <div style="font-size:.78rem;color:var(--primary);font-weight:700;">{{ item.user.score }} ball</div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ASOSIY JADVAL -->
   <div class="benefits-table">
     <table>
       <thead>
@@ -31,36 +85,37 @@
           <th style="width:50px;">#</th>
           <th>Ism</th>
           <th>Viloyat</th>
-          <th>Ko'nikmalar</th>
-          <th>Ball</th>
+          <th>Nishonlar</th>
+          <th>{% if tab == 'streak' %}Streak{% else %}Ball{% endif %}</th>
         </tr>
       </thead>
       <tbody>
         {% for u in users %}
-        <tr>
+        <tr {% if user.is_authenticated and u.pk == user.pk %}style="background:rgba(108,99,255,.08);"{% endif %}>
           <td>
-            {% if forloop.counter == 1 %}
-              <span style="font-size:1.3rem;">🥇</span>
-            {% elif forloop.counter == 2 %}
-              <span style="font-size:1.3rem;">🥈</span>
-            {% elif forloop.counter == 3 %}
-              <span style="font-size:1.3rem;">🥉</span>
-            {% else %}
-              {{ forloop.counter }}
-            {% endif %}
+            {% if forloop.counter == 1 %}🥇
+            {% elif forloop.counter == 2 %}🥈
+            {% elif forloop.counter == 3 %}🥉
+            {% else %}{{ forloop.counter }}{% endif %}
           </td>
           <td>
             <a href="{% url 'public_profile' pk=u.pk %}" style="color:var(--text);text-decoration:none;display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#43E97B);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:white;flex-shrink:0;">
-                {{ u.initial }}
-              </div>
+              {% if u.avatar %}
+                <img src="{{ u.avatar.url }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+              {% else %}
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0;">{{ u.initial }}</div>
+              {% endif %}
               <div>
                 <div style="font-weight:600;">{{ u.get_full_name|default:u.phone }}</div>
-                <div style="font-size:.78rem;color:var(--muted);">{{ u.bio|default:"" }}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px;">
+                  {% for b in u.badges.all|slice:":3" %}
+                    <span title="{{ b.info.name }}" style="font-size:.9rem;">{{ b.info.icon }}</span>
+                  {% endfor %}
+                </div>
               </div>
             </a>
           </td>
-          <td style="color:var(--muted);font-size:.88rem;">{{ u.region|default:"—" }}</td>
+          <td style="color:var(--muted);font-size:.85rem;">{{ u.region|default:"—" }}</td>
           <td>
             <div style="display:flex;gap:4px;flex-wrap:wrap;">
               {% for s in u.skills.all|slice:":3" %}
@@ -69,9 +124,15 @@
             </div>
           </td>
           <td>
-            <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:800;font-size:1.1rem;">
-              {{ u.score }}
-            </span>
+            {% if tab == 'streak' %}
+              <span style="color:#ff6432;font-weight:800;font-size:1rem;">
+                🔥 {% if u.streak %}{{ u.streak.current_streak }}{% else %}0{% endif %}
+              </span>
+            {% else %}
+              <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:800;font-size:1.1rem;">
+                {{ u.score }}
+              </span>
+            {% endif %}
           </td>
         </tr>
         {% empty %}

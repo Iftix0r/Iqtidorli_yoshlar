@@ -85,6 +85,10 @@ def login_view(request):
                 reset_failed_attempts(phone, ip)
                 record_login(request, user, success=True)
                 log_activity(user, 'login', f'IP: {ip}')
+                # Streak va birinchi login badge
+                from .utils import update_streak, award_badge
+                update_streak(user)
+                award_badge(user, 'first_login')
                 return redirect(request.GET.get('next', 'profile'))
             else:
                 record_failed_attempt(phone, ip)
