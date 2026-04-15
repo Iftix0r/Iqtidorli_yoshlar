@@ -75,6 +75,8 @@ urlpatterns = [
     path(f'{PANEL_URL}/settings/',                     panel_views.settings_view,           name='panel_settings'),
     path(f'{PANEL_URL}/export/users/',                 panel_views.export_users_csv,        name='panel_export_users'),
     path(f'{PANEL_URL}/blocked-ips/',                  panel_views.blocked_ips_view,        name='panel_blocked_ips'),
+    path(f'{PANEL_URL}/market/items/',                 panel_views.market_items_view,       name='panel_market_items'),
+    path(f'{PANEL_URL}/market/orders/',                panel_views.market_orders_view,      name='panel_market_orders'),
 
     # Tizim paneli
     path(f'{TIZIM_URL}/',                              system_views.sys_dashboard,          name='sys_dashboard'),

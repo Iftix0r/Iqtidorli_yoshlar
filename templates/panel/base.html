@@ -177,6 +177,15 @@
       <i data-lucide="book-open"></i> Resurslar
     </a>
 
+    <div class="nav-section">Market</div>
+    <a href="{% url 'panel_market_items' %}" class="nav-item {% block nav_market_items %}{% endblock %}">
+      <i data-lucide="shopping-bag"></i> Mahsulotlar
+    </a>
+    <a href="{% url 'panel_market_orders' %}" class="nav-item {% block nav_market_orders %}{% endblock %}">
+      <i data-lucide="package"></i> Buyurtmalar
+      <span id="rt-market-orders" style="display:none;background:#FF9A44;color:white;border-radius:10px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:auto;"></span>
+    </a>
+
     <div class="nav-section">Muloqot</div>
     <a href="{% url 'panel_messages' %}" class="nav-item {% block nav_messages %}{% endblock %}">
       <i data-lucide="message-circle"></i> Xabarlar

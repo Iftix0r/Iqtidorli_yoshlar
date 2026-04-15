@@ -1,0 +1,134 @@
+{% extends "panel/base.html" %}
+{% block title %}Market Buyurtmalari{% endblock %}
+{% block page_title %}📦 Market Buyurtmalari{% endblock %}
+{% block nav_market_orders %}active{% endblock %}
+{% block content %}
+
+<!-- Statistika -->
+<div class="stat-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="icon" style="background:rgba(255,215,0,.15);">⏳</div>
+    <div class="num" style="color:var(--gold);">{{ pending_count }}</div>
+    <div class="lbl">Kutilayotgan</div>
+  </div>
+  <div class="stat-card">
+    <div class="icon" style="background:rgba(67,233,123,.15);">✅</div>
+    <div class="num" style="color:#43E97B;">{{ orders|length }}</div>
+    <div class="lbl">Jami buyurtma</div>
+  </div>
+</div>
+
+<!-- Filter -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+  <a href="{% url 'panel_market_orders' %}"
+     class="btn {% if not status %}btn-primary{% else %}btn-outline{% endif %}">Barchasi</a>
+  {% for val, label in status_choices %}
+  <a href="?status={{ val }}"
+     class="btn {% if status == val %}btn-primary{% else %}btn-outline{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<!-- Buyurtmalar jadvali -->
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h3>Buyurtmalar</h3>
+  </div>
+  <table class="panel-table">
+    <thead>
+      <tr>
+        <th>Foydalanuvchi</th>
+        <th>Mahsulot</th>
+        <th>Ball</th>
+        <th>Holat</th>
+        <th>Sana</th>
+        <th>Amal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>
+          <a href="{% url 'panel_user_detail' pk=order.user.pk %}" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);">
+            <div class="mini-avatar">{{ order.user.initial }}</div>
+            <div>
+              <div style="font-weight:600;font-size:.85rem;">{{ order.user.get_full_name }}</div>
+              <div style="font-size:.75rem;color:var(--muted);">⚡ {{ order.user.score }} ball</div>
+            </div>
+          </a>
+        </td>
+        <td>
+          <div style="font-weight:600;font-size:.85rem;">{{ order.item.title }}</div>
+          <div style="font-size:.75rem;color:var(--muted);">{{ order.item.get_category_display }}</div>
+        </td>
+        <td><b style="color:var(--gold);">-{{ order.price_paid }} ⚡</b></td>
+        <td>
+          <span class="badge
+            {% if order.status == 'pending' %}badge-gold
+            {% elif order.status == 'approved' or order.status == 'delivered' %}badge-green
+            {% else %}badge-red{% endif %}">
+            {{ order.get_status_display }}
+          </span>
+          {% if order.note %}
+            <div style="font-size:.72rem;color:var(--muted);margin-top:3px;">{{ order.note|truncatechars:30 }}</div>
+          {% endif %}
+        </td>
+        <td style="color:var(--muted);font-size:.82rem;">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+        <td>
+          <button onclick="openOrderModal({{ order.pk }}, '{{ order.status }}', '{{ order.note|escapejs }}')"
+                  class="btn btn-outline" style="padding:5px 12px;font-size:.78rem;">
+            <i data-lucide="edit-2"></i> Boshqarish
+          </button>
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">Buyurtma yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Boshqarish modali -->
+<div id="order-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:440px;margin:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3>📦 Buyurtmani Boshqarish</h3>
+      <button onclick="closeOrderModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;">✕</button>
+    </div>
+    <form method="post" class="panel-form">
+      {% csrf_token %}
+      <input type="hidden" name="order_id" id="modal-order-id">
+      <div style="margin-bottom:16px;">
+        <label>Holat</label>
+        <select name="status" id="modal-status">
+          {% for val, label in status_choices %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label>Admin izohi (ixtiyoriy)</label>
+        <textarea name="note" id="modal-note" rows="3" placeholder="Foydalanuvchiga ko'rinadigan izoh..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">
+          <i data-lucide="save"></i> Saqlash
+        </button>
+        <button type="button" onclick="closeOrderModal()" class="btn btn-outline">Bekor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openOrderModal(id, status, note) {
+  document.getElementById('modal-order-id').value = id;
+  document.getElementById('modal-status').value   = status;
+  document.getElementById('modal-note').value     = note;
+  document.getElementById('order-modal').style.display = 'flex';
+  lucide.createIcons();
+}
+function closeOrderModal() {
+  document.getElementById('order-modal').style.display = 'none';
+}
+</script>
+{% endblock %}

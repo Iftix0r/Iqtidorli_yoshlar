@@ -1,0 +1,217 @@
+{% extends "panel/base.html" %}
+{% block title %}Market Mahsulotlari{% endblock %}
+{% block page_title %}🛍️ Market Mahsulotlari{% endblock %}
+{% block nav_market_items %}active{% endblock %}
+{% block content %}
+
+<!-- Yangi mahsulot qo'shish -->
+<div class="panel-card" style="margin-bottom:24px;">
+  <div class="panel-card-header">
+    <h3>➕ Yangi Mahsulot Qo'shish</h3>
+    <button onclick="toggleForm()" class="btn btn-outline" id="toggleBtn">
+      <i data-lucide="plus"></i> Qo'shish
+    </button>
+  </div>
+  <div id="add-form" style="display:none;padding:20px;">
+    <form method="post" enctype="multipart/form-data" class="panel-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <div class="form-row">
+        <div>
+          <label>Nomi *</label>
+          <input type="text" name="title" required placeholder="Masalan: 1 oylik mentoring sessiyasi">
+        </div>
+        <div>
+          <label>Kategoriya</label>
+          <select name="category">
+            {% for val, label in categories %}
+              <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Narxi (ball) *</label>
+          <input type="number" name="price" required min="1" placeholder="500">
+        </div>
+        <div>
+          <label>Stok (-1 = cheksiz)</label>
+          <input type="number" name="stock" value="-1" placeholder="-1">
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label>Tavsif</label>
+        <textarea name="description" rows="3" placeholder="Mahsulot haqida qisqacha..."></textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Rasm (ixtiyoriy)</label>
+          <input type="file" name="image" accept="image/*">
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:0;">
+            <input type="checkbox" name="is_active" checked style="width:auto;"> Faol
+          </label>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i> Saqlash
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Mahsulotlar jadvali -->
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h3>Barcha Mahsulotlar ({{ items.count }})</h3>
+  </div>
+  <table class="panel-table">
+    <thead>
+      <tr>
+        <th>Mahsulot</th>
+        <th>Kategoriya</th>
+        <th>Narxi</th>
+        <th>Stok</th>
+        <th>Buyurtmalar</th>
+        <th>Holat</th>
+        <th>Amallar</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            {% if item.image %}
+              <img src="{{ item.image.url }}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">
+            {% else %}
+              <div style="width:40px;height:40px;border-radius:8px;background:rgba(108,99,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+                {% if item.category == 'certificate' %}📜{% elif item.category == 'mentoring' %}👨‍🏫{% elif item.category == 'course' %}🎓{% elif item.category == 'badge' %}🏅{% elif item.category == 'gift' %}🎁{% else %}✨{% endif %}
+              </div>
+            {% endif %}
+            <div>
+              <div style="font-weight:600;font-size:.88rem;">{{ item.title }}</div>
+              <div style="font-size:.75rem;color:var(--muted);">{{ item.description|truncatechars:40 }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="badge badge-blue">{{ item.get_category_display }}</span></td>
+        <td><b style="color:var(--gold);">⚡ {{ item.price }}</b></td>
+        <td>
+          {% if item.stock == -1 %}<span style="color:#43E97B;">♾️</span>
+          {% elif item.stock == 0 %}<span class="badge badge-red">Tugagan</span>
+          {% else %}<span class="badge badge-gold">{{ item.stock }} ta</span>{% endif %}
+        </td>
+        <td><span class="badge badge-blue">{{ item.order_count }}</span></td>
+        <td>
+          {% if item.is_active %}<span class="badge badge-green">Faol</span>
+          {% else %}<span class="badge badge-red">Nofaol</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <!-- Tahrirlash modal -->
+            <button onclick="openEdit({{ item.pk }}, '{{ item.title|escapejs }}', '{{ item.description|escapejs }}', '{{ item.category }}', {{ item.price }}, {{ item.stock }}, {{ item.is_active|yesno:'true,false' }})"
+                    class="btn btn-outline" style="padding:5px 10px;font-size:.78rem;">
+              <i data-lucide="edit-2"></i>
+            </button>
+            <!-- Toggle -->
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle">
+              <input type="hidden" name="item_id" value="{{ item.pk }}">
+              <button type="submit" class="btn {% if item.is_active %}btn-danger{% else %}btn-outline{% endif %}" style="padding:5px 10px;font-size:.78rem;">
+                <i data-lucide="{% if item.is_active %}eye-off{% else %}eye{% endif %}"></i>
+              </button>
+            </form>
+            <!-- O'chirish -->
+            <form method="post" style="display:inline;" onsubmit="return confirm('O\'chirasizmi?')">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="item_id" value="{{ item.pk }}">
+              <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:.78rem;">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Mahsulot yo'q. Yuqoridan qo'shing.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Tahrirlash modali -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:520px;margin:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3>✏️ Mahsulotni Tahrirlash</h3>
+      <button onclick="closeEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;">✕</button>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="panel-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="item_id" id="edit-id">
+      <div class="form-row">
+        <div>
+          <label>Nomi</label>
+          <input type="text" name="title" id="edit-title" required>
+        </div>
+        <div>
+          <label>Kategoriya</label>
+          <select name="category" id="edit-category">
+            {% for val, label in categories %}
+              <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Narxi (ball)</label>
+          <input type="number" name="price" id="edit-price" min="1">
+        </div>
+        <div>
+          <label>Stok (-1 = cheksiz)</label>
+          <input type="number" name="stock" id="edit-stock">
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label>Tavsif</label>
+        <textarea name="description" id="edit-desc" rows="3"></textarea>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" name="is_active" id="edit-active" style="width:auto;"> Faol
+        </label>
+        <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleForm() {
+  const f = document.getElementById('add-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+function openEdit(id, title, desc, cat, price, stock, active) {
+  document.getElementById('edit-id').value    = id;
+  document.getElementById('edit-title').value = title;
+  document.getElementById('edit-desc').value  = desc;
+  document.getElementById('edit-price').value = price;
+  document.getElementById('edit-stock').value = stock;
+  document.getElementById('edit-active').checked = active;
+  document.getElementById('edit-category').value = cat;
+  const m = document.getElementById('edit-modal');
+  m.style.display = 'flex';
+  lucide.createIcons();
+}
+function closeEdit() {
+  document.getElementById('edit-modal').style.display = 'none';
+}
+</script>
+{% endblock %}

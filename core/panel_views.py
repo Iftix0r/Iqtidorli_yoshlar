@@ -683,3 +683,91 @@ def certificates_view(request):
         'q': q,
         'selected_course': course_id
     })
+
+
+# ── MARKET BOSHQARUVI ─────────────────────────────────────────────────────────
+@panel_tfa_required
+def market_items_view(request):
+    from .models import MarketItem
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            item = MarketItem.objects.create(
+                title       = request.POST.get('title', '').strip(),
+                description = request.POST.get('description', '').strip(),
+                category    = request.POST.get('category', 'gift'),
+                price       = int(request.POST.get('price', 100)),
+                stock       = int(request.POST.get('stock', -1)),
+                is_active   = request.POST.get('is_active') == 'on',
+            )
+            if request.FILES.get('image'):
+                item.image = request.FILES['image']
+                item.save()
+        elif action == 'toggle':
+            item = get_object_or_404(MarketItem, pk=request.POST.get('item_id'))
+            item.is_active = not item.is_active
+            item.save()
+        elif action == 'delete':
+            MarketItem.objects.filter(pk=request.POST.get('item_id')).delete()
+        elif action == 'edit':
+            item = get_object_or_404(MarketItem, pk=request.POST.get('item_id'))
+            item.title       = request.POST.get('title', item.title).strip()
+            item.description = request.POST.get('description', item.description).strip()
+            item.category    = request.POST.get('category', item.category)
+            item.price       = int(request.POST.get('price', item.price))
+            item.stock       = int(request.POST.get('stock', item.stock))
+            item.is_active   = request.POST.get('is_active') == 'on'
+            if request.FILES.get('image'):
+                item.image = request.FILES['image']
+            item.save()
+        return redirect('panel_market_items')
+
+    items = MarketItem.objects.annotate(order_count=Count('orders')).order_by('price')
+    return render(request, 'panel/market_items.html', {
+        'items': items,
+        'categories': MarketItem.CATEGORIES,
+    })
+
+
+@panel_tfa_required
+def market_orders_view(request):
+    from .models import MarketOrder, Notification
+    status = request.GET.get('status', '')
+    qs = MarketOrder.objects.select_related('user', 'item').order_by('-created_at')
+    if status:
+        qs = qs.filter(status=status)
+
+    if request.method == 'POST':
+        order = get_object_or_404(MarketOrder, pk=request.POST.get('order_id'))
+        old_status = order.status
+        new_status = request.POST.get('status', order.status)
+        note       = request.POST.get('note', '').strip()
+        order.status = new_status
+        order.note   = note
+        order.save()
+
+        # Bildirishnoma
+        text_map = {
+            'approved':  f"'{order.item.title}' buyurtmangiz tasdiqlandi! 🎉",
+            'rejected':  f"'{order.item.title}' buyurtmangiz rad etildi.",
+            'delivered': f"'{order.item.title}' yetkazildi! Tabriklaymiz 🎁",
+        }
+        if new_status in text_map and old_status != new_status:
+            Notification.objects.create(
+                user=order.user, notif_type='score',
+                text=text_map[new_status], link='/market/orders/'
+            )
+            # Rad etilsa — ballarni qaytarish
+            if new_status == 'rejected' and old_status == 'pending':
+                order.user.score += order.price_paid
+                order.user.save(update_fields=['score'])
+
+        return redirect('panel_market_orders')
+
+    pending_count = MarketOrder.objects.filter(status='pending').count()
+    return render(request, 'panel/market_orders.html', {
+        'orders':        qs[:200],
+        'status':        status,
+        'status_choices': MarketOrder.STATUS,
+        'pending_count': pending_count,
+    })
