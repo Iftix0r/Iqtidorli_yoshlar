@@ -519,3 +519,44 @@ class XPLog(models.Model):
 
     def __str__(self):
         return f"{self.user} +{self.amount} XP — {self.reason}"
+
+
+# ── AI CHAT TARIXI ────────────────────────────────────────────────────────────
+
+AI_MODES = [
+    ('general',   '🤖 AI Yordamchi'),
+    ('mentor',    '🎯 AI Mentor'),
+    ('talent',    '🧠 Iqtidor Tahlili'),
+    ('portfolio', '📋 Portfolio Baholash'),
+    ('matching',  '🤝 Smart Matching'),
+]
+
+
+class AIChatSession(models.Model):
+    """Har bir suhbat sessiyasi"""
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_sessions')
+    mode       = models.CharField(max_length=20, choices=AI_MODES, default='general')
+    title      = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f"{self.user} — {self.mode} — {self.title or self.created_at:%d.%m.%Y}"
+
+
+class AIChatMessage(models.Model):
+    """Suhbat xabarlari"""
+    ROLES = [('user', 'Foydalanuvchi'), ('assistant', 'AI')]
+    session    = models.ForeignKey(AIChatSession, on_delete=models.CASCADE, related_name='messages')
+    role       = models.CharField(max_length=10, choices=ROLES)
+    content    = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.role}: {self.content[:60]}"

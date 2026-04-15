@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% load ai_extras %}
+{% block title %}AI Chat{% endblock %}
+{% block content %}
+<div id="ai-app" style="display:flex;height:calc(100vh - 64px);margin-top:64px;overflow:hidden;">
+
+  <!-- ── SIDEBAR ── -->
+  <aside id="ai-sidebar" style="width:260px;min-width:260px;background:var(--card);border-right:1px solid var(--border);
+         display:flex;flex-direction:column;overflow:hidden;transition:.3s;">
+
+    <!-- Yangi chat -->
+    <div style="padding:16px 12px;border-bottom:1px solid var(--border);">
+      <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Rejim tanlang</div>
+      {% for val, label in ai_modes %}
+      <form method="post" action="{% url 'ai_new_session' %}" style="margin-bottom:4px;">
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="{{ val }}">
+        <button type="submit" style="width:100%;text-align:left;background:{% if mode == val %}rgba(108,99,255,.15){% else %}transparent{% endif %};
+               border:1px solid {% if mode == val %}rgba(108,99,255,.4){% else %}transparent{% endif %};
+               border-radius:8px;padding:8px 12px;color:{% if mode == val %}var(--primary){% else %}var(--text){% endif %};
+               font-size:.85rem;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;transition:.15s;">
+          {{ label }}
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+
+    <!-- Tarix -->
+    <div style="flex:1;overflow-y:auto;padding:12px 8px;">
+      <div style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 4px;margin-bottom:8px;">Tarix</div>
+      {% for s in sessions %}
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;">
+        <a href="{% url 'ai_chat_session' session_id=s.pk %}"
+           style="flex:1;display:block;padding:8px 10px;border-radius:8px;text-decoration:none;font-size:.82rem;
+                  background:{% if session and session.pk == s.pk %}rgba(108,99,255,.15){% else %}transparent{% endif %};
+                  color:{% if session and session.pk == s.pk %}var(--primary){% else %}var(--muted){% endif %};
+                  border:1px solid {% if session and session.pk == s.pk %}rgba(108,99,255,.3){% else %}transparent{% endif %};
+                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.15s;"
+           title="{{ s.title|default:s.get_mode_display }}">
+          <span style="font-size:.75rem;opacity:.6;">{{ s.get_mode_display|slice:":2" }}</span>
+          {{ s.title|default:"Yangi suhbat"|truncatechars:22 }}
+        </a>
+        <button onclick="deleteSession({{ s.pk }}, this)"
+                style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:4px;flex-shrink:0;font-size:.8rem;"
+                title="O'chirish">✕</button>
+      </div>
+      {% empty %}
+        <p style="font-size:.8rem;color:var(--muted);padding:8px 4px;">Hali suhbat yo'q</p>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <!-- ── ASOSIY CHAT ── -->
+  <main style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);">
+
+    {% if session %}
+    <!-- Header -->
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--card);">
+      <button onclick="toggleSidebar()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;">
+        <i data-lucide="panel-left" style="width:18px;height:18px;"></i>
+      </button>
+      <div style="font-size:.95rem;font-weight:700;">{{ mode_labels|get_item:session.mode }}</div>
+      <div style="font-size:.8rem;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        {{ session.title|default:"Yangi suhbat" }}
+      </div>
+    </div>
+
+    <!-- Xabarlar -->
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:16px;">
+      {% if not messages %}
+      <div id="welcome-msg" style="text-align:center;margin:auto;max-width:480px;">
+        <div style="font-size:3rem;margin-bottom:16px;">{{ mode_labels|get_item:session.mode|slice:":2" }}</div>
+        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;">{{ mode_labels|get_item:session.mode }}</h3>
+        <p style="color:var(--muted);font-size:.9rem;line-height:1.6;">
+          {% if session.mode == 'mentor' %}Soha va maqsadingizni yozing — shaxsiy o'quv yo'l xaritangizni tuzib beraman.
+          {% elif session.mode == 'talent' %}Qiziqishlaringizni yozing — sizga mos kasblarni tahlil qilaman.
+          {% elif session.mode == 'portfolio' %}Portfoliongizni baholashni so'rang — kuchli va zaif tomonlarini ko'rsataman.
+          {% elif session.mode == 'matching' %}Mentor, investor yoki hamkor izlayapsizmi? Yordam beraman.
+          {% else %}Istalgan savol bering — karera, ta'lim, texnologiya bo'yicha maslahat beraman.{% endif %}
+        </p>
+        <!-- Tezkor savollar -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px;">
+          {% if session.mode == 'mentor' %}
+            <button class="quick-btn" onclick="sendQuick('Web dasturlashni 0 dan o\'rganmoqchiman, qayerdan boshlashim kerak?')">Web dasturlash yo'l xaritasi</button>
+            <button class="quick-btn" onclick="sendQuick('Data Science sohasida karera qurish uchun nima o\'rganishim kerak?')">Data Science yo'li</button>
+            <button class="quick-btn" onclick="sendQuick('6 oyda freelancer bo\'lish uchun reja tuz')">Freelance rejasi</button>
+          {% elif session.mode == 'talent' %}
+            <button class="quick-btn" onclick="sendQuick('Mening ko\'nikmalarimga qarab qaysi kasblar mos keladi?')">Menga mos kasblar</button>
+            <button class="quick-btn" onclick="sendQuick('IT sohasida qaysi yo\'nalish eng ko\'p maosh to\'laydi?')">Yuqori maoshli IT yo'nalishlar</button>
+          {% elif session.mode == 'portfolio' %}
+            <button class="quick-btn" onclick="sendQuick('Portfoliomni baholab ber va tavsiyalar ber')">Portfoliomni baholash</button>
+            <button class="quick-btn" onclick="sendQuick('Portfoliomni yaxshilash uchun nima qo\'shishim kerak?')">Yaxshilash tavsiyalari</button>
+          {% elif session.mode == 'matching' %}
+            <button class="quick-btn" onclick="sendQuick('Menga mos mentor topib ber')">Mentor topish</button>
+            <button class="quick-btn" onclick="sendQuick('Startup uchun investor izlayapman')">Investor topish</button>
+          {% else %}
+            <button class="quick-btn" onclick="sendQuick('O\'zbekistonda IT sohasida ish topish qanday?')">IT ish bozori</button>
+            <button class="quick-btn" onclick="sendQuick('Rezyume yozishda qanday xatolar bo\'ladi?')">Rezyume maslahati</button>
+            <button class="quick-btn" onclick="sendQuick('GitHub profilimni qanday yaxshilayman?')">GitHub profil</button>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% for msg in messages %}
+        {% include "ai/message.html" with msg=msg %}
+      {% endfor %}
+
+      <!-- Typing indicator -->
+      <div id="typing" style="display:none;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">🤖</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px 12px 12px 2px;padding:12px 16px;">
+          <span class="typing-dots"><span></span><span></span><span></span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--card);">
+      <div style="display:flex;gap:10px;align-items:flex-end;max-width:800px;margin:0 auto;">
+        <textarea id="msg-input" rows="1" placeholder="Xabar yozing..."
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;
+                 padding:12px 16px;color:var(--text);font-size:.9rem;outline:none;resize:none;
+                 font-family:inherit;line-height:1.5;max-height:160px;overflow-y:auto;transition:.2s;"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button id="send-btn" onclick="sendMessage()"
+          style="width:44px;height:44px;border-radius:12px;background:var(--gradient);border:none;
+                 cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;">
+          <i data-lucide="send" style="width:18px;height:18px;color:#fff;"></i>
+        </button>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Sessiya tanlanmagan -->
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:40px;">
+      <div style="font-size:4rem;">✨</div>
+      <h2 style="font-size:1.4rem;font-weight:800;">AI Chat ga Xush Kelibsiz</h2>
+      <p style="color:var(--muted);max-width:400px;line-height:1.6;">Chap tarafdan rejim tanlang va yangi suhbat boshlang</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:400px;width:100%;">
+        {% for val, label in ai_modes %}
+        <form method="post" action="{% url 'ai_new_session' %}">
+          {% csrf_token %}
+          <input type="hidden" name="mode" value="{{ val }}">
+          <button type="submit" style="width:100%;background:var(--card);border:1px solid var(--border);
+                 border-radius:12px;padding:14px;color:var(--text);font-size:.88rem;cursor:pointer;
+                 font-family:inherit;transition:.2s;text-align:center;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+            {{ label }}
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </main>
+</div>
+
+<style>
+.quick-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 7px 14px;
+  color: var(--muted);
+  font-size: .82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: .2s;
+}
+.quick-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+.typing-dots span {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  margin: 0 2px;
+  animation: bounce 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+/* Markdown styling */
+.ai-content h1,.ai-content h2,.ai-content h3 { color:var(--primary);margin:12px 0 6px; }
+.ai-content p { margin:6px 0;line-height:1.7; }
+.ai-content ul,.ai-content ol { padding-left:20px;margin:6px 0; }
+.ai-content li { margin:4px 0;line-height:1.6; }
+.ai-content code { background:rgba(108,99,255,.15);padding:2px 6px;border-radius:4px;font-size:.85em; }
+.ai-content pre { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;margin:8px 0; }
+.ai-content strong { color:var(--text);font-weight:700; }
+.ai-content blockquote { border-left:3px solid var(--primary);padding-left:12px;color:var(--muted);margin:8px 0; }
+</style>
+
+{% if session %}
+<script>
+const SESSION_ID = {{ session.pk }};
+const CSRF = '{{ csrf_token }}';
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Welcome xabarni yashirish
+  const welcome = document.getElementById('welcome-msg');
+  if (welcome) welcome.remove();
+
+  // Foydalanuvchi xabarini qo'shish
+  appendMessage('user', text);
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Typing ko'rsatish
+  const typing = document.getElementById('typing');
+  typing.style.display = 'flex';
+  scrollBottom();
+
+  // Send tugmasini o'chirish
+  document.getElementById('send-btn').disabled = true;
+
+  try {
+    const res = await fetch(`/ai/${SESSION_ID}/send/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body: JSON.stringify({ message: text }),
+    });
+    const data = await res.json();
+    typing.style.display = 'none';
+
+    if (data.error) {
+      appendMessage('assistant', '❌ ' + data.error);
+    } else {
+      appendMessage('assistant', data.answer);
+      // Sarlavhani yangilash
+      if (data.session_title) {
+        document.title = data.session_title + ' — AI Chat';
+      }
+    }
+  } catch(e) {
+    typing.style.display = 'none';
+    appendMessage('assistant', '❌ Tarmoq xatosi. Qayta urinib ko\'ring.');
+  }
+  document.getElementById('send-btn').disabled = false;
+  scrollBottom();
+}
+
+function sendQuick(text) {
+  document.getElementById('msg-input').value = text;
+  sendMessage();
+}
+
+function appendMessage(role, content) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;' + (role === 'user' ? 'flex-direction:row-reverse;' : '');
+
+  const avatar = document.createElement('div');
+  avatar.style.cssText = 'width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;';
+  if (role === 'user') {
+    avatar.style.background = 'var(--gradient)';
+    avatar.textContent = '{{ request.user.initial }}';
+    avatar.style.color = '#fff';
+    avatar.style.fontWeight = '700';
+  } else {
+    avatar.style.background = 'var(--gradient)';
+    avatar.textContent = '🤖';
+  }
+
+  const bubble = document.createElement('div');
+  bubble.style.cssText = 'max-width:75%;padding:12px 16px;border-radius:' +
+    (role === 'user' ? '12px 2px 12px 12px' : '2px 12px 12px 12px') +
+    ';font-size:.9rem;line-height:1.6;border:1px solid var(--border);';
+  if (role === 'user') {
+    bubble.style.background = 'rgba(108,99,255,.15)';
+    bubble.style.borderColor = 'rgba(108,99,255,.3)';
+    bubble.textContent = content;
+  } else {
+    bubble.style.background = 'var(--card)';
+    bubble.className = 'ai-content';
+    bubble.innerHTML = renderMarkdown(content);
+  }
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  container.insertBefore(div, document.getElementById('typing'));
+  scrollBottom();
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>[\s\S]+?<\/li>)/g, '<ul>$1</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
+function scrollBottom() {
+  const c = document.getElementById('chat-messages');
+  c.scrollTop = c.scrollHeight;
+}
+
+async function deleteSession(id, btn) {
+  if (!confirm("Bu suhbatni o'chirasizmi?")) return;
+  await fetch(`/ai/${id}/del/`, { method:'POST', headers:{'X-CSRFToken':CSRF} });
+  const item = btn.closest('div');
+  item.remove();
+  if (id === SESSION_ID) window.location.href = '/ai/';
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('ai-sidebar');
+  sb.style.width = sb.style.width === '0px' ? '260px' : '0px';
+  sb.style.minWidth = sb.style.minWidth === '0px' ? '260px' : '0px';
+}
+
+scrollBottom();
+</script>
+{% endif %}
+{% endblock %}

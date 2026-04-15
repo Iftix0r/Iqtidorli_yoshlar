@@ -1,23 +1,89 @@
 """
-AI imkoniyatlari — OpenAI GPT orqali:
-  - AI Mentor: shaxsiy o'quv yo'l xaritasi
-  - Iqtidor Tahlili: kasblar taklifi
-  - Portfolio Baholash: kuchli/zaif tomonlar
-  - Smart Matching: yosh + mentor + investor moslash
+AI Chat — Gemini uslubida
+Rejimlar: general, mentor, talent, portfolio, matching
+Tarix DB da saqlanadi (AIChatSession + AIChatMessage)
 """
 import json
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.conf import settings
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.http import require_POST
+from django.conf import settings
+from django.utils import timezone
+
+from .models import AIChatSession, AIChatMessage, AI_MODES
 
 
-def _openai_chat(messages_list: list, max_tokens: int = 800) -> tuple[str, str]:
-    """OpenAI API ga so'rov yuborish — (javob, xato)"""
+# ── SYSTEM PROMPTLAR ──────────────────────────────────────────────────────────
+def _system_prompt(mode, user):
+    skills = ', '.join(s.skill_name for s in user.skills.all()) or "yo'q"
+    base = (
+        f"Foydalanuvchi: {user.get_full_name()}, "
+        f"rol: {user.get_role_display()}, "
+        f"viloyat: {user.region or 'noaniq'}, "
+        f"ko'nikmalar: {skills}. "
+        f"O'zbek tilida javob ber. Markdown formatdan foydalanish mumkin."
+    )
+    prompts = {
+        'general': (
+            "Sen Iqtidorli Yoshlar platformasining aqlli AI yordamchisan. "
+            "Yoshlarga karera, ta'lim, texnologiya va shaxsiy rivojlanish bo'yicha maslahat berasan. " + base
+        ),
+        'mentor': (
+            "Sen tajribali IT mentor va karera maslahatchisin. "
+            "Foydalanuvchiga shaxsiy o'quv yo'l xaritasi tuzib berasan, "
+            "resurslar va amaliy topshiriqlar taklif qilasan. " + base
+        ),
+        'talent': (
+            "Sen iqtidor tahlilchisi va karera maslahatchisin. "
+            "Foydalanuvchining qiziqishlari va ko'nikmalariga qarab "
+            "mos kasblar, yo'nalishlar va Uzbekistondagi imkoniyatlarni taklif qilasan. " + base
+        ),
+        'portfolio': (
+            "Sen HR mutaxassisi va portfolio baholovchisan. "
+            "Foydalanuvchining loyihalari, sertifikatlari va ko'nikmalarini tahlil qilib, "
+            "kuchli/zaif tomonlarini va tavsiyalarni aniq ko'rsatasan. " + base
+        ),
+        'matching': (
+            "Sen smart matching tizimisan. "
+            "Foydalanuvchiga mos mentor, investor yoki hamkorlarni topib, "
+            "moslik sabablarini tushuntirib berasan. " + base
+        ),
+    }
+    return prompts.get(mode, prompts['general'])
+
+
+def _context_message(mode, user):
+    """Rejimga qarab boshlang'ich kontekst xabari"""
+    if mode == 'portfolio':
+        projects = user.projects.all()
+        certs = user.certificates.all()
+        skills = user.skills.all()
+        return (
+            "Mening portfolio ma'lumotlarim:\n"
+            "Ko'nikmalar: " + (', '.join(s.skill_name for s in skills) or "yo'q") + "\n"
+            "Loyihalar: " + (', '.join(p.title for p in projects) or "yo'q") + "\n"
+            "Sertifikatlar: " + (', '.join(c.title for c in certs) or "yo'q") + "\n"
+            "Bio: " + (user.bio or "yo'q")
+        )
+    if mode == 'matching':
+        from .models import User as UserModel
+        mentors = UserModel.objects.filter(role='mentor', is_active=True).prefetch_related('skills')[:15]
+        mentor_list = '\n'.join(
+            "- {} (ID:{}): {}".format(
+                m.get_full_name(), m.pk,
+                ', '.join(s.skill_name for s in m.skills.all()) or "yo'q"
+            ) for m in mentors
+        )
+        return "Platformadagi mentorlar:\n" + mentor_list
+    return None
+
+
+# ── OPENAI CALL ───────────────────────────────────────────────────────────────
+def _call_ai(messages_list: list, max_tokens: int = 1000):
     api_key = getattr(settings, 'OPENAI_API_KEY', '')
     if not api_key:
-        return '', 'OPENAI_API_KEY sozlanmagan. .env faylga qo\'shing.'
+        return '', "OPENAI_API_KEY sozlanmagan."
     try:
         from openai import OpenAI
         client = OpenAI(api_key=api_key)
@@ -29,205 +95,122 @@ def _openai_chat(messages_list: list, max_tokens: int = 800) -> tuple[str, str]:
         )
         return resp.choices[0].message.content.strip(), ''
     except Exception as e:
-        return '', f'OpenAI xato: {type(e).__name__}: {e}'
+        return '', f'AI xato: {e}'
 
 
-# ── AI MENTOR ─────────────────────────────────────────────────────────────────
+# ── ASOSIY CHAT SAHIFASI ──────────────────────────────────────────────────────
 @login_required
-def ai_mentor(request):
-    """Foydalanuvchi sohasini kiritsa, AI shaxsiy o'quv yo'l xaritasi tuzadi"""
-    result = ''
-    error  = ''
-    field  = ''
+def ai_chat(request, session_id=None):
+    user = request.user
 
-    if request.method == 'POST':
-        field    = request.POST.get('field', '').strip()
-        level    = request.POST.get('level', 'boshlang\'ich')
-        goal     = request.POST.get('goal', '').strip()
-        user     = request.user
+    # Sessiyalar ro'yxati
+    sessions = user.ai_sessions.all()[:30]
 
-        # Foydalanuvchi ma'lumotlari
-        skills = ', '.join(s.skill_name for s in user.skills.all()) or 'ko\'nikmalar kiritilmagan'
+    # Joriy sessiya
+    session = None
+    messages_qs = []
+    if session_id:
+        session = get_object_or_404(AIChatSession, pk=session_id, user=user)
+        messages_qs = session.messages.all()
 
-        prompt = (
-            f"Sen Iqtidorli Yoshlar platformasining AI Mentorisan. "
-            f"Foydalanuvchi: {user.get_full_name()}, daraja: {level}, soha: {field}. "
-            f"Mavjud ko'nikmalar: {skills}. Maqsad: {goal or 'aniqlanmagan'}.\n\n"
-            f"Ushbu foydalanuvchi uchun 3-6 oylik shaxsiy o'quv yo'l xaritasini tuz. "
-            f"Har bir bosqich uchun: maqsad, resurslar (kurslar, kitoblar), amaliy topshiriqlar. "
-            f"O'zbek tilida, aniq va qisqa yoz."
-        )
-        result, error = _openai_chat([
-            {'role': 'system', 'content': 'Sen tajribali IT mentor va karera maslahatchisin. O\'zbek tilida javob ber.'},
-            {'role': 'user',   'content': prompt},
-        ], max_tokens=1000)
+    mode = request.GET.get('mode', session.mode if session else 'general')
 
-    return render(request, 'ai/mentor.html', {
-        'result': result, 'error': error, 'field': field,
+    return render(request, 'ai/chat.html', {
+        'sessions':    sessions,
+        'session':     session,
+        'messages':    messages_qs,
+        'mode':        mode,
+        'ai_modes':    AI_MODES,
+        'mode_labels': dict(AI_MODES),
     })
 
 
-# ── IQTIDOR TAHLILI ───────────────────────────────────────────────────────────
-@login_required
-def ai_talent_analysis(request):
-    """Yosh yutuq va qiziqishlarini kiritsa, AI mos kasblarni taklif qiladi"""
-    result = ''
-    error  = ''
-
-    if request.method == 'POST':
-        interests  = request.POST.get('interests', '').strip()
-        achievements = request.POST.get('achievements', '').strip()
-        user       = request.user
-        skills     = ', '.join(s.skill_name for s in user.skills.all()) or 'yo\'q'
-
-        prompt = (
-            f"Foydalanuvchi: {user.get_full_name()}, yosh: {user.role}.\n"
-            f"Ko'nikmalar: {skills}\n"
-            f"Qiziqishlar: {interests}\n"
-            f"Yutuqlar: {achievements}\n\n"
-            f"Ushbu ma'lumotlar asosida:\n"
-            f"1. Eng mos 5 ta kasb/yo'nalishni taklif qil\n"
-            f"2. Har bir kasb uchun nima uchun mos ekanligini tushuntir\n"
-            f"3. Har bir kasb uchun Uzbekistondagi ish imkoniyatlari va maosh darajasini ko'rsat\n"
-            f"O'zbek tilida yoz."
-        )
-        result, error = _openai_chat([
-            {'role': 'system', 'content': 'Sen karera maslahatchi va iqtidor tahlilchisan. O\'zbek tilida javob ber.'},
-            {'role': 'user',   'content': prompt},
-        ], max_tokens=900)
-
-    return render(request, 'ai/talent_analysis.html', {
-        'result': result, 'error': error,
-    })
-
-
-# ── PORTFOLIO BAHOLASH ────────────────────────────────────────────────────────
-@login_required
-def ai_portfolio_review(request):
-    """AI portfolioni tahlil qilib, kuchli va zaif tomonlarini ko'rsatadi"""
-    result = ''
-    error  = ''
-    user   = request.user
-
-    if request.method == 'POST':
-        projects = user.projects.all()
-        certs    = user.certificates.all()
-        skills   = user.skills.all()
-
-        proj_list = '\n'.join(f"- {p.title}: {p.description[:100]}" for p in projects) or 'Loyihalar yo\'q'
-        cert_list = '\n'.join(f"- {c.title} ({c.issuer})" for c in certs) or 'Sertifikatlar yo\'q'
-        skill_list = ', '.join(s.skill_name for s in skills) or 'Ko\'nikmalar yo\'q'
-
-        region_str = user.region or "ko'rsatilmagan"
-        bio_str = user.bio or "yo'q"
-        prompt = (
-            f"Foydalanuvchi: {user.get_full_name()}, rol: {user.get_role_display()}, "
-            f"viloyat: {region_str}.\n"
-            f"Bio: {bio_str}\n\n"
-            f"Ko'nikmalar: {skill_list}\n\n"
-            f"Loyihalar:\n{proj_list}\n\n"
-            f"Sertifikatlar:\n{cert_list}\n\n"
-            f"Ushbu portfolio ni professional nuqtai nazardan baholang:\n"
-            f"1. Kuchli tomonlar (nima yaxshi)\n"
-            f"2. Zaif tomonlar (nima yetishmaydi)\n"
-            f"3. Konkret tavsiyalar (nima qo'shish/yaxshilash kerak)\n"
-            f"4. Umumiy baho (10 dan)\n"
-            f"O'zbek tilida yoz."
-        )
-        result, error = _openai_chat([
-            {'role': 'system', 'content': 'Sen HR mutaxassisi va portfolio baholovchisan. O\'zbek tilida javob ber.'},
-            {'role': 'user',   'content': prompt},
-        ], max_tokens=900)
-
-    return render(request, 'ai/portfolio_review.html', {
-        'result': result, 'error': error, 'user': user,
-    })
-
-
-# ── SMART MATCHING ────────────────────────────────────────────────────────────
-@login_required
-def ai_smart_match(request):
-    """AI yosh + mentor + investor uchun eng mos juftlikni topadi"""
-    result = ''
-    error  = ''
-    user   = request.user
-
-    if request.method == 'POST':
-        from .models import User
-        match_type = request.POST.get('match_type', 'mentor')
-
-        # Foydalanuvchi profili
-        skills = ', '.join(s.skill_name for s in user.skills.all()) or 'yo\'q'
-
-        # Potentsial moslar
-        if match_type == 'mentor':
-            candidates = User.objects.filter(role='mentor', is_active=True).prefetch_related('skills')[:20]
-            role_label = 'mentor'
-        elif match_type == 'investor':
-            candidates = User.objects.filter(role='investor', is_active=True).prefetch_related('skills')[:20]
-            role_label = 'investor'
-        else:
-            candidates = User.objects.filter(role='yosh', is_active=True).prefetch_related('skills')[:20]
-            role_label = 'hamkor yosh'
-
-        cand_list = '\n'.join(
-            "- {} (ID:{}): ko'nikmalar: {}, bio: {}".format(
-                c.get_full_name(), c.pk,
-                ', '.join(s.skill_name for s in c.skills.all()) or "yo'q",
-                c.bio[:80] or "yo'q"
-            )
-            for c in candidates
-        ) or 'Nomzodlar topilmadi'
-
-        user_bio = user.bio or "yo'q"
-        prompt = (
-            f"Foydalanuvchi: {user.get_full_name()}, rol: {user.get_role_display()}\n"
-            f"Ko'nikmalar: {skills}\n"
-            f"Bio: {user_bio}\n\n"
-            f"Quyidagi {role_label}lar ro'yxatidan eng mos 3 tasini tanlang va nima uchun mos ekanligini tushuntiring:\n"
-            f"{cand_list}\n\n"
-            f"Har bir tavsiya uchun: ism, ID, moslik sababi. O'zbek tilida yoz."
-        )
-        result, error = _openai_chat([
-            {'role': 'system', 'content': 'Sen smart matching tizimisan. O\'zbek tilida javob ber.'},
-            {'role': 'user',   'content': prompt},
-        ], max_tokens=700)
-
-    return render(request, 'ai/smart_match.html', {
-        'result': result, 'error': error,
-    })
-
-
-# ── AI CHAT (umumiy savol-javob) ──────────────────────────────────────────────
+# ── YANGI SESSIYA YARATISH ────────────────────────────────────────────────────
 @login_required
 @require_POST
-def ai_chat_api(request):
-    """AJAX orqali AI bilan suhbat"""
+def ai_new_session(request):
+    mode = request.POST.get('mode', 'general')
+    session = AIChatSession.objects.create(
+        user=request.user,
+        mode=mode,
+        title='',
+    )
+    return redirect('ai_chat_session', session_id=session.pk)
+
+
+# ── SESSIYA O'CHIRISH ─────────────────────────────────────────────────────────
+@login_required
+@require_POST
+def ai_delete_session(request, session_id):
+    AIChatSession.objects.filter(pk=session_id, user=request.user).delete()
+    return JsonResponse({'ok': True})
+
+
+# ── XABAR YUBORISH (AJAX) ─────────────────────────────────────────────────────
+@login_required
+@require_POST
+def ai_send_message(request, session_id):
     try:
-        data    = json.loads(request.body)
-        message = data.get('message', '').strip()[:500]
+        data = json.loads(request.body)
+        user_text = data.get('message', '').strip()[:1000]
     except Exception:
-        return JsonResponse({'error': 'Noto\'g\'ri so\'rov'}, status=400)
+        return JsonResponse({'error': "Noto'g'ri so'rov"}, status=400)
 
-    if not message:
-        return JsonResponse({'error': 'Xabar bo\'sh'}, status=400)
+    if not user_text:
+        return JsonResponse({'error': "Xabar bo'sh"}, status=400)
 
-    user = request.user
-    skills = ', '.join(s.skill_name for s in user.skills.all()) or 'yo\'q'
+    session = get_object_or_404(AIChatSession, pk=session_id, user=request.user)
 
-    answer, error = _openai_chat([
-        {
-            'role': 'system',
-            'content': (
-                f"Sen Iqtidorli Yoshlar platformasining AI yordamchisan. "
-                f"Foydalanuvchi: {user.get_full_name()}, rol: {user.get_role_display()}, "
-                f"ko'nikmalar: {skills}. "
-                f"Qisqa, aniq va foydali javob ber. O'zbek tilida."
-            )
-        },
-        {'role': 'user', 'content': message},
-    ], max_tokens=500)
+    # Foydalanuvchi xabarini saqlash
+    AIChatMessage.objects.create(session=session, role='user', content=user_text)
+
+    # Sessiya sarlavhasini birinchi xabardan olish
+    if not session.title:
+        session.title = user_text[:60]
+        session.save(update_fields=['title'])
+
+    # Tarix (oxirgi 20 xabar)
+    history = list(session.messages.order_by('created_at')[:20])
+
+    # OpenAI uchun messages ro'yxati
+    messages_list = [{'role': 'system', 'content': _system_prompt(session.mode, request.user)}]
+
+    # Kontekst (portfolio, matching uchun)
+    ctx = _context_message(session.mode, request.user)
+    if ctx and len(history) <= 2:
+        messages_list.append({'role': 'user', 'content': ctx})
+        messages_list.append({'role': 'assistant', 'content': "Tushundim, ma'lumotlaringizni ko'rib chiqdim."})
+
+    for msg in history:
+        messages_list.append({'role': msg.role, 'content': msg.content})
+
+    answer, error = _call_ai(messages_list, max_tokens=1200)
 
     if error:
         return JsonResponse({'error': error}, status=500)
-    return JsonResponse({'answer': answer})
+
+    # AI javobini saqlash
+    ai_msg = AIChatMessage.objects.create(session=session, role='assistant', content=answer)
+    session.updated_at = timezone.now()
+    session.save(update_fields=['updated_at'])
+
+    return JsonResponse({
+        'answer':  answer,
+        'msg_id':  ai_msg.pk,
+        'session_title': session.title,
+    })
+
+
+# ── SESSIYA TARIXI (JSON) ─────────────────────────────────────────────────────
+@login_required
+def ai_session_history(request, session_id):
+    session = get_object_or_404(AIChatSession, pk=session_id, user=request.user)
+    msgs = [
+        {
+            'role':    m.role,
+            'content': m.content,
+            'time':    m.created_at.strftime('%H:%M'),
+        }
+        for m in session.messages.all()
+    ]
+    return JsonResponse({'messages': msgs, 'mode': session.mode, 'title': session.title})

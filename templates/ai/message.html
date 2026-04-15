@@ -1,0 +1,16 @@
+<div style="display:flex;gap:10px;align-items:flex-start;{% if msg.role == 'user' %}flex-direction:row-reverse;{% endif %}">
+  <div style="width:32px;height:32px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;{% if msg.role == 'user' %}color:#fff;font-weight:700;{% endif %}">
+    {% if msg.role == 'user' %}{{ request.user.initial }}{% else %}🤖{% endif %}
+  </div>
+  <div style="max-width:75%;padding:12px 16px;font-size:.9rem;line-height:1.6;border:1px solid var(--border);
+       border-radius:{% if msg.role == 'user' %}12px 2px 12px 12px{% else %}2px 12px 12px 12px{% endif %};
+       {% if msg.role == 'user' %}background:rgba(108,99,255,.15);border-color:rgba(108,99,255,.3);{% else %}background:var(--card);{% endif %}
+       {% if msg.role == 'assistant' %}class='ai-content'{% endif %}">
+    {% if msg.role == 'user' %}
+      {{ msg.content }}
+    {% else %}
+      <div class="ai-content">{{ msg.content }}</div>
+    {% endif %}
+    <div style="font-size:.7rem;color:var(--muted);margin-top:6px;text-align:right;">{{ msg.created_at|date:"H:i" }}</div>
+  </div>
+</div>

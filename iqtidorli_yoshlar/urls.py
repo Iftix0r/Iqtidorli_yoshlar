@@ -107,11 +107,12 @@ urlpatterns = [
     path('2fa/logout/',  tfa_views.tfa_logout_view, name='tfa_logout'),
 
     # AI imkoniyatlari
-    path('ai/mentor/',           ai_views.ai_mentor,           name='ai_mentor'),
-    path('ai/talent-analysis/',  ai_views.ai_talent_analysis,  name='ai_talent_analysis'),
-    path('ai/portfolio-review/', ai_views.ai_portfolio_review, name='ai_portfolio_review'),
-    path('ai/smart-match/',      ai_views.ai_smart_match,      name='ai_smart_match'),
-    path('ai/chat/',             ai_views.ai_chat_api,         name='ai_chat_api'),
+    path('ai/',                      ai_views.ai_chat,            name='ai_chat'),
+    path('ai/new/',                  ai_views.ai_new_session,     name='ai_new_session'),
+    path('ai/<int:session_id>/',     ai_views.ai_chat,            name='ai_chat_session'),
+    path('ai/<int:session_id>/send/',ai_views.ai_send_message,    name='ai_send_message'),
+    path('ai/<int:session_id>/del/', ai_views.ai_delete_session,  name='ai_delete_session'),
+    path('ai/<int:session_id>/history/', ai_views.ai_session_history, name='ai_session_history'),
 
     # SEO URLs
     path('robots.txt', TemplateView.as_view(template_name='seo/robots.txt', content_type='text/plain')),
