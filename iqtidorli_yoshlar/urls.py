@@ -34,6 +34,7 @@ def admin_stats(request):
 
 
 from core import panel_views, system_views, tfa_views
+from core import ai_views
 
 from django.conf.urls import handler400, handler403, handler404, handler500
 
@@ -104,6 +105,13 @@ urlpatterns = [
     path('2fa/send/',    tfa_views.tfa_send_view,   name='tfa_send'),
     path('2fa/verify/',  tfa_views.tfa_verify_view, name='tfa_verify'),
     path('2fa/logout/',  tfa_views.tfa_logout_view, name='tfa_logout'),
+
+    # AI imkoniyatlari
+    path('ai/mentor/',           ai_views.ai_mentor,           name='ai_mentor'),
+    path('ai/talent-analysis/',  ai_views.ai_talent_analysis,  name='ai_talent_analysis'),
+    path('ai/portfolio-review/', ai_views.ai_portfolio_review, name='ai_portfolio_review'),
+    path('ai/smart-match/',      ai_views.ai_smart_match,      name='ai_smart_match'),
+    path('ai/chat/',             ai_views.ai_chat_api,         name='ai_chat_api'),
 
     # SEO URLs
     path('robots.txt', TemplateView.as_view(template_name='seo/robots.txt', content_type='text/plain')),

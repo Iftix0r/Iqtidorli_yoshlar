@@ -884,59 +884,13 @@ def sys_services(request):
 def sys_cache(request):
     """Django keshini tozalash va tahlil qilish"""
     from django.core.cache import cache
-    
-    action = request.POST.get('action')
-    if request.method == 'POST' and action == 'clear':
+
+    if request.method == 'POST' and request.POST.get('action') == 'clear':
         cache.clear()
         messages.success(request, "Barcha keshlar tozalandi!")
         return redirect('sys_cache')
 
-    # Kesh turi
     cache_backend = settings.CACHES['default']['BACKEND']
-    
-    return render(request, 'tizim/cache.html', {
-        'backend': cache_backend,
-    })
-
-
-# ── MA'LUMOTLAR BAZASI ZAXIRALASH (BACKUP) ──────────────────────────────────
-@superuser_required
-def sys_backup(request):
-    """Ma'lumotlar bazasidan zaxira nusxa (SQL dump) olish"""
-    from django.http import HttpResponse
-    from django.utils import timezone
-    
-    if request.method == 'POST' and request.POST.get('action') == 'create':
-        db_settings = settings.DATABASES['default']
-        db_name = db_settings['NAME']
-        db_user = db_settings.get('USER', '')
-        db_pass = db_settings.get('PASSWORD', '')
-        db_host = db_settings.get('HOST', 'localhost')
-        
-        timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-        backup_file = f"backup_{timestamp}.sql"
-        
-        try:
-            if db_settings['ENGINE'] == 'django.db.backends.postgresql':
-                os.environ['PGPASSWORD'] = db_pass
-                cmd = f"pg_dump -h {db_host} -U {db_user} {db_name} > /tmp/{backup_file}"
-                os.system(cmd)
-            elif db_settings['ENGINE'] == 'django.db.backends.mysql':
-                cmd = f"mysqldump -h {db_host} -u {db_user} -p'{db_pass}' {db_name} > /tmp/{backup_file}"
-                os.system(cmd)
-            else: # sqlite3
-                cmd = f"sqlite3 {db_name} .dump > /tmp/{backup_file}"
-                os.system(cmd)
-                
-            with open(f"/tmp/{backup_file}", "rb") as f:
-                response = HttpResponse(f.read(), content_type="application/sql")
-                response['Content-Disposition'] = f'attachment; filename={backup_file}'
-                os.remove(f"/tmp/{backup_file}")
-                return response
-        except Exception as e:
-            messages.error(request, f"Zaxira xatosi: {e}")
-            return redirect('sys_backup')
-
-    return render(request, 'tizim/backup.html', {})
+    return render(request, 'tizim/cache.html', {'backend': cache_backend})
 
 

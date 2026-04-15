@@ -232,3 +232,7 @@ CSRF_COOKIE_HTTPONLY = True
 TFA_ENABLED   = os.getenv('TFA_ENABLED', 'False') == 'True'
 TFA_BOT_TOKEN = os.getenv('TFA_BOT_TOKEN', '')
 TFA_CHAT_ID   = os.getenv('TFA_CHAT_ID', '')
+
+# ── AI (OpenAI) ───────────────────────────────────────────────────────────────
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+OPENAI_MODEL   = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')

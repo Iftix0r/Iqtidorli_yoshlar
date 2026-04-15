@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+  <div class="flex gap-3 mb-8 flex-wrap">
+    <a href="{% url 'ai_mentor' %}" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">🎯 AI Mentor</a>
+    <a href="{% url 'ai_talent_analysis' %}" class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700">🧠 Iqtidor Tahlili</a>
+    <a href="{% url 'ai_portfolio_review' %}" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700">📋 Portfolio Baholash</a>
+    <a href="{% url 'ai_smart_match' %}" class="px-4 py-2 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700">🤝 Smart Matching</a>
+  </div>
+  {% block ai_content %}{% endblock %}
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "ai/base.html" %}
+{% block ai_content %}
+<h1 class="text-2xl font-bold mb-6">🤝 Smart Matching</h1>
+
+<form method="post" class="bg-white rounded-xl shadow p-6 mb-6 space-y-4">
+  {% csrf_token %}
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Kim bilan moslashtirish?</label>
+    <div class="grid grid-cols-3 gap-3">
+      <label class="flex flex-col items-center border-2 rounded-lg p-4 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+        <input type="radio" name="match_type" value="mentor" class="sr-only" checked>
+        <span class="text-2xl mb-1">👨‍🏫</span>
+        <span class="text-sm font-medium">Mentor</span>
+      </label>
+      <label class="flex flex-col items-center border-2 rounded-lg p-4 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+        <input type="radio" name="match_type" value="investor" class="sr-only">
+        <span class="text-2xl mb-1">💼</span>
+        <span class="text-sm font-medium">Investor</span>
+      </label>
+      <label class="flex flex-col items-center border-2 rounded-lg p-4 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+        <input type="radio" name="match_type" value="yosh" class="sr-only">
+        <span class="text-2xl mb-1">🤝</span>
+        <span class="text-sm font-medium">Hamkor</span>
+      </label>
+    </div>
+  </div>
+  <button type="submit" class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 font-medium">
+    🤖 Eng Mos Odamlarni Top
+  </button>
+</form>
+
+{% if error %}
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-4">{{ error }}</div>
+{% endif %}
+{% if result %}
+  <div class="bg-white rounded-xl shadow p-6">
+    <h2 class="font-semibold text-lg mb-3">✨ Sizga Mos Nomzodlar</h2>
+    <div class="prose max-w-none text-gray-700 whitespace-pre-wrap">{{ result }}</div>
+  </div>
+{% endif %}
+{% endblock %}
