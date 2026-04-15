@@ -538,3 +538,16 @@ def lesson_done(request, pk):
 def certificate_view(request, cert_number):
     cert = get_object_or_404(CourseCertificate, cert_number=cert_number)
     return render(request, 'courses/certificate.html', {'cert': cert})
+
+
+# ── ERROR HANDLERS ────────────────────────────────────────────────────────────
+def error_404(request, exception):
+    return render(request, '404.html', status=404)
+
+
+def error_500(request):
+    return render(request, '500.html', status=500)
+
+
+def error_403(request, exception):
+    return render(request, '404.html', status=403)

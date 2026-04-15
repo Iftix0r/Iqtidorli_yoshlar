@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 — Serverda xatolik</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --danger: #FF6584;
+            --bg: #0F0E17;
+            --text: #FFFFFE;
+            --muted: #A7A9BE;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .error-code {
+            font-size: 10rem;
+            font-weight: 900;
+            margin: 0;
+            background: linear-gradient(135deg, #FF6584, #FFB2B2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        h1 { font-size: 2rem; margin: 20px 0 10px; }
+        p { color: var(--muted); margin-bottom: 30px; font-size: 1.1rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+        .btn-red { background: var(--danger); border: none; }
+        .btn-red:hover { box-shadow: 0 10px 20px rgba(255, 101, 132, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-code">500</div>
+        <h1>Tizimda xatolik yuz berdi</h1>
+        <p>Kechirasiz, serverimizda kutilmagan muammo yuzaga keldi. Bizning muhandislar allaqachon bundan xabardor.</p>
+        <div class="btn-group">
+            <a href="/" class="btn">Asosiy sahifa</a>
+            <a href="https://t.me/yoshiqtidorlar_bot" target="_blank" class="btn btn-red">
+                <i data-lucide="message-square"></i> Muammoni xabar qilish
+            </a>
+        </div>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
