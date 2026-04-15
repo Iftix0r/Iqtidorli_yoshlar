@@ -1,0 +1,57 @@
+{% extends 'panel/base.html' %}
+{% block title %}Ommaviy Xabar{% endblock %}
+{% block page_title %}Ommaviy Xabar Yuborish{% endblock %}
+{% block nav_broadcast %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;">
+
+  {% if sent_count %}
+    <div style="background:rgba(67,233,123,.12);border:1px solid rgba(67,233,123,.3);border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
+      <i data-lucide="check-circle" style="color:#43E97B;width:24px;height:24px;flex-shrink:0;"></i>
+      <div>
+        <div style="font-weight:700;color:#43E97B;">Muvaffaqiyatli yuborildi!</div>
+        <div style="font-size:.85rem;color:var(--muted);">{{ sent_count }} ta foydalanuvchiga bildirishnoma yuborildi.</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="panel-card">
+    <div class="panel-card-header"><h3><i data-lucide="send" style="width:15px;margin-right:6px;"></i> Xabar Yuborish</h3></div>
+    <div style="padding:24px;">
+      <form method="post" class="panel-form">
+        {% csrf_token %}
+        <div style="margin-bottom:16px;">
+          <label>Kimga yuborish</label>
+          <select name="role" style="width:100%;padding:9px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.88rem;">
+            <option value="">Barcha foydalanuvchilar</option>
+            <option value="yosh">Faqat Iqtidorli Yoshlar</option>
+            <option value="mentor">Faqat Mentorlar</option>
+            <option value="investor">Faqat Investorlar</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label>Xabar matni</label>
+          <textarea name="text" rows="4" required placeholder="Bildirishnoma matni..." style="width:100%;padding:9px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.88rem;font-family:inherit;resize:vertical;"></textarea>
+        </div>
+        <div style="margin-bottom:20px;">
+          <label>Havola (ixtiyoriy)</label>
+          <input type="text" name="link" placeholder="/contests/ yoki /courses/" style="width:100%;padding:9px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.88rem;"/>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="send"></i> Yuborish
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel-card" style="margin-top:20px;">
+    <div class="panel-card-header"><h3>Eslatma</h3></div>
+    <div style="padding:16px 20px;font-size:.85rem;color:var(--muted);line-height:1.7;">
+      <p>• Xabar barcha tanlangan foydalanuvchilarning bildirishnomalar bo'limiga tushadi.</p>
+      <p>• Foydalanuvchilar keyingi kirganlarida ko'rishadi.</p>
+      <p>• Havola qo'shsangiz, foydalanuvchi bildirishnomaga bosib o'sha sahifaga o'tadi.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

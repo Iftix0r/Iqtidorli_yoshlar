@@ -152,6 +152,9 @@
     <a href="{% url 'panel_contests' %}" class="nav-item {% block nav_contests %}{% endblock %}">
       <i data-lucide="trophy"></i> Tanlovlar
     </a>
+    <a href="{% url 'panel_applications' %}" class="nav-item {% block nav_applications %}{% endblock %}">
+      <i data-lucide="file-text"></i> Arizalar
+    </a>
     <a href="{% url 'panel_courses' %}" class="nav-item {% block nav_courses %}{% endblock %}">
       <i data-lucide="graduation-cap"></i> Kurslar
     </a>
@@ -162,7 +165,16 @@
       <i data-lucide="book-open"></i> Resurslar
     </a>
 
-    <div class="nav-section">Tizim</div>
+    <div class="nav-section">Muloqot</div>
+    <a href="{% url 'panel_messages' %}" class="nav-item {% block nav_messages %}{% endblock %}">
+      <i data-lucide="message-circle"></i> Xabarlar
+    </a>
+    <a href="{% url 'panel_mentor_requests' %}" class="nav-item {% block nav_mentor %}{% endblock %}">
+      <i data-lucide="handshake"></i> Mentor So'rovlari
+    </a>
+    <a href="{% url 'panel_broadcast' %}" class="nav-item {% block nav_broadcast %}{% endblock %}">
+      <i data-lucide="send"></i> Ommaviy Xabar
+    </a>
     <a href="/" class="nav-item" target="_blank">
       <i data-lucide="external-link"></i> Saytga O'tish
     </a>

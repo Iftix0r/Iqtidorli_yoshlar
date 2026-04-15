@@ -1,0 +1,76 @@
+{% extends 'panel/base.html' %}
+{% block title %}{{ course.title }} — Darslar{% endblock %}
+{% block page_title %}{{ course.title }} — Darslar{% endblock %}
+{% block nav_courses %}active{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{% url 'panel_courses' %}" class="btn btn-outline">← Kurslarga qaytish</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
+
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h3>{{ lessons|length }} ta dars</h3>
+    </div>
+    <table class="panel-table">
+      <thead><tr><th>#</th><th>Dars nomi</th><th>Video</th><th>Amal</th></tr></thead>
+      <tbody>
+        {% for l in lessons %}
+        <tr>
+          <td style="color:var(--muted);">{{ l.order }}</td>
+          <td style="font-weight:600;">{{ l.title }}</td>
+          <td>
+            {% if l.video_url %}
+              <a href="{{ l.video_url }}" target="_blank" style="color:var(--primary);font-size:.82rem;">
+                <i data-lucide="play-circle" style="width:14px;"></i> Video
+              </a>
+            {% else %}
+              <span style="color:var(--muted);font-size:.82rem;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete"/>
+              <input type="hidden" name="lesson_id" value="{{ l.pk }}"/>
+              <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:.75rem;"
+                      onclick="return confirm('O\'chirishni tasdiqlaysizmi?')">
+                <i data-lucide="trash-2" style="width:13px;"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px;">Dars yo'q.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Yangi dars qo'shish -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h3><i data-lucide="plus-circle" style="width:15px;margin-right:6px;"></i> Yangi Dars</h3></div>
+    <div style="padding:20px;">
+      <form method="post" class="panel-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add"/>
+        <div style="margin-bottom:14px;">
+          <label>Dars nomi</label>
+          <input type="text" name="title" required placeholder="Dars nomi"/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>Video URL (ixtiyoriy)</label>
+          <input type="url" name="video_url" placeholder="https://youtube.com/..."/>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label>Mazmun</label>
+          <textarea name="content" rows="4" placeholder="Dars matni..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Qo'shish</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'panel/base.html' %}
+{% block title %}{{ target.get_full_name }} — Batafsil{% endblock %}
+{% block page_title %}Foydalanuvchi Batafsil{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{% url 'panel_users' %}" class="btn btn-outline">← Foydalanuvchilarga qaytish</a>
+</div>
+
+<!-- Profil header -->
+<div class="panel-card" style="margin-bottom:20px;">
+  <div style="padding:24px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+    <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#43E97B);display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;color:white;flex-shrink:0;overflow:hidden;">
+      {% if target.avatar %}<img src="{{ target.avatar.url }}" style="width:100%;height:100%;object-fit:cover;"/>
+      {% else %}{{ target.initial }}{% endif %}
+    </div>
+    <div style="flex:1;">
+      <h2 style="font-size:1.3rem;font-weight:800;">{{ target.get_full_name|default:target.phone }}</h2>
+      <div style="color:var(--muted);font-size:.85rem;margin-top:4px;">
+        {{ target.phone }} · {{ target.get_role_display }} · {{ target.region|default:"Viloyat yo'q" }}
+      </div>
+      <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;">
+        <span class="badge badge-blue">Ball: {{ target.score }}</span>
+        {% if target.is_active %}<span class="badge badge-green">Faol</span>
+        {% else %}<span class="badge badge-red">Bloklangan</span>{% endif %}
+        {% if target.is_staff %}<span class="badge badge-gold">Staff</span>{% endif %}
+      </div>
+    </div>
+
+    <!-- Tezkor amallar -->
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:200px;">
+      <form method="post" style="display:flex;gap:6px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="score"/>
+        <input type="number" name="score" value="{{ target.score }}" style="width:80px;padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;"/>
+        <button type="submit" class="btn btn-primary" style="padding:6px 14px;font-size:.82rem;">Ball Yangilash</button>
+      </form>
+      <form method="post" style="display:flex;gap:6px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="role"/>
+        <select name="role" style="flex:1;padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.82rem;">
+          <option value="yosh" {% if target.role == 'yosh' %}selected{% endif %}>Yosh</option>
+          <option value="mentor" {% if target.role == 'mentor' %}selected{% endif %}>Mentor</option>
+          <option value="investor" {% if target.role == 'investor' %}selected{% endif %}>Investor</option>
+        </select>
+        <button type="submit" class="btn btn-outline" style="padding:6px 14px;font-size:.82rem;">Rol</button>
+      </form>
+      <form method="post" style="display:flex;gap:6px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="toggle"/>
+        <button type="submit" class="btn {% if target.is_active %}btn-danger{% else %}btn-primary{% endif %}" style="flex:1;padding:6px 14px;font-size:.82rem;">
+          {% if target.is_active %}Bloklash{% else %}Faollashtirish{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bildirishnoma yuborish -->
+<div class="panel-card" style="margin-bottom:20px;">
+  <div class="panel-card-header"><h3><i data-lucide="bell" style="width:15px;margin-right:6px;"></i> Bildirishnoma Yuborish</h3></div>
+  <div style="padding:16px 20px;">
+    <form method="post" style="display:flex;gap:10px;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="notify"/>
+      <input type="text" name="msg" placeholder="Xabar matni..." required style="flex:1;padding:8px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;"/>
+      <button type="submit" class="btn btn-primary"><i data-lucide="send"></i> Yuborish</button>
+    </form>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+  <!-- Faoliyat tarixi -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h3>Faoliyat Tarixi</h3></div>
+    <table class="panel-table">
+      <thead><tr><th>Amal</th><th>Tafsilot</th><th>Vaqt</th></tr></thead>
+      <tbody>
+        {% for a in acts %}
+        <tr>
+          <td><span class="badge badge-blue">{{ a.get_action_display }}</span></td>
+          <td style="font-size:.8rem;color:var(--muted);">{{ a.detail|truncatechars:30|default:"—" }}</td>
+          <td style="font-size:.75rem;color:var(--muted);">{{ a.created_at|date:"d.m H:i" }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px;">Faoliyat yo'q.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Kirish tarixi -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h3>Kirish Tarixi</h3></div>
+    <table class="panel-table">
+      <thead><tr><th>IP</th><th>Qurilma</th><th>Holat</th><th>Vaqt</th></tr></thead>
+      <tbody>
+        {% for l in logins %}
+        <tr>
+          <td style="font-family:monospace;font-size:.78rem;">{{ l.ip_address }}</td>
+          <td style="font-size:.78rem;">{% if l.device == 'Mobil' %}📱{% else %}💻{% endif %} {{ l.browser }}</td>
+          <td>{% if l.is_success %}<span class="badge badge-green">✓</span>{% else %}<span class="badge badge-red">✗</span>{% endif %}</td>
+          <td style="font-size:.75rem;color:var(--muted);">{{ l.created_at|date:"d.m H:i" }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">Kirish yo'q.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Loyihalar -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h3>Loyihalar ({{ projects|length }})</h3></div>
+    <table class="panel-table">
+      <thead><tr><th>Nomi</th><th>Havola</th></tr></thead>
+      <tbody>
+        {% for p in projects %}
+        <tr>
+          <td style="font-weight:600;">{{ p.title }}</td>
+          <td>{% if p.link %}<a href="{{ p.link }}" target="_blank" style="color:var(--primary);font-size:.82rem;">Ko'rish →</a>{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="2" style="text-align:center;color:var(--muted);padding:20px;">Loyiha yo'q.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Sertifikatlar -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h3>Sertifikatlar ({{ course_certs|length }})</h3></div>
+    <table class="panel-table">
+      <thead><tr><th>Kurs</th><th>Raqam</th><th>Sana</th></tr></thead>
+      <tbody>
+        {% for c in course_certs %}
+        <tr>
+          <td style="font-weight:600;">{{ c.course.title }}</td>
+          <td style="font-family:monospace;font-size:.78rem;color:var(--primary);">{{ c.cert_number }}</td>
+          <td style="font-size:.78rem;color:var(--muted);">{{ c.issued_at|date:"d.m.Y" }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px;">Sertifikat yo'q.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'panel/base.html' %}
+{% block title %}Mentor So'rovlari{% endblock %}
+{% block page_title %}Mentor So'rovlari{% endblock %}
+{% block nav_mentor %}active{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+  {% for val, label in status_choices %}
+    <a href="?status={{ val }}" class="btn {% if status == val %}btn-primary{% else %}btn-outline{% endif %}">{{ label }}</a>
+  {% endfor %}
+  <a href="{% url 'panel_mentor_requests' %}" class="btn btn-outline">Barchasi</a>
+</div>
+
+<div class="panel-card">
+  <div class="panel-card-header"><h3>{{ requests|length }} ta so'rov</h3></div>
+  <table class="panel-table">
+    <thead><tr><th>Yuboruvchi</th><th>Qabul qiluvchi</th><th>Xabar</th><th>Holat</th><th>Sana</th><th>Amal</th></tr></thead>
+    <tbody>
+      {% for r in requests %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="mini-avatar">{{ r.sender.initial }}</div>
+            <div>
+              <div style="font-weight:600;">{{ r.sender.get_full_name }}</div>
+              <div style="font-size:.75rem;color:var(--muted);">{{ r.sender.get_role_display }}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="mini-avatar">{{ r.receiver.initial }}</div>
+            <div>
+              <div style="font-weight:600;">{{ r.receiver.get_full_name }}</div>
+              <div style="font-size:.75rem;color:var(--muted);">{{ r.receiver.get_role_display }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="color:var(--muted);font-size:.82rem;max-width:200px;">{{ r.message|truncatechars:50|default:"—" }}</td>
+        <td>
+          {% if r.status == 'pending' %}<span class="badge badge-blue">Kutilmoqda</span>
+          {% elif r.status == 'accepted' %}<span class="badge badge-green">Qabul</span>
+          {% else %}<span class="badge badge-red">Rad</span>{% endif %}
+        </td>
+        <td style="font-size:.78rem;color:var(--muted);">{{ r.created_at|date:"d.m.Y" }}</td>
+        <td>
+          <form method="post" style="display:flex;gap:5px;">
+            {% csrf_token %}
+            <input type="hidden" name="req_id" value="{{ r.pk }}"/>
+            <button name="new_status" value="accepted" type="submit" class="btn btn-primary" style="padding:4px 10px;font-size:.75rem;">✓</button>
+            <button name="new_status" value="rejected" type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:.75rem;">✗</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">So'rov yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

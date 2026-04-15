@@ -1,0 +1,57 @@
+{% extends 'panel/base.html' %}
+{% block title %}Xabarlar{% endblock %}
+{% block page_title %}Xabarlar Monitoring{% endblock %}
+{% block nav_messages %}active{% endblock %}
+
+{% block content %}
+<form method="get" style="display:flex;gap:10px;margin-bottom:20px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Ism yoki xabar matni..."
+         style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;min-width:260px;"/>
+  <button type="submit" class="btn btn-primary">Qidirish</button>
+</form>
+
+<div class="panel-card">
+  <div class="panel-card-header"><h3>{{ messages|length }} ta xabar</h3></div>
+  <table class="panel-table">
+    <thead><tr><th>Yuboruvchi</th><th>Qabul qiluvchi</th><th>Xabar</th><th>Holat</th><th>Vaqt</th><th></th></tr></thead>
+    <tbody>
+      {% for m in messages %}
+      <tr>
+        <td style="display:flex;align-items:center;gap:8px;">
+          <div class="mini-avatar">{{ m.sender.initial }}</div>
+          {{ m.sender.get_full_name|default:m.sender.phone }}
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="mini-avatar">{{ m.receiver.initial }}</div>
+            {{ m.receiver.get_full_name|default:m.receiver.phone }}
+          </div>
+        </td>
+        <td style="max-width:300px;color:var(--muted);font-size:.82rem;">{{ m.body|truncatechars:60 }}</td>
+        <td>
+          {% if m.is_read %}
+            <span class="badge badge-green">O'qilgan</span>
+          {% else %}
+            <span class="badge badge-blue">Yangi</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.78rem;color:var(--muted);">{{ m.created_at|date:"d.m.Y H:i" }}</td>
+        <td>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete"/>
+            <input type="hidden" name="msg_id" value="{{ m.pk }}"/>
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:.75rem;"
+                    onclick="return confirm('O\'chirishni tasdiqlaysizmi?')">
+              <i data-lucide="trash-2" style="width:13px;"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Xabar yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -34,6 +34,7 @@
         <td>
           <div style="display:flex;gap:6px;">
             <a href="/courses/{{ c.pk }}/" class="btn btn-outline" style="padding:4px 10px;font-size:.75rem;" target="_blank">Ko'rish</a>
+            <a href="{% url 'panel_course_lessons' pk=c.pk %}" class="btn btn-primary" style="padding:4px 10px;font-size:.75rem;">Darslar</a>
             <form method="post" style="display:inline;">
               {% csrf_token %}
               <input type="hidden" name="action" value="toggle"/>

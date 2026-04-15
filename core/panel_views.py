@@ -181,3 +181,160 @@ def resources_view(request):
 
     resources = Resource.objects.select_related('added_by').order_by('-created_at')
     return render(request, 'panel/resources.html', {'resources': resources})
+
+
+# ── XABARLAR MONITORING ───────────────────────────────────────────────────────
+@panel_required
+def messages_view(request):
+    from .models import Message
+    q  = request.GET.get('q', '').strip()
+    qs = Message.objects.select_related('sender', 'receiver').order_by('-created_at')
+    if q:
+        qs = qs.filter(
+            Q(sender__first_name__icontains=q) |
+            Q(receiver__first_name__icontains=q) |
+            Q(body__icontains=q)
+        )
+    if request.method == 'POST' and request.POST.get('action') == 'delete':
+        Message.objects.filter(pk=request.POST.get('msg_id')).delete()
+        return redirect('panel_messages')
+    return render(request, 'panel/messages.html', {'messages': qs[:200], 'q': q})
+
+
+# ── MENTOR SO'ROVLARI ─────────────────────────────────────────────────────────
+@panel_required
+def mentor_requests_view(request):
+    from .models import MentorRequest
+    status = request.GET.get('status', '')
+    qs = MentorRequest.objects.select_related('sender', 'receiver').order_by('-created_at')
+    if status:
+        qs = qs.filter(status=status)
+    if request.method == 'POST':
+        req = get_object_or_404(MentorRequest, pk=request.POST.get('req_id'))
+        req.status = request.POST.get('new_status', req.status)
+        req.save()
+        return redirect('panel_mentor_requests')
+    return render(request, 'panel/mentor_requests.html', {
+        'requests': qs, 'status': status,
+        'status_choices': MentorRequest.STATUS,
+    })
+
+
+# ── TANLOV ARIZALARI ──────────────────────────────────────────────────────────
+@panel_required
+def applications_view(request):
+    contest_id = request.GET.get('contest', '')
+    status     = request.GET.get('status', '')
+    qs = ContestApplication.objects.select_related('user', 'contest').order_by('-created_at')
+    if contest_id:
+        qs = qs.filter(contest_id=contest_id)
+    if status:
+        qs = qs.filter(status=status)
+    if request.method == 'POST':
+        app = get_object_or_404(ContestApplication, pk=request.POST.get('app_id'))
+        app.status = request.POST.get('new_status', app.status)
+        app.save()
+        from .utils import log_activity
+        from .models import Notification
+        if app.status == 'accepted':
+            Notification.objects.create(
+                user=app.user, notif_type='contest',
+                text=f"'{app.contest.title}' tanloviga arizangiz qabul qilindi!",
+                link='/contests/'
+            )
+            app.user.score += 20
+            app.user.save()
+        return redirect('panel_applications')
+    contests = Contest.objects.all()
+    return render(request, 'panel/applications.html', {
+        'applications': qs, 'contests': contests,
+        'selected_contest': contest_id, 'status': status,
+        'status_choices': ContestApplication.STATUS,
+    })
+
+
+# ── KURS DARSLARI ─────────────────────────────────────────────────────────────
+@panel_required
+def course_lessons_view(request, pk):
+    from .models import Lesson
+    course  = get_object_or_404(Course, pk=pk)
+    lessons = course.lessons.order_by('order')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            Lesson.objects.create(
+                course    = course,
+                title     = request.POST.get('title'),
+                content   = request.POST.get('content', ''),
+                video_url = request.POST.get('video_url', ''),
+                order     = course.lessons.count() + 1,
+            )
+        elif action == 'delete':
+            Lesson.objects.filter(pk=request.POST.get('lesson_id'), course=course).delete()
+        return redirect('panel_course_lessons', pk=pk)
+
+    return render(request, 'panel/course_lessons.html', {
+        'course': course, 'lessons': lessons,
+    })
+
+
+# ── OMMAVIY XABAR ─────────────────────────────────────────────────────────────
+@panel_required
+def broadcast_view(request):
+    from .models import Notification
+    sent_count = 0
+    if request.method == 'POST':
+        text    = request.POST.get('text', '').strip()
+        role    = request.POST.get('role', '')
+        link    = request.POST.get('link', '')
+        if text:
+            users = User.objects.filter(is_active=True)
+            if role:
+                users = users.filter(role=role)
+            notifs = [
+                Notification(user=u, notif_type='contest', text=text, link=link)
+                for u in users
+            ]
+            Notification.objects.bulk_create(notifs)
+            sent_count = len(notifs)
+    return render(request, 'panel/broadcast.html', {
+        'sent_count': sent_count,
+        'roles': User.objects.values_list('role', flat=True).distinct(),
+    })
+
+
+# ── FOYDALANUVCHI BATAFSIL ────────────────────────────────────────────────────
+@panel_required
+def user_detail_view(request, pk):
+    from .models import LoginHistory, ActivityLog
+    target   = get_object_or_404(User, pk=pk)
+    logins   = LoginHistory.objects.filter(user=target).order_by('-created_at')[:20]
+    acts     = ActivityLog.objects.filter(user=target).order_by('-created_at')[:30]
+    projects = target.projects.order_by('-created_at')
+    certs    = target.certificates.order_by('-issued_date')
+    course_certs = target.course_certificates.select_related('course').order_by('-issued_at')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'score':
+            target.score = int(request.POST.get('score', target.score))
+            target.save()
+        elif action == 'role':
+            target.role = request.POST.get('role', target.role)
+            target.save()
+        elif action == 'toggle':
+            target.is_active = not target.is_active
+            target.save()
+        elif action == 'notify':
+            from .models import Notification
+            Notification.objects.create(
+                user=target, notif_type='score',
+                text=request.POST.get('msg', ''),
+            )
+        return redirect('panel_user_detail', pk=pk)
+
+    return render(request, 'panel/user_detail.html', {
+        'target': target, 'logins': logins, 'acts': acts,
+        'projects': projects, 'certs': certs, 'course_certs': course_certs,
+    })

@@ -40,7 +40,7 @@
               <div class="mini-avatar">{{ u.initial }}</div>
             {% endif %}
             <div>
-              <div style="font-weight:600;">{{ u.get_full_name|default:"—" }}</div>
+              <a href="{% url 'panel_user_detail' pk=u.pk %}" style="color:var(--text);text-decoration:none;font-weight:600;">{{ u.get_full_name|default:"—" }}</a>
               <div style="font-size:.75rem;color:var(--muted);">{{ u.date_joined|date:"d.m.Y" }}</div>
             </div>
           </div>
