@@ -11,8 +11,8 @@ BOT_TOKEN  = '8737975467:AAE-LrxJbuB-pVAKkS9rDdV0lRAv_Tz9EE4'
 ADMIN_CHAT_ID = '2114098498'
 
 
-def send_telegram(chat_id: str, text: str) -> bool:
-    """Telegram ga xabar yuborish"""
+def send_telegram(chat_id: str, text: str) -> tuple[bool, str]:
+    """Telegram ga xabar yuborish — (ok, error_msg)"""
     try:
         url  = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
         data = urllib.parse.urlencode({
@@ -21,12 +21,16 @@ def send_telegram(chat_id: str, text: str) -> bool:
             'parse_mode': 'HTML',
         }).encode()
         req = urllib.request.Request(url, data=data, method='POST')
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        req.add_header('User-Agent', 'Mozilla/5.0')
+        with urllib.request.urlopen(req, timeout=10) as resp:
             result = json.loads(resp.read())
-            return result.get('ok', False)
+            if result.get('ok'):
+                return True, ''
+            return False, str(result.get('description', 'Telegram xato'))
+    except urllib.error.URLError as e:
+        return False, f'URL xato: {e.reason}'
     except Exception as e:
-        print(f"Telegram xato: {e}")
-        return False
+        return False, f'Xato: {type(e).__name__}: {e}'
 
 
 def generate_code() -> str:
@@ -55,7 +59,11 @@ def create_and_send_code(user) -> bool:
         f"⏰ Amal qilish muddati: <b>5 daqiqa</b>\n\n"
         f"⚠️ Bu kodni hech kimga bermang!"
     )
-    return send_telegram(ADMIN_CHAT_ID, text)
+    ok, err = send_telegram(ADMIN_CHAT_ID, text)
+    if not ok:
+        import logging
+        logging.getLogger('core').error(f"Telegram 2FA xato: {err}")
+    return ok, err
 
 
 def verify_code(user, code: str) -> bool:

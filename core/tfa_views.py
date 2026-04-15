@@ -30,15 +30,14 @@ def tfa_send_view(request):
     resent  = request.GET.get('resend') == '1'
 
     if request.method == 'GET' and not resent:
-        # Sahifa ochilganda avtomatik kod yuborish
-        ok = create_and_send_code(request.user)
-        sent = ok
-        if not ok:
-            error = 'Telegram ga kod yuborishda xato. Qayta urinib ko\'ring.'
+        ok, err = create_and_send_code(request.user)
+        sent  = ok
+        error = err if not ok else ''
 
     if resent:
-        ok = create_and_send_code(request.user)
-        sent = ok
+        ok, err = create_and_send_code(request.user)
+        sent  = ok
+        error = err if not ok else ''
 
     return render(request, 'tfa/send.html', {
         'sent': sent, 'error': error,
