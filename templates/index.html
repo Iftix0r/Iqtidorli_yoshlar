@@ -65,26 +65,26 @@
 <section style="padding:60px 20px;background:linear-gradient(135deg,rgba(108,99,255,.08),rgba(67,233,123,.05));">
   <div class="section-title">
     <div class="section-badge">Sun'iy Intellekt</div>
-    <h2>AI <span>Imkoniyatlari</span></h2>
-    <p>Shaxsiy AI mentor va tahlil vositalari</p>
+    <h2>Iqtidor <span>AI</span></h2>
+    <p>Shaxsiy Iqtidor AI — mentor, tahlil va moslash vositalari</p>
   </div>
   <div class="features-grid" style="max-width:900px;margin:0 auto;">
-    <a href="{% url 'ai_mentor' %}" class="feature-card" style="text-decoration:none;cursor:pointer;">
+    <a href="{% url 'ai_chat' %}" class="feature-card" style="text-decoration:none;cursor:pointer;">
       <div class="feature-icon"><i data-lucide="target"></i></div>
-      <h3>AI Mentor</h3>
+      <h3>Mentor Rejimi</h3>
       <p>Sohaingizga mos shaxsiy o'quv yo'l xaritasi</p>
     </a>
-    <a href="{% url 'ai_talent_analysis' %}" class="feature-card" style="text-decoration:none;cursor:pointer;">
+    <a href="{% url 'ai_chat' %}?mode=talent" class="feature-card" style="text-decoration:none;cursor:pointer;">
       <div class="feature-icon"><i data-lucide="brain"></i></div>
       <h3>Iqtidor Tahlili</h3>
       <p>Qiziqishlaringizga mos kasblar taklifi</p>
     </a>
-    <a href="{% url 'ai_portfolio_review' %}" class="feature-card" style="text-decoration:none;cursor:pointer;">
+    <a href="{% url 'ai_chat' %}?mode=portfolio" class="feature-card" style="text-decoration:none;cursor:pointer;">
       <div class="feature-icon"><i data-lucide="clipboard-check"></i></div>
       <h3>Portfolio Baholash</h3>
-      <p>AI portfoliongizni tahlil qilib baho beradi</p>
+      <p>Iqtidor AI portfoliongizni tahlil qilib baho beradi</p>
     </a>
-    <a href="{% url 'ai_smart_match' %}" class="feature-card" style="text-decoration:none;cursor:pointer;">
+    <a href="{% url 'ai_chat' %}?mode=matching" class="feature-card" style="text-decoration:none;cursor:pointer;">
       <div class="feature-icon"><i data-lucide="handshake"></i></div>
       <h3>Smart Matching</h3>
       <p>Sizga mos mentor, investor yoki hamkor topish</p>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load ai_extras %}
-{% block title %}AI Chat{% endblock %}
+{% block title %}Iqtidor AI{% endblock %}
 {% block content %}
 <div id="ai-app" style="display:flex;height:calc(100vh - 64px);margin-top:64px;overflow:hidden;">
 
@@ -135,7 +135,7 @@
     <!-- Sessiya tanlanmagan -->
     <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:40px;">
       <div style="font-size:4rem;">✨</div>
-      <h2 style="font-size:1.4rem;font-weight:800;">AI Chat ga Xush Kelibsiz</h2>
+      <h2 style="font-size:1.4rem;font-weight:800;">Iqtidor AI ga Xush Kelibsiz</h2>
       <p style="color:var(--muted);max-width:400px;line-height:1.6;">Chap tarafdan rejim tanlang va yangi suhbat boshlang</p>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:400px;width:100%;">
         {% for val, label in ai_modes %}
@@ -243,7 +243,7 @@ async function sendMessage() {
       appendMessage('assistant', data.answer);
       // Sarlavhani yangilash
       if (data.session_title) {
-        document.title = data.session_title + ' — AI Chat';
+        document.title = data.session_title + ' — Iqtidor AI';
       }
     }
   } catch(e) {

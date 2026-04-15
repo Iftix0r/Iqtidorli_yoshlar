@@ -524,8 +524,8 @@ class XPLog(models.Model):
 # ── AI CHAT TARIXI ────────────────────────────────────────────────────────────
 
 AI_MODES = [
-    ('general',   '🤖 AI Yordamchi'),
-    ('mentor',    '🎯 AI Mentor'),
+    ('general',   '✨ Iqtidor AI'),
+    ('mentor',    '🎯 Mentor Rejimi'),
     ('talent',    '🧠 Iqtidor Tahlili'),
     ('portfolio', '📋 Portfolio Baholash'),
     ('matching',  '🤝 Smart Matching'),
