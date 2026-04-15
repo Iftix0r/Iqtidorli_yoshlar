@@ -1,0 +1,23 @@
+# ── SERVER XAVFSIZLIGI ────────────────────────────────────────────────────────
+# Papkalar ro'yxatini ko'rishni taqiqlash
+Options -Indexes
+
+# Muhim fayllarga kirishni to'liq yopish
+<FilesMatch "^\.|\.(env|git|sqlite3|py|sh|log|bak|config|swp)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Media papkasida script ijro etishni taqiqlash
+<Directory "/home/iftixor-toychiyev/Desktop/Iftixor_Github/Iqtidorli_yoshlar/public/media">
+    Options -ExecCGI
+    AddHandler cgi-script .php .pl .py .jsp .asp .sh .cgi
+    AllowOverride None
+</Directory>
+
+# Headerlarni mustahkamlash (Eskiz.uz/Apache agar ruxsat bersa)
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+</IfModule>

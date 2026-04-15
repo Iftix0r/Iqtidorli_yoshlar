@@ -1,6 +1,16 @@
+import os
+import uuid
 import re
 from django.utils import timezone
 from datetime import timedelta
+
+
+def uuid_path_gen(instance, filename):
+    """Fayl nomini UUID ga o'zgartiradi (Xavfsizlik uchun)"""
+    ext = filename.split('.')[-1]
+    new_filename = f"{uuid.uuid4()}.{ext}"
+    folder = instance.__class__.__name__.lower()
+    return os.path.join(folder, new_filename)
 
 
 def get_client_ip(request):

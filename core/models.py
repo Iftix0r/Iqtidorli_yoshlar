@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from .utils import uuid_path_gen
 
 
 ROLE_CHOICES = [
@@ -32,7 +33,7 @@ class User(AbstractUser):
     region = models.CharField(max_length=100, choices=REGIONS, blank=True)
     bio    = models.CharField(max_length=200, blank=True)
     score  = models.PositiveIntegerField(default=0)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField(upload_to=uuid_path_gen, blank=True, null=True)
     email  = models.EmailField(blank=True)
 
     USERNAME_FIELD  = 'phone'
@@ -159,7 +160,7 @@ class Certificate(models.Model):
     title       = models.CharField(max_length=200)
     issuer      = models.CharField(max_length=100, blank=True, verbose_name="Beruvchi tashkilot")
     issued_date = models.DateField(null=True, blank=True)
-    image       = models.ImageField(upload_to='certificates/', blank=True, null=True)
+    image       = models.ImageField(upload_to=uuid_path_gen, blank=True, null=True)
     link        = models.URLField(blank=True)
     created_at  = models.DateTimeField(auto_now_add=True)
 
@@ -225,7 +226,7 @@ class Course(models.Model):
     ]
     title       = models.CharField(max_length=200)
     description = models.TextField()
-    cover       = models.ImageField(upload_to='courses/', blank=True, null=True)
+    cover       = models.ImageField(upload_to=uuid_path_gen, blank=True, null=True)
     author      = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='authored_courses')
     level       = models.CharField(max_length=20, choices=LEVELS, default='beginner')
     duration    = models.CharField(max_length=50, blank=True, help_text="Masalan: 4 soat")
