@@ -762,12 +762,14 @@ def sys_config(request):
                         else:
                             new_lines.append(line)
                     if not found:
-                        new_lines.append(f'DEBUG={"False" if settings.DEBUG else "True"}')
+                        debug_val = 'False' if settings.DEBUG else 'True'
+                        new_lines.append(f'DEBUG={debug_val}')
                     new_content = '\n'.join(new_lines)
                     with open(env_path, 'w') as f:
                         f.write(new_content)
                     env_content = new_content
-                    message = f'DEBUG rejim {"o\'chirildi" if settings.DEBUG else "yoqildi"}. Server qayta ishga tushiring!'
+                    status_text = "o'chirildi" if settings.DEBUG else 'yoqildi'
+                    message = f'DEBUG rejim {status_text}. Server qayta ishga tushiring!'
             except Exception as e:
                 error = f'Xato: {e}'
 
@@ -787,12 +789,13 @@ def sys_config(request):
                             new_lines.append(line)
                     if not found:
                         tfa = getattr(settings, 'TFA_ENABLED', False)
-                        new_lines.append(f'TFA_ENABLED={"False" if tfa else "True"}')
+                        tfa_val = 'False' if tfa else 'True'
+                        new_lines.append(f'TFA_ENABLED={tfa_val}')
                     new_content = '\n'.join(new_lines)
                     with open(env_path, 'w') as f:
                         f.write(new_content)
                     env_content = new_content
-                    message = '2FA holati o\'zgartirildi. Server qayta ishga tushiring!'
+                    message = "2FA holati o'zgartirildi. Server qayta ishga tushiring!"
             except Exception as e:
                 error = f'Xato: {e}'
 
@@ -804,5 +807,7 @@ def sys_config(request):
         'settings_content': settings_content,
         'message': message,
         'error': error,
+        'debug_mode': settings.DEBUG,
+        'tfa_enabled': getattr(settings, 'TFA_ENABLED', False),
     })
 
