@@ -15,7 +15,8 @@ jobs:
         with:
           host: "45.138.159.4"
           username: "host7905"
-          password: ${{ secrets.SSH_PASSWORD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: 22
           timeout: 60s
           command_timeout: 10m
@@ -27,4 +28,4 @@ jobs:
             python manage.py migrate --noinput
             python manage.py collectstatic --noinput
             touch tmp/restart.txt
-            echo "✅ Deploy muvaffaqiyatli!"
+            echo "Deploy muvaffaqiyatli!"
