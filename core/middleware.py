@@ -52,10 +52,12 @@ class SecurityHeadersMiddleware:
         response['Permissions-Policy']        = 'geolocation=(), microphone=(), camera=()'
         response['Content-Security-Policy']   = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: blob:; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
             "connect-src 'self';"
         )
         return response

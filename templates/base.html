@@ -7,7 +7,7 @@
   <title>{% block title %}Iqtidorli Yoshlar{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicon.svg' %}"/>
   <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="{% static 'js/lucide.min.js' %}"></script>
   <script>
     (function(){
       const t = localStorage.getItem('theme') || 'dark';
