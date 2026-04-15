@@ -25,6 +25,7 @@ jobs:
             cd /home/host7905/yoshiqtidorlar
             git pull origin main
             pip install -r requirements.txt --quiet
+            python manage.py makemigrations --noinput
             python manage.py migrate --noinput
             python manage.py collectstatic --noinput
             touch tmp/restart.txt
