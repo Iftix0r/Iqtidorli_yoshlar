@@ -1,0 +1,75 @@
+{% extends 'tizim/base.html' %}
+{% block title %}SQL Konsol{% endblock %}
+{% block page_title %}sql-konsol{% endblock %}
+{% block nav_sql %}active{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;">
+  {% for q in quick_queries %}
+    <button onclick="setQuery('{{ q.sql }}')" class="btn btn-blue" style="font-size:.72rem;">{{ q.label }}</button>
+  {% endfor %}
+  <button onclick="setQuery('SELECT * FROM core_user ORDER BY date_joined DESC LIMIT 10;')" class="btn btn-blue" style="font-size:.72rem;">So'nggi userlar</button>
+  <button onclick="setQuery('SELECT * FROM core_activitylog ORDER BY created_at DESC LIMIT 20;')" class="btn btn-blue" style="font-size:.72rem;">Faoliyat logi</button>
+  <button onclick="setQuery('SELECT * FROM core_loginhistory ORDER BY created_at DESC LIMIT 20;')" class="btn btn-blue" style="font-size:.72rem;">Kirish tarixi</button>
+  <button onclick="setQuery('SELECT table_name, pg_size_pretty(pg_total_relation_size(table_name::text)) as size FROM information_schema.tables WHERE table_schema=\'public\' ORDER BY pg_total_relation_size(table_name::text) DESC;')" class="btn btn-blue" style="font-size:.72rem;">Jadval o'lchamlari</button>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <div style="margin-bottom:12px;">
+    <textarea name="query" id="sql-input" class="code-input" rows="6"
+              placeholder="-- SQL so'rovingizni yozing&#10;SELECT * FROM core_user LIMIT 5;">{{ query }}</textarea>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:20px;">
+    <button type="submit" class="btn btn-green">
+      <i data-lucide="play" style="width:13px;"></i> Bajarish
+    </button>
+    <button type="button" onclick="document.getElementById('sql-input').value=''" class="btn btn-red">
+      <i data-lucide="x" style="width:13px;"></i> Tozalash
+    </button>
+  </div>
+</form>
+
+{% if error %}
+  <div style="background:rgba(255,101,132,.1);border:1px solid rgba(255,101,132,.3);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+    <div style="color:var(--danger);font-size:.78rem;font-weight:700;margin-bottom:4px;">XATO:</div>
+    <div class="code-block" style="color:var(--danger);background:transparent;border:none;padding:0;">{{ error }}</div>
+  </div>
+{% endif %}
+
+{% if result is not None %}
+  <div class="sys-table-wrap">
+    <div class="sys-table-header">
+      <span>Natija — {{ result|length }} qator</span>
+      <span style="color:var(--muted);font-size:.72rem;">{{ cols|length }} ustun</span>
+    </div>
+    {% if result %}
+      <div style="overflow-x:auto;">
+        <table class="sys-table">
+          <thead>
+            <tr>{% for c in cols %}<th>{{ c }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in result %}
+            <tr>{% for cell in row %}<td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ cell }}">{{ cell }}</td>{% endfor %}</tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="padding:20px;text-align:center;color:var(--muted);">Natija yo'q.</div>
+    {% endif %}
+  </div>
+{% endif %}
+
+<script>
+function setQuery(q) {
+  document.getElementById('sql-input').value = q;
+}
+// Ctrl+Enter bilan yuborish
+document.getElementById('sql-input').addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') e.target.closest('form').submit();
+});
+</script>
+{% endblock %}

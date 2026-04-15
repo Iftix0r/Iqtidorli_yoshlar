@@ -1,0 +1,55 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Migratsiyalar{% endblock %}
+{% block page_title %}migratsiyalar{% endblock %}
+{% block nav_mig %}active{% endblock %}
+
+{% block content %}
+
+<div style="display:flex;gap:12px;margin-bottom:20px;">
+  <div class="sys-card" style="flex:1;">
+    <div class="label">Jami</div>
+    <div class="value ok">{{ total_count }}</div>
+  </div>
+  <div class="sys-card" style="flex:1;">
+    <div class="label">Bajarilgan</div>
+    <div class="value ok">{{ applied_count }}</div>
+  </div>
+  <div class="sys-card" style="flex:1;">
+    <div class="label">Kutilmoqda</div>
+    <div class="value {% if total_count != applied_count %}warn{% else %}ok{% endif %}">
+      {{ total_count|add:"-"|add:applied_count }}
+    </div>
+  </div>
+</div>
+
+{% if total_count != applied_count %}
+  <div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;color:var(--warn);font-size:.82rem;">
+    ⚠ Bajarilmagan migratsiyalar bor. <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;">python manage.py migrate</code> ishlatib ko'ring.
+  </div>
+{% endif %}
+
+<div class="sys-table-wrap">
+  <div class="sys-table-header">
+    <span>Barcha Migratsiyalar</span>
+  </div>
+  <table class="sys-table">
+    <thead><tr><th>App</th><th>Migration</th><th>Holat</th></tr></thead>
+    <tbody>
+      {% for m in migrations %}
+      <tr>
+        <td style="color:var(--accent);">{{ m.app }}</td>
+        <td style="font-family:monospace;font-size:.78rem;">{{ m.name }}</td>
+        <td>
+          {% if m.applied %}
+            <span class="badge badge-ok">✓ Bajarilgan</span>
+          {% else %}
+            <span class="badge badge-warn">⏳ Kutilmoqda</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

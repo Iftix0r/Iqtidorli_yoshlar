@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Tizim{% endblock %} — Dev Panel</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicon.svg' %}"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --bg:#0A0A0F;--sidebar:#0F0E1A;--card:#13122A;--border:rgba(67,233,123,.15);
+      --primary:#43E97B;--accent:#6C63FF;--text:#FFFFFE;--muted:#7A7A9A;
+      --danger:#FF6584;--warn:#FFD700;
+    }
+    body{font-family:'Cascadia Code','Fira Code','Consolas',monospace;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:13px;}
+
+    .sidebar{width:220px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;}
+    .sidebar-logo{padding:20px 16px;font-size:1rem;font-weight:900;color:var(--primary);border-bottom:1px solid var(--border);letter-spacing:1px;}
+    .sidebar-logo span{color:var(--accent);}
+    .sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+    .nav-section{padding:8px 16px 4px;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+    .nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;color:var(--muted);text-decoration:none;font-size:.82rem;transition:all .2s;border-left:2px solid transparent;}
+    .nav-item:hover,.nav-item.active{color:var(--primary);background:rgba(67,233,123,.06);border-left-color:var(--primary);}
+    .nav-item [data-lucide]{width:14px;height:14px;}
+    .sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);}
+
+    .main{margin-left:220px;flex:1;display:flex;flex-direction:column;}
+    .topbar{height:52px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50;}
+    .topbar-title{font-size:.88rem;font-weight:700;color:var(--primary);}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .topbar-right a{color:var(--muted);text-decoration:none;font-size:.78rem;display:flex;align-items:center;gap:4px;}
+    .topbar-right a:hover{color:var(--text);}
+
+    .content{padding:24px;flex:1;}
+
+    /* CARDS */
+    .sys-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+    .sys-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+    .sys-card .label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+    .sys-card .value{font-size:1.4rem;font-weight:900;}
+    .sys-card .sub{font-size:.72rem;color:var(--muted);margin-top:4px;}
+    .ok{color:var(--primary);}
+    .warn{color:var(--warn);}
+    .err{color:var(--danger);}
+
+    /* TABLE */
+    .sys-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+    .sys-table-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:.82rem;font-weight:700;}
+    .sys-table{width:100%;border-collapse:collapse;}
+    .sys-table th{padding:8px 14px;text-align:left;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+    .sys-table td{padding:8px 14px;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,.03);}
+    .sys-table tr:last-child td{border-bottom:none;}
+    .sys-table tr:hover td{background:rgba(67,233,123,.03);}
+
+    /* CODE */
+    .code-block{background:#050508;border:1px solid var(--border);border-radius:10px;padding:16px;font-family:inherit;font-size:.8rem;overflow-x:auto;white-space:pre-wrap;color:#a8ff78;line-height:1.6;}
+    textarea.code-input{width:100%;background:#050508;border:1px solid var(--border);border-radius:10px;padding:14px;color:#a8ff78;font-family:inherit;font-size:.82rem;resize:vertical;outline:none;line-height:1.6;}
+    textarea.code-input:focus{border-color:var(--primary);}
+
+    /* BTN */
+    .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;font-family:inherit;transition:opacity .2s;}
+    .btn:hover{opacity:.8;}
+    .btn-green{background:rgba(67,233,123,.2);color:var(--primary);border:1px solid rgba(67,233,123,.3);}
+    .btn-red{background:rgba(255,101,132,.2);color:var(--danger);border:1px solid rgba(255,101,132,.3);}
+    .btn-blue{background:rgba(108,99,255,.2);color:#a89fff;border:1px solid rgba(108,99,255,.3);}
+    .btn-warn{background:rgba(255,215,0,.15);color:var(--warn);border:1px solid rgba(255,215,0,.3);}
+
+    /* BADGE */
+    .badge{display:inline-flex;padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:700;}
+    .badge-ok{background:rgba(67,233,123,.15);color:var(--primary);}
+    .badge-err{background:rgba(255,101,132,.15);color:var(--danger);}
+    .badge-warn{background:rgba(255,215,0,.12);color:var(--warn);}
+
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+    @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  </style>
+  <script>(function(){document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">⚡ <span>tizim</span>.dev</div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Monitoring</div>
+    <a href="{% url 'sys_dashboard' %}" class="nav-item {% block nav_dash %}{% endblock %}">
+      <i data-lucide="activity"></i> Dashboard
+    </a>
+    <a href="{% url 'sys_logs' %}" class="nav-item {% block nav_logs %}{% endblock %}">
+      <i data-lucide="file-text"></i> Loglar
+    </a>
+    <a href="{% url 'sys_migrations' %}" class="nav-item {% block nav_mig %}{% endblock %}">
+      <i data-lucide="layers"></i> Migratsiyalar
+    </a>
+
+    <div class="nav-section">Asboblar</div>
+    <a href="{% url 'sys_sql' %}" class="nav-item {% block nav_sql %}{% endblock %}">
+      <i data-lucide="database"></i> SQL Konsol
+    </a>
+
+    <div class="nav-section">Tizim</div>
+    <a href="#" onclick="clearCache()" class="nav-item">
+      <i data-lucide="trash"></i> Cache Tozalash
+    </a>
+    <a href="#" onclick="restartServer()" class="nav-item">
+      <i data-lucide="refresh-cw"></i> Server Restart
+    </a>
+
+    <div class="nav-section">Boshqa</div>
+    <a href="{% url 'panel_dashboard' %}" class="nav-item">
+      <i data-lucide="layout-dashboard"></i> Admin Panel
+    </a>
+    <a href="/" class="nav-item" target="_blank">
+      <i data-lucide="external-link"></i> Sayt
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    {{ request.user.get_full_name }}<br/>
+    <span style="color:var(--primary);">superuser</span>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">
+      <span style="color:var(--muted);">/tizim/</span>{% block page_title %}dashboard{% endblock %}
+    </div>
+    <div class="topbar-right">
+      <span id="sys-status" style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--primary);">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--primary);animation:pulse 2s infinite;display:inline-block;"></span>
+        online
+      </span>
+      <a href="{% url 'logout' %}"><i data-lucide="log-out"></i> Chiqish</a>
+    </div>
+  </header>
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+async function clearCache() {
+  if (!confirm('Cache ni tozalashni tasdiqlaysizmi?')) return;
+  const res = await fetch('{% url "sys_clear_cache" %}', {method:'POST', headers:{'X-CSRFToken':'{{ csrf_token }}'}});
+  const d = await res.json();
+  alert(d.msg);
+}
+
+async function restartServer() {
+  if (!confirm('Serverni qayta ishga tushirishni tasdiqlaysizmi?')) return;
+  const res = await fetch('{% url "sys_restart" %}', {method:'POST', headers:{'X-CSRFToken':'{{ csrf_token }}'}});
+  const d = await res.json();
+  alert(d.msg);
+}
+
+// Real-time status
+async function checkStatus() {
+  try {
+    const res  = await fetch('{% url "sys_api" %}');
+    const data = await res.json();
+    const el   = document.getElementById('sys-status');
+    if (data.db_ok) {
+      el.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:var(--primary);animation:pulse 2s infinite;display:inline-block;"></span> online · DB ${data.db_ms}ms`;
+      el.style.color = 'var(--primary)';
+    } else {
+      el.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:var(--danger);display:inline-block;"></span> DB xato!`;
+      el.style.color = 'var(--danger)';
+    }
+  } catch(e) {
+    document.getElementById('sys-status').innerHTML = '⚠ offline';
+  }
+}
+checkStatus();
+setInterval(checkStatus, 15000);
+</script>
+</body>
+</html>

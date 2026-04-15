@@ -1,0 +1,52 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Loglar{% endblock %}
+{% block page_title %}loglar{% endblock %}
+{% block nav_logs %}active{% endblock %}
+
+{% block content %}
+
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+  <a href="?type=activity&limit={{ limit }}" class="btn {% if log_type == 'activity' %}btn-green{% else %}btn-blue{% endif %}">
+    <i data-lucide="activity" style="width:13px;"></i> Faoliyat
+  </a>
+  <a href="?type=login&limit={{ limit }}" class="btn {% if log_type == 'login' %}btn-green{% else %}btn-blue{% endif %}">
+    <i data-lucide="log-in" style="width:13px;"></i> Kirish
+  </a>
+  <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+    <span style="color:var(--muted);font-size:.75rem;">Ko'rsatish:</span>
+    {% for n in "50,100,200,500"|split:"," %}
+    {% endfor %}
+    <a href="?type={{ log_type }}&limit=50"  class="btn {% if limit == 50  %}btn-green{% else %}btn-blue{% endif %}" style="padding:4px 10px;">50</a>
+    <a href="?type={{ log_type }}&limit=100" class="btn {% if limit == 100 %}btn-green{% else %}btn-blue{% endif %}" style="padding:4px 10px;">100</a>
+    <a href="?type={{ log_type }}&limit=200" class="btn {% if limit == 200 %}btn-green{% else %}btn-blue{% endif %}" style="padding:4px 10px;">200</a>
+  </div>
+</div>
+
+<div class="sys-table-wrap">
+  <div class="sys-table-header">
+    <span>{{ rows|length }} ta yozuv</span>
+    <span style="color:var(--muted);font-size:.72rem;">{% if log_type == 'login' %}Kirish tarixi{% else %}Faoliyat tarixi{% endif %}</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="sys-table">
+      <thead>
+        <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          {% for cell in row %}
+          <td style="{% if cell == '✓' %}color:var(--primary);{% elif cell == '✗' %}color:var(--danger);{% endif %}">
+            {{ cell }}
+          </td>
+          {% endfor %}
+        </tr>
+        {% empty %}
+          <tr><td colspan="{{ headers|length }}" style="text-align:center;color:var(--muted);padding:30px;">Log yo'q.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

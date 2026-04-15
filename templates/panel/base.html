@@ -205,6 +205,11 @@
     <a href="/" class="nav-item" target="_blank">
       <i data-lucide="external-link"></i> Saytga O'tish
     </a>
+    {% if request.user.is_superuser %}
+    <a href="{% url 'sys_dashboard' %}" class="nav-item" style="color:#43E97B;">
+      <i data-lucide="terminal"></i> Tizim Paneli
+    </a>
+    {% endif %}
   </nav>
   <div class="sidebar-footer" style="font-size:.8rem;color:var(--muted);">
     {{ request.user.get_full_name }}

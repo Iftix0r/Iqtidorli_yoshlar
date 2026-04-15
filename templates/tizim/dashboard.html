@@ -1,0 +1,161 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}dashboard{% endblock %}
+{% block nav_dash %}active{% endblock %}
+
+{% block content %}
+
+<!-- STATUS CARDS -->
+<div class="sys-grid">
+  <div class="sys-card">
+    <div class="label">Database</div>
+    <div class="value {% if db_ok %}ok{% else %}err{% endif %}">
+      {% if db_ok %}● Online{% else %}● Offline{% endif %}
+    </div>
+    <div class="sub">{{ db_engine }} · {{ db_ms }}ms · {{ db_size }}</div>
+  </div>
+  <div class="sys-card">
+    <div class="label">Jadvallar</div>
+    <div class="value ok">{{ table_count }}</div>
+    <div class="sub">DB jadvallar soni</div>
+  </div>
+  <div class="sys-card">
+    <div class="label">Debug rejim</div>
+    <div class="value {% if debug %}warn{% else %}ok{% endif %}">
+      {% if debug %}ON{% else %}OFF{% endif %}
+    </div>
+    <div class="sub">{% if debug %}⚠ Production da o'chiring{% else %}✓ Xavfsiz{% endif %}</div>
+  </div>
+  <div class="sys-card">
+    <div class="label">Python</div>
+    <div class="value ok">{{ py_version }}</div>
+    <div class="sub">Django {{ dj_version }}</div>
+  </div>
+  <div class="sys-card">
+    <div class="label">Static fayllar</div>
+    <div class="value {% if static_exists %}ok{% else %}err{% endif %}">
+      {% if static_exists %}✓ Mavjud{% else %}✗ Yo'q{% endif %}
+    </div>
+    <div class="sub" style="word-break:break-all;font-size:.65rem;">{{ static_root }}</div>
+  </div>
+  <div class="sys-card">
+    <div class="label">Media fayllar</div>
+    <div class="value {% if media_exists %}ok{% else %}warn{% endif %}">
+      {% if media_exists %}✓ Mavjud{% else %}— Yo'q{% endif %}
+    </div>
+    <div class="sub" style="word-break:break-all;font-size:.65rem;">{{ media_root }}</div>
+  </div>
+</div>
+
+<!-- TEZKOR AMALLAR -->
+<div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
+  <button onclick="clearCache()" class="btn btn-green">
+    <i data-lucide="trash" style="width:13px;"></i> Cache Tozalash
+  </button>
+  <button onclick="restartServer()" class="btn btn-warn">
+    <i data-lucide="refresh-cw" style="width:13px;"></i> Server Restart
+  </button>
+  <a href="{% url 'sys_sql' %}" class="btn btn-blue">
+    <i data-lucide="database" style="width:13px;"></i> SQL Konsol
+  </a>
+  <a href="{% url 'sys_logs' %}" class="btn btn-blue">
+    <i data-lucide="file-text" style="width:13px;"></i> Loglar
+  </a>
+  <a href="{% url 'sys_migrations' %}" class="btn btn-blue">
+    <i data-lucide="layers" style="width:13px;"></i> Migratsiyalar
+  </a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+  <!-- MODEL STATISTIKASI -->
+  <div class="sys-table-wrap">
+    <div class="sys-table-header">
+      <span>Model Statistikasi</span>
+      <span style="color:var(--muted);font-size:.72rem;">{{ model_stats|length }} model</span>
+    </div>
+    <table class="sys-table">
+      <thead><tr><th>Model</th><th>Yozuvlar</th></tr></thead>
+      <tbody>
+        {% for name, count in model_stats %}
+        <tr>
+          <td style="color:var(--primary);font-family:monospace;">{{ name }}</td>
+          <td style="font-weight:700;">{{ count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TIZIM MA'LUMOTLARI -->
+  <div>
+    <div class="sys-table-wrap" style="margin-bottom:16px;">
+      <div class="sys-table-header">Tizim Ma'lumotlari</div>
+      <table class="sys-table">
+        <tbody>
+          <tr><td style="color:var(--muted);">OS</td><td style="font-size:.72rem;">{{ os_info }}</td></tr>
+          <tr><td style="color:var(--muted);">Base dir</td><td style="font-size:.72rem;word-break:break-all;">{{ base_dir }}</td></tr>
+          <tr><td style="color:var(--muted);">DB nomi</td><td>{{ db_name }}</td></tr>
+          <tr><td style="color:var(--muted);">Allowed hosts</td><td style="font-size:.72rem;">{{ allowed_hosts|join:", " }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- INSTALLED APPS -->
+    <div class="sys-table-wrap">
+      <div class="sys-table-header">Installed Apps</div>
+      <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px;">
+        {% for app in apps %}
+          <span style="background:rgba(108,99,255,.12);color:#a89fff;padding:2px 8px;border-radius:6px;font-size:.72rem;">{{ app }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- REAL-TIME GRAFIK -->
+<div class="sys-table-wrap" style="margin-top:20px;">
+  <div class="sys-table-header">
+    <span>Real-time Monitor</span>
+    <span id="rt-time" style="color:var(--muted);font-size:.72rem;"></span>
+  </div>
+  <div style="padding:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" id="rt-stats">
+    <div style="text-align:center;">
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;">BUGUNGI KIRISHLAR</div>
+      <div id="rt-logins" style="font-size:1.4rem;font-weight:900;color:var(--primary);">—</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;">XATO KIRISHLAR</div>
+      <div id="rt-errors" style="font-size:1.4rem;font-weight:900;color:var(--danger);">—</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;">DB JAVOB VAQTI</div>
+      <div id="rt-dbms" style="font-size:1.4rem;font-weight:900;color:var(--warn);">—</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;">DB HOLATI</div>
+      <div id="rt-dbstatus" style="font-size:1.4rem;font-weight:900;">—</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadRt() {
+  try {
+    const res  = await fetch('{% url "sys_api" %}');
+    const d    = await res.json();
+    document.getElementById('rt-logins').textContent   = d.today_logins;
+    document.getElementById('rt-errors').textContent   = d.today_errors;
+    document.getElementById('rt-dbms').textContent     = d.db_ms + 'ms';
+    const dbEl = document.getElementById('rt-dbstatus');
+    dbEl.textContent  = d.db_ok ? '● OK' : '● XATO';
+    dbEl.style.color  = d.db_ok ? 'var(--primary)' : 'var(--danger)';
+    document.getElementById('rt-time').textContent = new Date().toLocaleTimeString('uz');
+  } catch(e) {}
+}
+loadRt();
+setInterval(loadRt, 10000);
+</script>
+
+{% endblock %}

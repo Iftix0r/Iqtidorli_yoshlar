@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, panel_views
+from . import views, panel_views, system_views
 
 urlpatterns = [
     path('',                                  views.index,                 name='index'),
@@ -52,4 +52,12 @@ urlpatterns = [
     path('panel/settings/',                   panel_views.settings_view,        name='panel_settings'),
     path('panel/export/users/',               panel_views.export_users_csv,     name='panel_export_users'),
     path('panel/blocked-ips/',                panel_views.blocked_ips_view,     name='panel_blocked_ips'),
+    # Tizim paneli (superuser only)
+    path('tizim/',                            system_views.sys_dashboard,   name='sys_dashboard'),
+    path('tizim/sql/',                        system_views.sys_sql,         name='sys_sql'),
+    path('tizim/logs/',                       system_views.sys_logs,        name='sys_logs'),
+    path('tizim/migrations/',                 system_views.sys_migrations,  name='sys_migrations'),
+    path('tizim/api/',                        system_views.sys_api,         name='sys_api'),
+    path('tizim/cache/clear/',                system_views.sys_clear_cache, name='sys_clear_cache'),
+    path('tizim/restart/',                    system_views.sys_restart,     name='sys_restart'),
 ]
