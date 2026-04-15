@@ -60,4 +60,10 @@ urlpatterns = [
     path('tizim/api/',                        system_views.sys_api,         name='sys_api'),
     path('tizim/cache/clear/',                system_views.sys_clear_cache, name='sys_clear_cache'),
     path('tizim/restart/',                    system_views.sys_restart,     name='sys_restart'),
+    path('tizim/errors/',                     system_views.sys_errors,      name='sys_errors'),
+    path('tizim/packages/',                   system_views.sys_packages,    name='sys_packages'),
+    path('tizim/env/',                        system_views.sys_env,         name='sys_env'),
+    path('tizim/files/',                      system_views.sys_files,       name='sys_files'),
+    path('tizim/health/',                     system_views.sys_health,      name='sys_health'),
+    path('tizim/backup/',                     system_views.sys_backup,      name='sys_backup'),
 ]

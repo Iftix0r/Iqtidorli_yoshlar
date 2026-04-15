@@ -245,3 +245,189 @@ def sys_restart(request):
         except Exception as e:
             return JsonResponse({'ok': False, 'msg': str(e)})
     return JsonResponse({'ok': False})
+
+
+# ── XATOLAR MONITORING ────────────────────────────────────────────────────────
+@superuser_required
+def sys_errors(request):
+    from .models import SystemError
+    errors = SystemError.objects.order_by('-created_at')[:200]
+    if request.method == 'POST' and request.POST.get('action') == 'clear':
+        SystemError.objects.all().delete()
+        return redirect('sys_errors')
+    return render(request, 'tizim/errors.html', {'errors': errors})
+
+
+# ── PAKETLAR ──────────────────────────────────────────────────────────────────
+@superuser_required
+def sys_packages(request):
+    import subprocess
+    result = []
+    try:
+        out = subprocess.check_output(
+            ['pip', 'list', '--format=columns'],
+            stderr=subprocess.DEVNULL
+        ).decode()
+        lines = out.strip().split('\n')[2:]  # header ni o'tkazib yuborish
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 2:
+                result.append({'name': parts[0], 'version': parts[1]})
+    except Exception as e:
+        result = [{'name': 'Xato', 'version': str(e)}]
+    return render(request, 'tizim/packages.html', {'packages': result})
+
+
+# ── MUHIT O'ZGARUVCHILARI ─────────────────────────────────────────────────────
+@superuser_required
+def sys_env(request):
+    sensitive = {'password', 'secret', 'key', 'token', 'pass', 'pwd'}
+    env_vars = []
+    for k, v in sorted(os.environ.items()):
+        is_sensitive = any(s in k.lower() for s in sensitive)
+        env_vars.append({
+            'key': k,
+            'value': '***' if is_sensitive else v,
+            'sensitive': is_sensitive,
+        })
+    # .env fayl
+    env_file = []
+    env_path = os.path.join(settings.BASE_DIR, '.env')
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    k, v = line.split('=', 1)
+                    is_sensitive = any(s in k.lower() for s in sensitive)
+                    env_file.append({
+                        'key': k.strip(),
+                        'value': '***' if is_sensitive else v.strip(),
+                        'sensitive': is_sensitive,
+                    })
+    return render(request, 'tizim/env.html', {
+        'env_vars': env_vars, 'env_file': env_file,
+    })
+
+
+# ── FAYLLAR MENEJERI ──────────────────────────────────────────────────────────
+@superuser_required
+def sys_files(request):
+    base = request.GET.get('path', '')
+    root = settings.BASE_DIR
+
+    # Path traversal himoyasi
+    target = os.path.normpath(os.path.join(root, base))
+    if not target.startswith(str(root)):
+        target = str(root)
+        base = ''
+
+    items = []
+    if os.path.isdir(target):
+        try:
+            for name in sorted(os.listdir(target)):
+                full = os.path.join(target, name)
+                rel  = os.path.relpath(full, root)
+                stat = os.stat(full)
+                items.append({
+                    'name':     name,
+                    'path':     rel,
+                    'is_dir':   os.path.isdir(full),
+                    'size':     stat.st_size,
+                    'modified': timezone.datetime.fromtimestamp(stat.st_mtime).strftime('%d.%m.%Y %H:%M'),
+                })
+        except PermissionError:
+            pass
+
+    # Parent path
+    parent = str(os.path.relpath(os.path.dirname(target), root)) if base else None
+    if parent == '.':
+        parent = ''
+
+    return render(request, 'tizim/files.html', {
+        'items': items, 'current': base or '/', 'parent': parent,
+    })
+
+
+# ── HEALTH CHECK ─────────────────────────────────────────────────────────────
+@superuser_required
+def sys_health(request):
+    import urllib.request
+    checks = []
+
+    # DB
+    try:
+        t0 = time.time()
+        with connection.cursor() as cur:
+            cur.execute("SELECT 1")
+        checks.append({'name': 'Database', 'ok': True, 'ms': round((time.time()-t0)*1000,2), 'detail': 'Ulanish muvaffaqiyatli'})
+    except Exception as e:
+        checks.append({'name': 'Database', 'ok': False, 'ms': 0, 'detail': str(e)})
+
+    # Static fayllar
+    checks.append({
+        'name': 'Static fayllar',
+        'ok': os.path.exists(str(settings.STATIC_ROOT)),
+        'ms': 0,
+        'detail': str(settings.STATIC_ROOT),
+    })
+
+    # Media papka
+    checks.append({
+        'name': 'Media papka',
+        'ok': os.path.exists(str(settings.MEDIA_ROOT)),
+        'ms': 0,
+        'detail': str(settings.MEDIA_ROOT),
+    })
+
+    # Migrations
+    from django.db.migrations.loader import MigrationLoader
+    loader = MigrationLoader(connection)
+    pending = len(loader.disk_migrations) - len(loader.applied_migrations)
+    checks.append({
+        'name': 'Migratsiyalar',
+        'ok': pending == 0,
+        'ms': 0,
+        'detail': f'{pending} ta bajarilmagan' if pending else 'Hammasi bajarilgan',
+    })
+
+    # Debug rejim
+    checks.append({
+        'name': 'Debug rejim',
+        'ok': not settings.DEBUG,
+        'ms': 0,
+        'detail': 'OFF (xavfsiz)' if not settings.DEBUG else 'ON — production da o\'chiring!',
+    })
+
+    all_ok = all(c['ok'] for c in checks)
+    return render(request, 'tizim/health.html', {'checks': checks, 'all_ok': all_ok})
+
+
+# ── DB BACKUP (dump) ──────────────────────────────────────────────────────────
+@superuser_required
+def sys_backup(request):
+    if request.method == 'POST':
+        from django.http import HttpResponse
+        import json
+
+        # Barcha modellardan ma'lumot olish
+        from django.core import serializers
+        from .models import (User, Skill, Project, Contest, Course, Lesson,
+                             Message, Notification, ActivityLog, Job, Resource)
+        data = {}
+        for model in [User, Skill, Project, Contest, Course, Lesson,
+                      Message, Notification, ActivityLog, Job, Resource]:
+            name = model.__name__
+            data[name] = json.loads(serializers.serialize('json', model.objects.all()))
+
+        response = HttpResponse(
+            json.dumps(data, ensure_ascii=False, indent=2, default=str),
+            content_type='application/json'
+        )
+        ts = timezone.now().strftime('%Y%m%d_%H%M%S')
+        response['Content-Disposition'] = f'attachment; filename="backup_{ts}.json"'
+        return response
+
+    return render(request, 'tizim/backup.html')

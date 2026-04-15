@@ -1,0 +1,43 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Backup{% endblock %}
+{% block page_title %}backup{% endblock %}
+{% block nav_backup %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;">
+
+  <div class="sys-card" style="margin-bottom:20px;">
+    <div class="label">JSON Backup</div>
+    <div style="color:var(--muted);font-size:.82rem;margin:10px 0 16px;line-height:1.6;">
+      Barcha modellardan ma'lumotlarni JSON formatda yuklab olish.<br/>
+      Foydalanuvchi parollari xavfsiz (hash) ko'rinishda saqlanadi.
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-green">
+        <i data-lucide="download" style="width:13px;"></i> JSON Backup Yuklab Olish
+      </button>
+    </form>
+  </div>
+
+  <div class="sys-card" style="margin-bottom:20px;">
+    <div class="label">PostgreSQL Dump</div>
+    <div style="color:var(--muted);font-size:.82rem;margin:10px 0 16px;line-height:1.6;">
+      To'liq DB dump uchun serverda quyidagi buyruqni ishlatib ko'ring:
+    </div>
+    <div class="code-block">pg_dump -U $DB_USER -h $DB_HOST $DB_NAME > backup_$(date +%Y%m%d).sql</div>
+  </div>
+
+  <div class="sys-card">
+    <div class="label">Avtomatik Backup (GitHub Actions)</div>
+    <div style="color:var(--muted);font-size:.82rem;margin:10px 0;line-height:1.6;">
+      <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;">.github/workflows/deploy.yml</code> ga qo'shish mumkin:
+    </div>
+    <div class="code-block">- name: Backup DB
+  run: |
+    pg_dump -U $DB_USER $DB_NAME | gzip > backup.sql.gz
+    # S3 yoki boshqa joyga yuklash</div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Xatolar{% endblock %}
+{% block page_title %}xatolar{% endblock %}
+{% block nav_errors %}active{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+  <span style="color:var(--muted);font-size:.82rem;">{{ errors|length }} ta xato</span>
+  {% if errors %}
+  <form method="post">
+    {% csrf_token %}
+    <button name="action" value="clear" type="submit" class="btn btn-red"
+            onclick="return confirm('Barcha xatolarni o\'chirishni tasdiqlaysizmi?')">
+      <i data-lucide="trash-2" style="width:13px;"></i> Barchasini o'chirish
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+{% if errors %}
+<div class="sys-table-wrap">
+  <table class="sys-table">
+    <thead><tr><th>Tur</th><th>Xabar</th><th>URL</th><th>Foydalanuvchi</th><th>IP</th><th>Vaqt</th></tr></thead>
+    <tbody>
+      {% for e in errors %}
+      <tr style="cursor:pointer;" onclick="toggleTrace('trace-{{ e.pk }}')">
+        <td><span class="badge badge-err">{{ e.error_type }}</span></td>
+        <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--danger);">{{ e.message }}</td>
+        <td style="font-size:.75rem;color:var(--muted);">{{ e.method }} {{ e.path }}</td>
+        <td style="font-size:.78rem;">{{ e.user|default:"—" }}</td>
+        <td style="font-family:monospace;font-size:.75rem;">{{ e.ip_address|default:"—" }}</td>
+        <td style="font-size:.72rem;color:var(--muted);white-space:nowrap;">{{ e.created_at|date:"d.m H:i:s" }}</td>
+      </tr>
+      {% if e.traceback %}
+      <tr id="trace-{{ e.pk }}" style="display:none;">
+        <td colspan="6" style="padding:0;">
+          <div class="code-block" style="margin:0;border-radius:0;border-left:3px solid var(--danger);">{{ e.traceback }}</div>
+        </td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div style="font-size:.72rem;color:var(--muted);margin-top:8px;">
+  * Qatorga bosing — traceback ko'rish uchun
+</div>
+{% else %}
+  <div style="text-align:center;padding:60px;color:var(--muted);">
+    <i data-lucide="check-circle" style="width:40px;height:40px;color:var(--primary);display:block;margin:0 auto 12px;"></i>
+    Xato yo'q. Tizim sog'lom ishlayapti.
+  </div>
+{% endif %}
+
+<script>
+function toggleTrace(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+}
+</script>
+{% endblock %}

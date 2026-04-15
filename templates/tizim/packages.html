@@ -1,0 +1,37 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Paketlar{% endblock %}
+{% block page_title %}paketlar{% endblock %}
+{% block nav_pkg %}active{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+  <span style="color:var(--muted);font-size:.82rem;">{{ packages|length }} ta paket o'rnatilgan</span>
+  <input type="text" id="pkg-search" placeholder="Qidirish..."
+         oninput="filterPkgs(this.value)"
+         style="padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.8rem;width:200px;"/>
+</div>
+
+<div class="sys-table-wrap">
+  <table class="sys-table" id="pkg-table">
+    <thead><tr><th>#</th><th>Paket nomi</th><th>Versiya</th></tr></thead>
+    <tbody>
+      {% for p in packages %}
+      <tr>
+        <td style="color:var(--muted);">{{ forloop.counter }}</td>
+        <td style="color:var(--primary);font-family:monospace;">{{ p.name }}</td>
+        <td style="color:var(--warn);">{{ p.version }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function filterPkgs(q) {
+  const rows = document.querySelectorAll('#pkg-table tbody tr');
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

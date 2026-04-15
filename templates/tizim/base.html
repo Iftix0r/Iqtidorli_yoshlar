@@ -87,6 +87,12 @@
     <a href="{% url 'sys_dashboard' %}" class="nav-item {% block nav_dash %}{% endblock %}">
       <i data-lucide="activity"></i> Dashboard
     </a>
+    <a href="{% url 'sys_health' %}" class="nav-item {% block nav_health %}{% endblock %}">
+      <i data-lucide="heart-pulse"></i> Health Check
+    </a>
+    <a href="{% url 'sys_errors' %}" class="nav-item {% block nav_errors %}{% endblock %}">
+      <i data-lucide="alert-triangle"></i> Xatolar
+    </a>
     <a href="{% url 'sys_logs' %}" class="nav-item {% block nav_logs %}{% endblock %}">
       <i data-lucide="file-text"></i> Loglar
     </a>
@@ -97,6 +103,18 @@
     <div class="nav-section">Asboblar</div>
     <a href="{% url 'sys_sql' %}" class="nav-item {% block nav_sql %}{% endblock %}">
       <i data-lucide="database"></i> SQL Konsol
+    </a>
+    <a href="{% url 'sys_files' %}" class="nav-item {% block nav_files %}{% endblock %}">
+      <i data-lucide="folder"></i> Fayllar
+    </a>
+    <a href="{% url 'sys_packages' %}" class="nav-item {% block nav_pkg %}{% endblock %}">
+      <i data-lucide="package"></i> Paketlar
+    </a>
+    <a href="{% url 'sys_env' %}" class="nav-item {% block nav_env %}{% endblock %}">
+      <i data-lucide="settings-2"></i> Muhit (.env)
+    </a>
+    <a href="{% url 'sys_backup' %}" class="nav-item {% block nav_backup %}{% endblock %}">
+      <i data-lucide="download"></i> Backup
     </a>
 
     <div class="nav-section">Tizim</div>

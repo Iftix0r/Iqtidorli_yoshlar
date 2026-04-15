@@ -1,0 +1,63 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Fayllar{% endblock %}
+{% block page_title %}fayllar · {{ current }}{% endblock %}
+{% block nav_files %}active{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;font-size:.8rem;color:var(--muted);">
+  <a href="{% url 'sys_files' %}" style="color:var(--primary);text-decoration:none;">root</a>
+  {% if current != '/' %}
+    <span>/</span>
+    <span style="color:var(--text);">{{ current }}</span>
+  {% endif %}
+</div>
+
+<div class="sys-table-wrap">
+  <div class="sys-table-header">
+    <span>{{ items|length }} ta element</span>
+    <span style="color:var(--muted);font-size:.72rem;">{{ current }}</span>
+  </div>
+  <table class="sys-table">
+    <thead><tr><th>Nom</th><th>Tur</th><th>O'lcham</th><th>O'zgartirilgan</th></tr></thead>
+    <tbody>
+      {% if parent is not None %}
+      <tr>
+        <td colspan="4">
+          <a href="{% url 'sys_files' %}?path={{ parent }}" style="color:var(--accent);text-decoration:none;font-family:monospace;">
+            <i data-lucide="corner-left-up" style="width:13px;"></i> ..
+          </a>
+        </td>
+      </tr>
+      {% endif %}
+      {% for item in items %}
+      <tr>
+        <td>
+          {% if item.is_dir %}
+            <a href="{% url 'sys_files' %}?path={{ item.path }}" style="color:var(--warn);text-decoration:none;font-family:monospace;">
+              <i data-lucide="folder" style="width:13px;margin-right:4px;"></i>{{ item.name }}/
+            </a>
+          {% else %}
+            <span style="color:var(--text);font-family:monospace;font-size:.8rem;">
+              <i data-lucide="file" style="width:13px;margin-right:4px;color:var(--muted);"></i>{{ item.name }}
+            </span>
+          {% endif %}
+        </td>
+        <td style="color:var(--muted);font-size:.75rem;">{% if item.is_dir %}papka{% else %}fayl{% endif %}</td>
+        <td style="color:var(--muted);font-size:.75rem;">
+          {% if not item.is_dir %}
+            {% if item.size > 1048576 %}{{ item.size|filesizeformat }}
+            {% elif item.size > 1024 %}{{ item.size|filesizeformat }}
+            {% else %}{{ item.size }} B{% endif %}
+          {% else %}—{% endif %}
+        </td>
+        <td style="color:var(--muted);font-size:.72rem;">{{ item.modified }}</td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">Bo'sh papka.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
