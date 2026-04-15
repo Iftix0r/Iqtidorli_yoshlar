@@ -96,28 +96,48 @@
     <a href="{% url 'sys_logs' %}" class="nav-item {% block nav_logs %}{% endblock %}">
       <i data-lucide="file-text"></i> Loglar
     </a>
-    <a href="{% url 'sys_migrations' %}" class="nav-item {% block nav_mig %}{% endblock %}">
-      <i data-lucide="layers"></i> Migratsiyalar
+    <a href="{% url 'sys_processes' %}" class="nav-item {% block nav_proc %}{% endblock %}">
+      <i data-lucide="cpu"></i> Jarayonlar
+    </a>
+    <a href="{% url 'sys_network' %}" class="nav-item {% block nav_net %}{% endblock %}">
+      <i data-lucide="wifi"></i> Tarmoq
     </a>
 
     <div class="nav-section">Asboblar</div>
+    <a href="{% url 'sys_terminal' %}" class="nav-item {% block nav_term %}{% endblock %}">
+      <i data-lucide="terminal"></i> Terminal
+    </a>
     <a href="{% url 'sys_sql' %}" class="nav-item {% block nav_sql %}{% endblock %}">
       <i data-lucide="database"></i> SQL Konsol
+    </a>
+    <a href="{% url 'sys_config' %}" class="nav-item {% block nav_config %}{% endblock %}">
+      <i data-lucide="sliders"></i> Konfiguratsiya
     </a>
     <a href="{% url 'sys_files' %}" class="nav-item {% block nav_files %}{% endblock %}">
       <i data-lucide="folder"></i> Fayllar
     </a>
+    <a href="{% url 'sys_cron' %}" class="nav-item {% block nav_cron %}{% endblock %}">
+      <i data-lucide="clock"></i> Cron Jobs
+    </a>
+
+    <div class="nav-section">Database</div>
+    <a href="{% url 'sys_migrations' %}" class="nav-item {% block nav_mig %}{% endblock %}">
+      <i data-lucide="layers"></i> Migratsiyalar
+    </a>
+    <a href="{% url 'sys_db_optimize' %}" class="nav-item {% block nav_dbopt %}{% endblock %}">
+      <i data-lucide="zap"></i> DB Optimizatsiya
+    </a>
+    <a href="{% url 'sys_backup' %}" class="nav-item {% block nav_backup %}{% endblock %}">
+      <i data-lucide="download"></i> Backup
+    </a>
+
+    <div class="nav-section">Sozlamalar</div>
     <a href="{% url 'sys_packages' %}" class="nav-item {% block nav_pkg %}{% endblock %}">
       <i data-lucide="package"></i> Paketlar
     </a>
     <a href="{% url 'sys_env' %}" class="nav-item {% block nav_env %}{% endblock %}">
       <i data-lucide="settings-2"></i> Muhit (.env)
     </a>
-    <a href="{% url 'sys_backup' %}" class="nav-item {% block nav_backup %}{% endblock %}">
-      <i data-lucide="download"></i> Backup
-    </a>
-
-    <div class="nav-section">Tizim</div>
     <a href="#" onclick="clearCache()" class="nav-item">
       <i data-lucide="trash"></i> Cache Tozalash
     </a>

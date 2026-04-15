@@ -1,0 +1,73 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Tarmoq{% endblock %}
+{% block page_title %}network{% endblock %}
+{% block nav_net %}active{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:16px;">
+  <h3 style="font-size:1rem;font-weight:800;margin-bottom:4px;">
+    <i data-lucide="wifi" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+    Tarmoq Ma'lumotlari
+  </h3>
+  <p style="font-size:.75rem;color:var(--muted);">Ulanishlar, ochiq portlar va DNS tekshirish.</p>
+</div>
+
+<!-- DNS TEKSHIRISH -->
+<div class="sys-grid" style="margin-bottom:20px;">
+  {% for host, ip in dns_check.items %}
+  <div class="sys-card">
+    <div class="label">🌐 DNS</div>
+    <div class="value ok" style="font-size:1rem;word-break:break-all;">{{ host }}</div>
+    <div class="sub">
+      <span style="background:rgba(67,233,123,.1);padding:2px 8px;border-radius:4px;font-family:monospace;color:var(--primary);">{{ ip }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- OCHIQ PORTLAR -->
+<div class="sys-table-wrap" style="margin-bottom:20px;">
+  <div class="sys-table-header">
+    <span>🔌 Ochiq Portlar (Listening)</span>
+    <span style="font-size:.68rem;color:var(--muted);">{{ open_ports|length }} ta port</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="sys-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Holat</th>
+          <th>Lokal manzil</th>
+          <th>Jarayon</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in open_ports %}
+        <tr>
+          <td style="color:var(--muted);">{{ forloop.counter }}</td>
+          <td>
+            <span class="badge badge-ok">{{ p.state }}</span>
+          </td>
+          <td style="font-family:monospace;color:var(--primary);">{{ p.local }}</td>
+          <td style="font-size:.72rem;color:var(--muted);">{{ p.process }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="text-align:center;color:var(--muted);">Port ma'lumotlari topilmadi</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- IP MANZILLAR -->
+<div class="sys-table-wrap">
+  <div class="sys-table-header">
+    <span>📡 IP Konfiguratsiya (ip addr)</span>
+  </div>
+  <div class="code-block" style="max-height:400px;overflow-y:auto;">{% for line in ip_info %}{{ line }}
+{% endfor %}</div>
+</div>
+
+<script>lucide.createIcons();</script>
+{% endblock %}

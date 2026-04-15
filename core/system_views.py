@@ -675,3 +675,134 @@ def sys_db_optimize(request):
     return render(request, 'tizim/db_optimize.html', {
         'results': results, 'table_sizes': table_sizes,
     })
+
+
+# ── KONFIGURATSIYA EDITOR ────────────────────────────────────────────────────
+@superuser_required
+def sys_config(request):
+    """Settings sozlamalarini ko'rish va .env faylni tahrirlash"""
+    import re
+
+    # Django settings ni ko'rish (xavfsiz maydonlar)
+    SAFE_SETTINGS = [
+        'DEBUG', 'ALLOWED_HOSTS', 'INSTALLED_APPS', 'MIDDLEWARE',
+        'ROOT_URLCONF', 'LANGUAGE_CODE', 'TIME_ZONE', 'USE_I18N', 'USE_TZ',
+        'STATIC_URL', 'STATIC_ROOT', 'MEDIA_URL', 'MEDIA_ROOT',
+        'AUTH_USER_MODEL', 'LOGIN_URL', 'LOGIN_REDIRECT_URL', 'LOGOUT_REDIRECT_URL',
+        'DEFAULT_AUTO_FIELD', 'SESSION_COOKIE_AGE', 'SESSION_COOKIE_SECURE',
+        'CSRF_COOKIE_SECURE', 'SECURE_SSL_REDIRECT', 'SECURE_HSTS_SECONDS',
+        'X_FRAME_OPTIONS', 'TFA_ENABLED', 'ADMIN_URL', 'PANEL_URL', 'TIZIM_URL',
+        'LOGIN_ATTEMPTS_LIMIT', 'LOGIN_ATTEMPTS_WINDOW',
+    ]
+    django_settings = []
+    for key in SAFE_SETTINGS:
+        val = getattr(settings, key, '—')
+        django_settings.append({
+            'key': key,
+            'value': str(val),
+            'type': type(val).__name__,
+        })
+
+    # .env fayl o'qish
+    env_path = os.path.join(settings.BASE_DIR, '.env')
+    env_content = ''
+    env_exists = os.path.exists(env_path)
+    if env_exists:
+        with open(env_path) as f:
+            env_content = f.read()
+
+    # .env.example fayl o'qish
+    env_example_path = os.path.join(settings.BASE_DIR, '.env.example')
+    env_example = ''
+    if os.path.exists(env_example_path):
+        with open(env_example_path) as f:
+            env_example = f.read()
+
+    # settings.py faylni o'qish
+    settings_path = os.path.join(settings.BASE_DIR, 'iqtidorli_yoshlar', 'settings.py')
+    settings_content = ''
+    if os.path.exists(settings_path):
+        with open(settings_path) as f:
+            settings_content = f.read()
+
+    message = ''
+    error = ''
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'save_env':
+            new_content = request.POST.get('env_content', '')
+            try:
+                # Backup
+                if env_exists:
+                    backup_path = env_path + '.bak'
+                    with open(backup_path, 'w') as f:
+                        f.write(env_content)
+                # Saqlash
+                with open(env_path, 'w') as f:
+                    f.write(new_content)
+                env_content = new_content
+                message = '.env fayl muvaffaqiyatli saqlandi! Server qayta ishga tushirilishi kerak.'
+            except Exception as e:
+                error = f'Saqlashda xato: {e}'
+
+        elif action == 'toggle_debug':
+            try:
+                if env_exists:
+                    lines = env_content.split('\n')
+                    new_lines = []
+                    found = False
+                    for line in lines:
+                        if line.strip().startswith('DEBUG='):
+                            current = line.strip().split('=', 1)[1].strip()
+                            new_val = 'False' if current == 'True' else 'True'
+                            new_lines.append(f'DEBUG={new_val}')
+                            found = True
+                        else:
+                            new_lines.append(line)
+                    if not found:
+                        new_lines.append(f'DEBUG={"False" if settings.DEBUG else "True"}')
+                    new_content = '\n'.join(new_lines)
+                    with open(env_path, 'w') as f:
+                        f.write(new_content)
+                    env_content = new_content
+                    message = f'DEBUG rejim {"o\'chirildi" if settings.DEBUG else "yoqildi"}. Server qayta ishga tushiring!'
+            except Exception as e:
+                error = f'Xato: {e}'
+
+        elif action == 'toggle_tfa':
+            try:
+                if env_exists:
+                    lines = env_content.split('\n')
+                    new_lines = []
+                    found = False
+                    for line in lines:
+                        if line.strip().startswith('TFA_ENABLED='):
+                            current = line.strip().split('=', 1)[1].strip()
+                            new_val = 'False' if current == 'True' else 'True'
+                            new_lines.append(f'TFA_ENABLED={new_val}')
+                            found = True
+                        else:
+                            new_lines.append(line)
+                    if not found:
+                        tfa = getattr(settings, 'TFA_ENABLED', False)
+                        new_lines.append(f'TFA_ENABLED={"False" if tfa else "True"}')
+                    new_content = '\n'.join(new_lines)
+                    with open(env_path, 'w') as f:
+                        f.write(new_content)
+                    env_content = new_content
+                    message = '2FA holati o\'zgartirildi. Server qayta ishga tushiring!'
+            except Exception as e:
+                error = f'Xato: {e}'
+
+    return render(request, 'tizim/config.html', {
+        'django_settings': django_settings,
+        'env_content': env_content,
+        'env_exists': env_exists,
+        'env_example': env_example,
+        'settings_content': settings_content,
+        'message': message,
+        'error': error,
+    })
+

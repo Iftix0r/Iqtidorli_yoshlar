@@ -1,0 +1,99 @@
+{% extends 'tizim/base.html' %}
+{% block title %}DB Optimizatsiya{% endblock %}
+{% block page_title %}db-optimize{% endblock %}
+{% block nav_dbopt %}active{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:16px;">
+  <h3 style="font-size:1rem;font-weight:800;margin-bottom:4px;">
+    <i data-lucide="zap" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+    Database Optimizatsiya
+  </h3>
+  <p style="font-size:.75rem;color:var(--muted);">Bazani tahlil qilish, tozalash va indekslarni tekshirish.</p>
+</div>
+
+<!-- AMALLAR -->
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+  <form method="post" style="margin:0;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="analyze">
+    <button type="submit" class="btn btn-green">
+      <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> ANALYZE
+    </button>
+  </form>
+  <form method="post" style="margin:0;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="vacuum">
+    <button type="submit" class="btn btn-warn">
+      <i data-lucide="wind" style="width:14px;height:14px;"></i> VACUUM ANALYZE
+    </button>
+  </form>
+  <form method="post" style="margin:0;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="indexes">
+    <button type="submit" class="btn btn-blue">
+      <i data-lucide="search" style="width:14px;height:14px;"></i> Indekslarni Tekshirish
+    </button>
+  </form>
+</div>
+
+<!-- NATIJALAR -->
+{% if results %}
+<div class="sys-table-wrap" style="margin-bottom:20px;">
+  <div class="sys-table-header">
+    <span>📊 Natijalar</span>
+  </div>
+  <table class="sys-table">
+    <thead><tr><th>Amal</th><th>Natija</th></tr></thead>
+    <tbody>
+      {% for action, result in results %}
+      <tr>
+        <td style="color:var(--primary);font-weight:700;">{{ action }}</td>
+        <td>{{ result }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- JADVAL O'LCHAMLARI -->
+{% if table_sizes %}
+<div class="sys-table-wrap">
+  <div class="sys-table-header">
+    <span>📏 Jadval O'lchamlari</span>
+  </div>
+  <table class="sys-table">
+    <thead>
+      <tr>
+        <th>Jadval</th>
+        <th>Umumiy hajmi</th>
+        <th>Jadval hajmi</th>
+        <th>Qatorlar</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in table_sizes %}
+      <tr>
+        <td style="color:var(--primary);font-family:monospace;">{{ row.0 }}</td>
+        <td>{{ row.1 }}</td>
+        <td>{{ row.2 }}</td>
+        <td style="font-weight:700;">{{ row.3 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="sys-table-wrap">
+  <div style="padding:24px;text-align:center;color:var(--muted);font-size:.82rem;">
+    <div style="font-size:2rem;margin-bottom:8px;">📊</div>
+     Jadval o'lchamlarini ko'rish faqat PostgreSQL uchun ishlaydi.
+     <br>SQLite uchun yuqoridagi amallardan foydalaning.
+  </div>
+</div>
+{% endif %}
+
+<script>lucide.createIcons();</script>
+{% endblock %}

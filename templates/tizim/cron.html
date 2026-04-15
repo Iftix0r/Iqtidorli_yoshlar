@@ -1,0 +1,141 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Cron Jobs{% endblock %}
+{% block page_title %}cron{% endblock %}
+{% block nav_cron %}active{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:16px;">
+  <h3 style="font-size:1rem;font-weight:800;margin-bottom:4px;">
+    <i data-lucide="clock" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+    Cron Jobs — Rejalashtirilgan Vazifalar
+  </h3>
+  <p style="font-size:.75rem;color:var(--muted);">Avtomatik bajariluvchi vazifalarni boshqarish.</p>
+</div>
+
+{% if cron_output %}
+<div style="background:rgba(67,233,123,.08);border:1px solid rgba(67,233,123,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;color:var(--primary);">
+  ✅ {{ cron_output }}
+</div>
+{% endif %}
+
+<!-- MAVJUD CRON LAR -->
+<div class="sys-table-wrap" style="margin-bottom:20px;">
+  <div class="sys-table-header">
+    <span>📋 Mavjud Cron Vazifalar</span>
+    <span style="font-size:.68rem;color:var(--muted);">{{ cron_list|length }} ta vazifa</span>
+  </div>
+  {% if cron_list %}
+  <table class="sys-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Jadval</th>
+        <th>Buyruq</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cron in cron_list %}
+      <tr>
+        <td style="color:var(--muted);">{{ forloop.counter }}</td>
+        <td>
+          <span style="background:rgba(108,99,255,.12);color:#a89fff;padding:2px 8px;border-radius:6px;font-size:.72rem;font-family:monospace;">
+            {% with parts=cron|truncatechars:30 %}{{ parts }}{% endwith %}
+          </span>
+        </td>
+        <td style="font-size:.72rem;color:var(--text);font-family:monospace;">{{ cron }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:24px;text-align:center;color:var(--muted);font-size:.82rem;">
+    <div style="font-size:2rem;margin-bottom:8px;">📭</div>
+    Hozircha rejalashtirilgan vazifa yo'q.
+  </div>
+  {% endif %}
+</div>
+
+<!-- YANGI CRON QO'SHISH -->
+<div class="sys-table-wrap" style="margin-bottom:20px;">
+  <div class="sys-table-header">
+    <span>➕ Yangi Vazifa Qo'shish</span>
+  </div>
+  <form method="post" style="padding:16px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+    <div style="display:grid;grid-template-columns:200px 1fr auto;gap:10px;align-items:flex-start;">
+      <div>
+        <label style="font-size:.68rem;color:var(--muted);display:block;margin-bottom:4px;">JADVAL (cron format)</label>
+        <input type="text" name="schedule" placeholder="*/5 * * * *"
+               style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;
+                      padding:8px 12px;color:var(--text);font-family:monospace;font-size:.82rem;outline:none;"
+               required>
+      </div>
+      <div>
+        <label style="font-size:.68rem;color:var(--muted);display:block;margin-bottom:4px;">BUYRUQ</label>
+        <input type="text" name="cmd" placeholder="cd /path && python manage.py ..."
+               style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;
+                      padding:8px 12px;color:var(--text);font-family:monospace;font-size:.82rem;outline:none;"
+               required>
+      </div>
+      <div style="padding-top:16px;">
+        <button type="submit" class="btn btn-green" style="padding:8px 16px;">
+          <i data-lucide="plus" style="width:12px;height:12px;"></i> Qo'shish
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- TAYYOR SHABLONLAR -->
+<div class="sys-table-wrap">
+  <div class="sys-table-header">
+    <span>⚡ Tayyor Shablonlar</span>
+  </div>
+  <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
+    {% for t in templates %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+                background:rgba(108,99,255,.06);border:1px solid rgba(108,99,255,.12);border-radius:8px;">
+      <div>
+        <div style="font-size:.82rem;font-weight:600;">{{ t.label }}</div>
+        <div style="font-size:.68rem;color:var(--muted);font-family:monospace;margin-top:2px;">
+          <span style="color:var(--primary);">{{ t.schedule }}</span> · {{ t.cmd|truncatechars:60 }}
+        </div>
+      </div>
+      <form method="post" style="margin:0;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <input type="hidden" name="schedule" value="{{ t.schedule }}">
+        <input type="hidden" name="cmd" value="{{ t.cmd }}">
+        <button type="submit" class="btn btn-blue" style="padding:6px 12px;font-size:.72rem;">
+          <i data-lucide="plus-circle" style="width:12px;height:12px;"></i> Qo'shish
+        </button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- CRON FORMAT YORDAMI -->
+<div style="margin-top:16px;padding:14px 16px;background:rgba(108,99,255,.06);border:1px solid rgba(108,99,255,.12);border-radius:10px;">
+  <div style="font-size:.72rem;color:var(--accent);font-weight:700;margin-bottom:8px;">📖 Cron Format Yordami</div>
+  <div class="code-block" style="font-size:.72rem;background:rgba(0,0,0,.3);">
+┌────────────── daqiqa (0-59)
+│ ┌──────────── soat (0-23)
+│ │ ┌────────── oy kuni (1-31)
+│ │ │ ┌──────── oy (1-12)
+│ │ │ │ ┌────── hafta kuni (0-7, 0=7=yakshanba)
+│ │ │ │ │
+* * * * *  buyruq
+
+Misollar:
+  */5 * * * *     — Har 5 daqiqada
+  0 * * * *       — Har soatda
+  0 0 * * *       — Har kuni yarim tunda
+  0 6 * * 1       — Har dushanba soat 6:00
+  0 0 1 * *       — Har oyning 1-kuni</div>
+</div>
+
+<script>lucide.createIcons();</script>
+{% endblock %}

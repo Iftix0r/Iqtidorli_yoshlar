@@ -1,0 +1,148 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Jarayonlar{% endblock %}
+{% block page_title %}processes{% endblock %}
+{% block nav_proc %}active{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:16px;">
+  <h3 style="font-size:1rem;font-weight:800;margin-bottom:4px;">
+    <i data-lucide="cpu" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+    Jarayonlar va Resurslar
+  </h3>
+  <p style="font-size:.75rem;color:var(--muted);">Ishlab turgan processlar, RAM va disk holati.</p>
+</div>
+
+<!-- RAM VA DISK KARTALARI -->
+<div class="sys-grid" style="grid-template-columns:1fr 1fr;">
+  {% if ram_info %}
+  <div class="sys-card">
+    <div class="label">🧠 RAM Holati</div>
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <div>
+        <div style="font-size:.68rem;color:var(--muted);">Jami</div>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--primary);">{{ ram_info.total }}</div>
+      </div>
+      <div>
+        <div style="font-size:.68rem;color:var(--muted);">Ishlatilgan</div>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--warn);">{{ ram_info.used }}</div>
+      </div>
+      <div>
+        <div style="font-size:.68rem;color:var(--muted);">Bo'sh</div>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--primary);">{{ ram_info.free }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="sys-card">
+    <div class="label">📊 Umumiy</div>
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <div>
+        <div style="font-size:.68rem;color:var(--muted);">Jarayonlar</div>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--accent);">{{ processes|length }}</div>
+      </div>
+      <div>
+        <div style="font-size:.68rem;color:var(--muted);">Disklar</div>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--accent);">{{ disk_info|length }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP JARAYONLAR -->
+<div class="sys-table-wrap" style="margin-bottom:20px;">
+  <div class="sys-table-header">
+    <span>🔄 Top Jarayonlar (CPU bo'yicha)</span>
+    <span style="font-size:.68rem;color:var(--muted);">Top 20</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="sys-table">
+      <thead>
+        <tr>
+          <th>Foydalanuvchi</th>
+          <th>PID</th>
+          <th>CPU %</th>
+          <th>MEM %</th>
+          <th>Holat</th>
+          <th>Buyruq</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in processes %}
+        <tr>
+          <td style="color:var(--accent);">{{ p.user }}</td>
+          <td>
+            <span style="background:rgba(67,233,123,.1);padding:1px 6px;border-radius:4px;font-size:.72rem;">{{ p.pid }}</span>
+          </td>
+          <td>
+            <span style="color:{% if p.cpu|floatformat:'0'|add:'0' > 50 %}var(--danger){% elif p.cpu|floatformat:'0'|add:'0' > 20 %}var(--warn){% else %}var(--primary){% endif %};font-weight:700;">
+              {{ p.cpu }}%
+            </span>
+          </td>
+          <td>
+            <span style="color:{% if p.mem|floatformat:'0'|add:'0' > 50 %}var(--danger){% elif p.mem|floatformat:'0'|add:'0' > 20 %}var(--warn){% else %}var(--text){% endif %};">
+              {{ p.mem }}%
+            </span>
+          </td>
+          <td>
+            <span class="badge {% if p.status == 'S' or p.status == 'Sl' %}badge-ok{% elif p.status == 'R' %}badge-warn{% else %}badge-err{% endif %}">
+              {{ p.status }}
+            </span>
+          </td>
+          <td style="font-size:.72rem;color:var(--muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ p.command }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);">Ma'lumot topilmadi</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DISK HOLATI -->
+{% if disk_info %}
+<div class="sys-table-wrap">
+  <div class="sys-table-header">
+    <span>💾 Disk Holati</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="sys-table">
+      <thead>
+        <tr>
+          <th>Fayl tizimi</th>
+          <th>Hajmi</th>
+          <th>Ishlatilgan</th>
+          <th>Bo'sh</th>
+          <th>Foiz</th>
+          <th>Ulangan joy</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in disk_info %}
+        <tr>
+          <td style="color:var(--accent);font-size:.72rem;">{{ d.fs }}</td>
+          <td>{{ d.size }}</td>
+          <td style="color:var(--warn);">{{ d.used }}</td>
+          <td style="color:var(--primary);">{{ d.avail }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:60px;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;">
+                <div style="height:100%;width:{{ d.use_pct }};background:{% if d.use_pct > '80%' %}var(--danger){% elif d.use_pct > '60%' %}var(--warn){% else %}var(--primary){% endif %};border-radius:3px;"></div>
+              </div>
+              <span style="font-weight:700;font-size:.78rem;">{{ d.use_pct }}</span>
+            </div>
+          </td>
+          <td style="font-size:.72rem;">{{ d.mount }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<script>lucide.createIcons();</script>
+{% endblock %}

@@ -80,6 +80,12 @@ urlpatterns = [
     path(f'{TIZIM_URL}/files/',                        system_views.sys_files,              name='sys_files'),
     path(f'{TIZIM_URL}/health/',                       system_views.sys_health,             name='sys_health'),
     path(f'{TIZIM_URL}/backup/',                       system_views.sys_backup,             name='sys_backup'),
+    path(f'{TIZIM_URL}/terminal/',                     system_views.sys_terminal,           name='sys_terminal'),
+    path(f'{TIZIM_URL}/processes/',                    system_views.sys_processes,          name='sys_processes'),
+    path(f'{TIZIM_URL}/network/',                      system_views.sys_network,            name='sys_network'),
+    path(f'{TIZIM_URL}/cron/',                         system_views.sys_cron,               name='sys_cron'),
+    path(f'{TIZIM_URL}/config/',                       system_views.sys_config,             name='sys_config'),
+    path(f'{TIZIM_URL}/db-optimize/',                  system_views.sys_db_optimize,        name='sys_db_optimize'),
 
     # 2FA
     path('2fa/send/',    tfa_views.tfa_send_view,   name='tfa_send'),

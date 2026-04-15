@@ -1,0 +1,170 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Konfiguratsiya{% endblock %}
+{% block page_title %}config{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <h3 style="font-size:1rem;font-weight:800;margin-bottom:4px;">
+      <i data-lucide="sliders" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+      Konfiguratsiya Editor
+    </h3>
+    <p style="font-size:.75rem;color:var(--muted);">Django settings va .env sozlamalarini ko'rish/tahrirlash.</p>
+  </div>
+</div>
+
+{% if message %}
+<div style="background:rgba(67,233,123,.08);border:1px solid rgba(67,233,123,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;color:var(--primary);">
+  ✅ {{ message }}
+</div>
+{% endif %}
+
+{% if error %}
+<div style="background:rgba(255,101,132,.08);border:1px solid rgba(255,101,132,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;color:var(--danger);">
+  ❌ {{ error }}
+</div>
+{% endif %}
+
+<!-- TEZKOR AMALLAR -->
+<div class="sys-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+  <form method="post" style="margin:0;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="toggle_debug">
+    <div class="sys-card" style="cursor:pointer;" onclick="this.closest('form').submit();">
+      <div class="label">Debug Rejim</div>
+      <div class="value {% if debug_mode %}warn{% else %}ok{% endif %}" style="font-size:1.2rem;">
+        {% if debug_mode %}🟡 ON{% else %}🟢 OFF{% endif %}
+      </div>
+      <div class="sub">Bosib o'zgartiring</div>
+    </div>
+  </form>
+
+  <form method="post" style="margin:0;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="toggle_tfa">
+    <div class="sys-card" style="cursor:pointer;" onclick="this.closest('form').submit();">
+      <div class="label">2FA (Telegram)</div>
+      <div class="value {% if tfa_enabled %}ok{% else %}warn{% endif %}" style="font-size:1.2rem;">
+        {% if tfa_enabled %}🟢 ON{% else %}🟡 OFF{% endif %}
+      </div>
+      <div class="sub">Bosib o'zgartiring</div>
+    </div>
+  </form>
+
+  <div class="sys-card">
+    <div class="label">.env Fayl</div>
+    <div class="value {% if env_exists %}ok{% else %}err{% endif %}" style="font-size:1.2rem;">
+      {% if env_exists %}✓ Mavjud{% else %}✗ Yo'q{% endif %}
+    </div>
+    <div class="sub">Muhit sozlamalari</div>
+  </div>
+</div>
+
+<!-- TAB MENYU -->
+<div style="display:flex;gap:4px;margin-bottom:0;">
+  <button onclick="showTab('settings')" id="tab-settings" class="btn btn-blue" style="border-radius:8px 8px 0 0;opacity:1;">
+    ⚙️ Django Settings
+  </button>
+  <button onclick="showTab('env')" id="tab-env" class="btn btn-green" style="border-radius:8px 8px 0 0;opacity:.6;">
+    📄 .env Editor
+  </button>
+  <button onclick="showTab('source')" id="tab-source" class="btn btn-warn" style="border-radius:8px 8px 0 0;opacity:.6;">
+    📝 settings.py
+  </button>
+  {% if env_example %}
+  <button onclick="showTab('example')" id="tab-example" class="btn btn-red" style="border-radius:8px 8px 0 0;opacity:.6;">
+    📋 .env.example
+  </button>
+  {% endif %}
+</div>
+
+<!-- TAB: DJANGO SETTINGS -->
+<div id="panel-settings" class="sys-table-wrap" style="border-radius:0 12px 12px 12px;">
+  <div class="sys-table-header">
+    <span>Django Sozlamalari (joriy qiymatlar)</span>
+    <span style="font-size:.68rem;color:var(--muted);">{{ django_settings|length }} ta parametr</span>
+  </div>
+  <table class="sys-table">
+    <thead>
+      <tr>
+        <th>Parametr</th>
+        <th>Qiymat</th>
+        <th>Turi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in django_settings %}
+      <tr>
+        <td style="color:var(--primary);font-family:monospace;font-weight:700;font-size:.78rem;">{{ s.key }}</td>
+        <td style="font-size:.72rem;max-width:400px;overflow:hidden;text-overflow:ellipsis;word-break:break-all;">
+          {% if s.value == 'True' %}
+            <span class="badge badge-ok">True</span>
+          {% elif s.value == 'False' %}
+            <span class="badge badge-err">False</span>
+          {% else %}
+            {{ s.value|truncatechars:80 }}
+          {% endif %}
+        </td>
+        <td><span style="font-size:.65rem;color:var(--muted);">{{ s.type }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- TAB: .ENV EDITOR -->
+<div id="panel-env" class="sys-table-wrap" style="display:none;border-radius:0 12px 12px 12px;">
+  <div class="sys-table-header">
+    <span>.env Fayl Tahrirlash</span>
+    <span style="font-size:.68rem;color:var(--danger);">⚠ O'zgarishdan keyin server restart kerak</span>
+  </div>
+  <form method="post" style="padding:16px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="save_env">
+    <textarea name="env_content" class="code-input" rows="16" style="margin-bottom:12px;font-size:.82rem;">{{ env_content }}</textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="submit" class="btn btn-green">
+        <i data-lucide="save" style="width:14px;height:14px;"></i> Saqlash
+      </button>
+      <button type="button" onclick="restartServer()" class="btn btn-warn">
+        <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Server Restart
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- TAB: settings.py SOURCE -->
+<div id="panel-source" class="sys-table-wrap" style="display:none;border-radius:0 12px 12px 12px;">
+  <div class="sys-table-header">
+    <span>settings.py (faqat ko'rish)</span>
+    <span style="font-size:.68rem;color:var(--muted);">O'zgartirish .env orqali amalga oshiriladi</span>
+  </div>
+  <div class="code-block" style="max-height:500px;overflow-y:auto;font-size:.78rem;line-height:1.7;">{{ settings_content }}</div>
+</div>
+
+<!-- TAB: .ENV.EXAMPLE -->
+{% if env_example %}
+<div id="panel-example" class="sys-table-wrap" style="display:none;border-radius:0 12px 12px 12px;">
+  <div class="sys-table-header">
+    <span>.env.example — Namuna</span>
+    <span style="font-size:.68rem;color:var(--muted);">Barcha mavjud sozlamalar</span>
+  </div>
+  <div class="code-block" style="max-height:500px;overflow-y:auto;font-size:.78rem;line-height:1.7;">{{ env_example }}</div>
+</div>
+{% endif %}
+
+<script>
+const tabs = ['settings', 'env', 'source', 'example'];
+function showTab(name) {
+  tabs.forEach(t => {
+    const panel = document.getElementById('panel-' + t);
+    const tab   = document.getElementById('tab-' + t);
+    if (panel) panel.style.display = t === name ? 'block' : 'none';
+    if (tab)   tab.style.opacity    = t === name ? '1' : '.6';
+  });
+}
+lucide.createIcons();
+</script>
+{% endblock %}
