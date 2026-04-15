@@ -4,11 +4,12 @@ import urllib.request
 import urllib.parse
 import json
 from django.utils import timezone
+from django.conf import settings as django_settings
 from datetime import timedelta
 
-# Bot token va admin Telegram ID
-BOT_TOKEN  = '8737975467:AAE-LrxJbuB-pVAKkS9rDdV0lRAv_Tz9EE4'
-ADMIN_CHAT_ID = '2114098498'
+# Bot token va admin Telegram ID — .env dan o'qiladi
+BOT_TOKEN     = getattr(django_settings, 'TFA_BOT_TOKEN', '')
+ADMIN_CHAT_ID = getattr(django_settings, 'TFA_CHAT_ID', '')
 
 
 def send_telegram(chat_id: str, text: str) -> tuple[bool, str]:

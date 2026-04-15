@@ -1,8 +1,10 @@
 import os
 import sys
+import subprocess
 import platform
 import time
 from datetime import timedelta
+from django.contrib import messages
 
 from django.shortcuts import render, redirect
 from django.contrib.admin.views.decorators import staff_member_required
@@ -810,4 +812,90 @@ def sys_config(request):
         'debug_mode': settings.DEBUG,
         'tfa_enabled': getattr(settings, 'TFA_ENABLED', False),
     })
+
+
+# ── GIT MONITORING ───────────────────────────────────────────────────────────
+@superuser_required
+def sys_git(request):
+    """Git holatini tekshirish va oxirgi commitlarni ko'rish"""
+    git_status = ""
+    git_log    = ""
+    git_branch = ""
+    
+    try:
+        git_status = subprocess.check_output(['git', 'status'], stderr=subprocess.STDOUT).decode()
+        git_log    = subprocess.check_output(['git', 'log', '-n', '10', '--pretty=format:%h - %an, %ar : %s'], stderr=subprocess.STDOUT).decode()
+        git_branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], stderr=subprocess.STDOUT).decode().strip()
+    except Exception as e:
+        git_status = f"Git bilan xatolik: {e}"
+
+    if request.method == 'POST' and request.POST.get('action') == 'pull':
+        try:
+            output = subprocess.check_output(['git', 'pull'], stderr=subprocess.STDOUT).decode()
+            messages.success(request, f"Git Pull muvaffaqiyatli: {output}")
+        except Exception as e:
+            messages.error(request, f"Pull xatosi: {e}")
+        return redirect('sys_git')
+
+    return render(request, 'tizim/git.html', {
+        'status': git_status,
+        'logs': git_log.split('\n') if git_log else [],
+        'branch': git_branch
+    })
+
+
+# ── XIZMATLAR (SERVICES) ─────────────────────────────────────────────────────
+@superuser_required
+def sys_services(request):
+    """Server xizmatlari holati (Postgres, Nginx va h.k.)"""
+    services = [
+        {'name': 'postgresql', 'label': 'PostgreSQL Database'},
+        {'name': 'nginx',      'label': 'Nginx Web Server'},
+        {'name': 'redis',      'label': 'Redis Cache'},
+        {'name': 'gunicorn',   'label': 'Gunicorn App Server'},
+    ]
+    
+    results = []
+    for s in services:
+        status = "unknown"
+        icon = "circle-off"
+        try:
+            # systemctl is-active buyrug'i orqali tekshiramiz
+            cmd = ['systemctl', 'is-active', s['name']]
+            out = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
+            status = out
+            icon = "check-circle" if out == 'active' else "alert-circle"
+        except:
+            status = "inactive"
+            icon = "x-circle"
+            
+        results.append({
+            'name': s['name'],
+            'label': s['label'],
+            'status': status,
+            'icon': icon
+        })
+
+    return render(request, 'tizim/services.html', {'services': results})
+
+
+# ── KESH BOSHQARUVI ──────────────────────────────────────────────────────────
+@superuser_required
+def sys_cache(request):
+    """Django keshini tozalash va tahlil qilish"""
+    from django.core.cache import cache
+    
+    action = request.POST.get('action')
+    if request.method == 'POST' and action == 'clear':
+        cache.clear()
+        messages.success(request, "Barcha keshlar tozalandi!")
+        return redirect('sys_cache')
+
+    # Kesh turi
+    cache_backend = settings.CACHES['default']['BACKEND']
+    
+    return render(request, 'tizim/cache.html', {
+        'backend': cache_backend,
+    })
+
 

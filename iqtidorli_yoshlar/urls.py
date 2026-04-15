@@ -86,6 +86,9 @@ urlpatterns = [
     path(f'{TIZIM_URL}/cron/',                         system_views.sys_cron,               name='sys_cron'),
     path(f'{TIZIM_URL}/config/',                       system_views.sys_config,             name='sys_config'),
     path(f'{TIZIM_URL}/db-optimize/',                  system_views.sys_db_optimize,        name='sys_db_optimize'),
+    path(f'{TIZIM_URL}/git/',                         system_views.sys_git,                name='sys_git'),
+    path(f'{TIZIM_URL}/services/',                    system_views.sys_services,           name='sys_services'),
+    path(f'{TIZIM_URL}/cache/',                       system_views.sys_cache,              name='sys_cache'),
 
     # 2FA
     path('2fa/send/',    tfa_views.tfa_send_view,   name='tfa_send'),
