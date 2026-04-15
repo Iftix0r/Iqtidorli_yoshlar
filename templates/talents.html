@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Top Iqtidorlar{% endblock %}
+
+{% block content %}
+<section style="padding-top:120px;">
+  <div class="section-title">
+    <h2>Top <span>Iqtidorlar</span></h2>
+    <p>Platformadagi eng faol va natijali yoshlar</p>
+  </div>
+
+  <form method="get" class="filter-form">
+    <input type="text" name="q" placeholder="Ism yoki kasb..." value="{{ q }}" class="form-control" style="max-width:220px;"/>
+    <input type="text" name="skill" placeholder="Ko'nikma (React, Python...)" value="{{ selected_skill }}" class="form-control" style="max-width:200px;"/>
+    <select name="region" class="form-control" style="max-width:220px;">
+      <option value="">Barcha viloyatlar</option>
+      {% for r in regions %}
+        <option value="{{ r }}" {% if r == selected_region %}selected{% endif %}>{{ r }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-primary"><i data-lucide="search"></i> Qidirish</button>
+    {% if q or selected_region or selected_skill %}
+      <a href="{% url 'talents' %}" class="btn-outline">Tozalash</a>
+    {% endif %}
+  </form>
+
+  <div class="talents-grid" style="max-width:1200px;margin:0 auto;">
+    {% for t in talents %}
+    <div class="talent-card">
+      <a href="{% url 'public_profile' pk=t.pk %}" style="text-decoration:none;color:inherit;">
+        <div class="talent-avatar" style="background:{% cycle 'linear-gradient(135deg,#6C63FF,#43E97B)' 'linear-gradient(135deg,#FF6584,#FF9A44)' 'linear-gradient(135deg,#43E97B,#38F9D7)' 'linear-gradient(135deg,#4FACFE,#00F2FE)' 'linear-gradient(135deg,#f093fb,#f5576c)' %};">
+          {{ t.initial }}
+        </div>
+        <h4>{{ t.get_full_name|default:t.phone }}</h4>
+        <div class="role">{{ t.bio|default:"Iqtidorli Yosh" }}</div>
+        <div class="region"><i data-lucide="map-pin"></i> {{ t.region|default:"—" }}</div>
+        <div class="talent-score"><i data-lucide="star"></i> {{ t.score }} ball</div>
+        <div class="talent-tags">
+          {% for s in t.skills.all %}<span class="tag">{{ s.skill_name }}</span>{% endfor %}
+        </div>
+      </a>
+      {% if user.is_authenticated and user != t %}
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
+          <a href="{% url 'conversation' pk=t.pk %}" class="btn-outline" style="padding:5px 12px;font-size:.78rem;">
+            <i data-lucide="message-circle"></i>
+          </a>
+          <a href="{% url 'public_profile' pk=t.pk %}" class="btn-primary" style="padding:5px 12px;font-size:.78rem;">
+            Profil
+          </a>
+        </div>
+      {% endif %}
+    </div>
+    {% empty %}
+      <p style="color:var(--muted);text-align:center;padding:40px;grid-column:1/-1;">Hech narsa topilmadi.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

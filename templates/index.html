@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Iqtidorli Yoshlar — Iste'dodlar Markazi{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="shape shape-1"></div>
+  <div class="shape shape-2"></div>
+  <div class="shape shape-3"></div>
+  <div>
+    <div class="hero-badge">
+      <i data-lucide="flag"></i> O'zbekiston Iste'dodlari Platformasi
+    </div>
+    <h1>Iqtidoringizni<br/><span>Dunyoga Ko'rsating</span></h1>
+    <p>Chekka hududlardagi iqtidorli yoshlarni kashf qilish, ularga portfolio yaratish va mentorlar hamda investorlar bilan bog'lash uchun yagona platforma.</p>
+    <div class="hero-btns">
+      <a href="{% url 'register' %}" class="btn-primary">
+        <i data-lucide="rocket"></i> Hoziroq Boshlash
+      </a>
+      <a href="{% url 'talents' %}" class="btn-outline">
+        <i data-lucide="arrow-right"></i> Ko'proq Bilish
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="num">{{ stats.yoshlar }}+</div>
+        <div class="label">Iqtidorli Yoshlar</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">{{ stats.mentors }}+</div>
+        <div class="label">Mentorlar</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">{{ stats.investors }}+</div>
+        <div class="label">Investorlar</div>
+      </div>
+      <div class="stat-item">
+        <div class="num">14</div>
+        <div class="label">Viloyat</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-title">
+    <h2>Platforma <span>Imkoniyatlari</span></h2>
+    <p>Har bir iqtidorli yoshga kerakli barcha vositalar bir joyda</p>
+  </div>
+  <div class="features-grid">
+    {% for icon, title, desc in features %}
+    <div class="feature-card">
+      <div class="feature-icon"><i data-lucide="{{ icon }}"></i></div>
+      <h3>{{ title }}</h3>
+      <p>{{ desc }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- TOP TALENTS -->
+{% if top_talents %}
+<section id="talents">
+  <div class="section-title">
+    <h2>Top <span>Iqtidorlar</span></h2>
+    <p>Bu oy eng faol va natijali yoshlarimiz</p>
+  </div>
+  <div class="talents-grid">
+    {% for t in top_talents %}
+    <div class="talent-card">
+      <div class="talent-avatar" style="background:{% cycle 'linear-gradient(135deg,#6C63FF,#43E97B)' 'linear-gradient(135deg,#FF6584,#FF9A44)' 'linear-gradient(135deg,#43E97B,#38F9D7)' 'linear-gradient(135deg,#4FACFE,#00F2FE)' %};">
+        {{ t.initial }}
+      </div>
+      <h4>{{ t.get_full_name }}</h4>
+      <div class="role">{{ t.bio|default:"Iqtidorli Yosh" }}</div>
+      <div class="region">
+        <i data-lucide="map-pin"></i> {{ t.region|default:"—" }}
+      </div>
+      <div class="talent-score">
+        <i data-lucide="star"></i> {{ t.score }} ball
+      </div>
+      <div class="talent-tags">
+        {% for s in t.skills.all %}<span class="tag">{{ s.skill_name }}</span>{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="text-align:center;margin-top:32px;">
+    <a href="{% url 'talents' %}" class="btn-primary">
+      <i data-lucide="users"></i> Barchasini Ko'rish
+    </a>
+  </div>
+</section>
+{% endif %}
+
+<!-- BENEFITS -->
+<section id="benefits">
+  <div class="section-title">
+    <h2>Kim Uchun <span>Foydali?</span></h2>
+    <p>Platforma barcha tomonlar uchun qiymat yaratadi</p>
+  </div>
+  <div class="benefits-table">
+    <table>
+      <thead><tr><th>Kim uchun?</th><th>Foydasi</th></tr></thead>
+      <tbody>
+        <tr><td><i data-lucide="code-2"></i> Yoshlar uchun</td><td>O'zini ko'rsatish, jamoa topish va moddiy qo'llab-quvvatlanish imkoniyati</td></tr>
+        <tr><td><i data-lucide="landmark"></i> Davlat uchun</td><td>Kadrlar zaxirasini shakllantirish va yoshlar salohiyatini statistik ko'rish</td></tr>
+        <tr><td><i data-lucide="briefcase"></i> Investorlar uchun</td><td>Istiqbolli startaplar va aqlli kadrlarni oson topish</td></tr>
+        <tr><td><i data-lucide="graduation-cap"></i> Mentorlar uchun</td><td>Iqtidorli shogirdlar topish va bilimlarini ulashish platformasi</td></tr>
+        <tr><td><i data-lucide="building-2"></i> Kompaniyalar uchun</td><td>Tayyor mutaxassislarni arzon va tez topish imkoniyati</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>Iqtidoringizni<br/><span>Hoziroq Namoyish Eting</span></h2>
+  <p>Minglab iqtidorli yoshlar allaqachon platformada. Siz ham qo'shiling.</p>
+  <div class="hero-btns">
+    <a href="{% url 'register' %}" class="btn-primary">
+      <i data-lucide="rocket"></i> Bepul Ro'yxatdan O'tish
+    </a>
+    <a href="{% url 'contests' %}" class="btn-outline">
+      <i data-lucide="trophy"></i> Tanlovlarni Ko'rish
+    </a>
+  </div>
+</section>
+
+{% endblock %}

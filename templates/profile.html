@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block title %}Mening Profilim{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+
+  <!-- PROFIL HEADER -->
+  <div class="profile-header">
+    <div class="profile-avatar">
+      {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="{{ user.initial }}"
+             style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+      {% else %}
+        {{ user.initial }}
+      {% endif %}
+    </div>
+    <div class="profile-info">
+      <h2>{{ user.get_full_name|default:user.username }}</h2>
+      <div class="role-badge">{{ user.get_role_display }}</div>
+      <div class="region"><i data-lucide="map-pin"></i> {{ user.region|default:"Viloyat ko'rsatilmagan" }}</div>
+      <div class="score"><i data-lucide="star"></i> {{ user.score }} ball</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <!-- Tahrirlash tugmasi -->
+      <button onclick="toggleEdit()" class="btn-outline" style="padding:8px 16px;font-size:.88rem;" id="editBtn">
+        <i data-lucide="edit-3"></i> Tahrirlash
+      </button>
+      <a href="{% url 'inbox' %}" class="btn-outline" style="padding:8px 16px;font-size:.88rem;">
+        <i data-lucide="message-circle"></i>
+        {% if unread_notif %}<span class="badge-dot">{{ unread_notif }}</span>{% endif %}
+      </a>
+      <a href="{% url 'notifications' %}" class="btn-outline" style="padding:8px 16px;font-size:.88rem;">
+        <i data-lucide="bell"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- MENTOR SO'ROVLARI -->
+  {% if mentor_requests %}
+  <div class="profile-card" style="margin-bottom:24px;border-color:rgba(108,99,255,.4);">
+    <h3><i data-lucide="handshake"></i> Mentor So'rovlari
+      <span class="badge-dot" style="position:static;display:inline-flex;margin-left:8px;">{{ mentor_requests.count }}</span>
+    </h3>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+      {% for req in mentor_requests %}
+        <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:rgba(108,99,255,.08);border-radius:12px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;flex-shrink:0;">
+            {{ req.sender.initial }}
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:600;">{{ req.sender.get_full_name }}</div>
+            <div style="font-size:.8rem;color:var(--muted);">{{ req.message|default:"Mentor bo'lishingizni so'raydi" }}</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <a href="{% url 'mentor_handle' req_id=req.pk action='accept' %}" class="btn-primary" style="padding:6px 14px;font-size:.82rem;">
+              <i data-lucide="check"></i> Qabul
+            </a>
+            <a href="{% url 'mentor_handle' req_id=req.pk action='reject' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;">
+              <i data-lucide="x"></i> Rad
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- TAHRIRLASH PANELI (yashirin, tugma bosilganda ochiladi) -->
+  <div id="editPanel" style="display:none;margin-bottom:24px;">
+    <div class="profile-grid">
+
+      <!-- Profil tahrirlash -->
+      <div class="profile-card">
+        <h3><i data-lucide="user"></i> Ma'lumotlarni Tahrirlash</h3>
+        <form method="post" enctype="multipart/form-data" style="margin-top:16px;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="profile"/>
+          {% for field in profile_form %}
+            <div class="form-group">
+              <label>{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<div class="field-error">{{ field.errors.0 }}</div>{% endif %}
+            </div>
+          {% endfor %}
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn-primary">
+              <i data-lucide="save"></i> Saqlash
+            </button>
+            <button type="button" onclick="toggleEdit()" class="btn-outline">
+              Bekor qilish
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Ko'nikmalar -->
+      <div class="profile-card">
+        <h3><i data-lucide="zap"></i> Ko'nikmalar</h3>
+        <div class="talent-tags" style="margin:16px 0;">
+          {% for s in skills %}
+            <span class="tag">
+              {{ s.skill_name }}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="del_skill"/>
+                <input type="hidden" name="skill_id" value="{{ s.pk }}"/>
+                <button type="submit" style="background:none;border:none;color:#ff8fa3;cursor:pointer;font-size:.75rem;padding:0 2px;">✕</button>
+              </form>
+            </span>
+          {% empty %}
+            <p style="color:var(--muted);font-size:.9rem;">Hali ko'nikma qo'shilmagan.</p>
+          {% endfor %}
+        </div>
+        <form method="post" style="display:flex;gap:8px;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="skill"/>
+          {{ skill_form.skill_name }}
+          <button type="submit" class="btn-primary" style="padding:10px 18px;"><i data-lucide="plus"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERTIFIKATLAR -->
+  <div class="profile-card" style="margin-top:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3><i data-lucide="award"></i> Sertifikatlar</h3>
+      <button onclick="toggleCerts()" class="btn-outline" style="padding:6px 14px;font-size:.82rem;" id="certBtn">
+        <i data-lucide="plus"></i> Qo'shish
+      </button>
+    </div>
+    {% if certificates %}
+      <div class="features-grid" style="margin-bottom:16px;">
+        {% for c in certificates %}
+          <div class="feature-card">
+            {% if c.image %}
+              <img src="{{ c.image.url }}" alt="{{ c.title }}"
+                   style="width:100%;height:120px;object-fit:cover;border-radius:10px;margin-bottom:12px;"/>
+            {% endif %}
+            <h4>{{ c.title }}</h4>
+            {% if c.issuer %}<div style="color:var(--primary);font-size:.85rem;margin:4px 0;">{{ c.issuer }}</div>{% endif %}
+            {% if c.issued_date %}<div style="color:var(--muted);font-size:.8rem;">{{ c.issued_date|date:"Y" }}</div>{% endif %}
+            {% if c.link %}
+              <a href="{{ c.link }}" target="_blank" class="btn-outline" style="margin-top:8px;display:inline-flex;padding:5px 12px;font-size:.8rem;">
+                <i data-lucide="external-link"></i> Ko'rish
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--muted);margin-bottom:12px;">Hali sertifikat qo'shilmagan.</p>
+    {% endif %}
+
+    <div id="certForm" style="display:none;border-top:1px solid rgba(108,99,255,.15);padding-top:20px;">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="certificate"/>
+        {% for field in cert_form %}
+          <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn-primary"><i data-lucide="save"></i> Saqlash</button>
+          <button type="button" onclick="toggleCerts()" class="btn-outline">Bekor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LOYIHALAR -->
+  <div class="profile-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3><i data-lucide="folder-open"></i> Loyihalar</h3>
+      <button onclick="toggleProjects()" class="btn-outline" style="padding:6px 14px;font-size:.82rem;" id="projBtn">
+        <i data-lucide="plus"></i> Qo'shish
+      </button>
+    </div>
+
+    {% if projects %}
+      <div class="features-grid" style="margin-bottom:20px;">
+        {% for p in projects %}
+          <div class="feature-card">
+            <h4>{{ p.title }}</h4>
+            <p>{{ p.description }}</p>
+            {% if p.link %}
+              <a href="{{ p.link }}" target="_blank" class="btn-outline"
+                 style="margin-top:10px;display:inline-flex;padding:6px 16px;font-size:.85rem;">
+                <i data-lucide="external-link"></i> Ko'rish
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--muted);margin-bottom:16px;">Hali loyiha qo'shilmagan.</p>
+    {% endif %}
+
+    <!-- Loyiha qo'shish formasi (yashirin) -->
+    <div id="projectForm" style="display:none;border-top:1px solid rgba(108,99,255,.15);padding-top:20px;margin-top:8px;">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="project"/>
+        {% for field in project_form %}
+          <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn-primary"><i data-lucide="plus-circle"></i> Qo'shish</button>
+          <button type="button" onclick="toggleProjects()" class="btn-outline">Bekor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  function toggleCerts() {
+    const f   = document.getElementById('certForm');
+    const btn = document.getElementById('certBtn');
+    const open = f.style.display === 'none';
+    f.style.display = open ? 'block' : 'none';
+    btn.innerHTML = open ? '<i data-lucide="x"></i> Yopish' : '<i data-lucide="plus"></i> Qo\'shish';
+    lucide.createIcons();
+  }
+
+  function toggleEdit() {
+    const panel = document.getElementById('editPanel');
+    const btn   = document.getElementById('editBtn');
+    const open  = panel.style.display === 'none';
+    panel.style.display = open ? 'block' : 'none';
+    btn.innerHTML = open
+      ? '<i data-lucide="x"></i> Yopish'
+      : '<i data-lucide="edit-3"></i> Tahrirlash';
+    lucide.createIcons();
+    if (open) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function toggleProjects() {
+    const f   = document.getElementById('projectForm');
+    const btn = document.getElementById('projBtn');
+    const open = f.style.display === 'none';
+    f.style.display = open ? 'block' : 'none';
+    btn.innerHTML = open
+      ? '<i data-lucide="x"></i> Yopish'
+      : '<i data-lucide="plus"></i> Qo\'shish';
+    lucide.createIcons();
+  }
+</script>
+{% endblock %}

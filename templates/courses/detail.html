@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+<section style="padding-top:100px;max-width:900px;margin:0 auto;padding-bottom:60px;">
+
+  <!-- Kurs header -->
+  <div style="background:var(--card);border:1px solid rgba(108,99,255,.2);border-radius:20px;overflow:hidden;margin-bottom:28px;">
+    {% if course.cover %}
+      <img src="{{ course.cover.url }}" alt="{{ course.title }}"
+           style="width:100%;height:220px;object-fit:cover;"/>
+    {% else %}
+      <div style="width:100%;height:180px;background:var(--gradient);display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="book-open" style="width:56px;height:56px;color:white;"></i>
+      </div>
+    {% endif %}
+    <div style="padding:24px 28px;">
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+        <span class="tag">{{ course.get_level_display }}</span>
+        {% if course.duration %}<span class="tag"><i data-lucide="clock"></i> {{ course.duration }}</span>{% endif %}
+        <span class="tag"><i data-lucide="layers"></i> {{ course.lesson_count }} dars</span>
+      </div>
+      <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:10px;">{{ course.title }}</h1>
+      <p style="color:var(--muted);line-height:1.7;">{{ course.description }}</p>
+      {% if course.author %}
+        <div style="margin-top:14px;font-size:.88rem;color:var(--muted);">
+          <i data-lucide="user"></i> Muallif: <strong style="color:var(--text);">{{ course.author.get_full_name }}</strong>
+        </div>
+      {% endif %}
+
+      <!-- Progress bar -->
+      {% if enrolled %}
+        <div style="margin-top:16px;">
+          <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);margin-bottom:6px;">
+            <span>Jarayon</span><span>{{ progress }}%</span>
+          </div>
+          <div style="height:8px;background:rgba(108,99,255,.15);border-radius:4px;">
+            <div style="height:100%;width:{{ progress }}%;background:var(--gradient);border-radius:4px;transition:width .5s;"></div>
+          </div>
+        </div>
+        {% if certificate %}
+          <div style="margin-top:16px;padding:14px 18px;background:rgba(67,233,123,.1);border:1px solid rgba(67,233,123,.3);border-radius:12px;display:flex;align-items:center;gap:12px;">
+            <i data-lucide="award" style="color:#43E97B;width:24px;height:24px;flex-shrink:0;"></i>
+            <div>
+              <div style="font-weight:700;color:#43E97B;">Sertifikat olindiz!</div>
+              <div style="font-size:.82rem;color:var(--muted);">№ {{ certificate.cert_number }}</div>
+            </div>
+            <a href="{% url 'certificate_view' cert_number=certificate.cert_number %}"
+               class="btn-primary" style="margin-left:auto;padding:6px 16px;font-size:.82rem;">
+              Ko'rish
+            </a>
+          </div>
+        {% endif %}
+      {% else %}
+        <form method="post" action="{% url 'course_enroll' pk=course.pk %}" style="margin-top:18px;">
+          {% csrf_token %}
+          {% if user.is_authenticated %}
+            <button type="submit" class="btn-primary" style="padding:12px 32px;">
+              <i data-lucide="play-circle"></i> Kursga Yozilish
+            </button>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn-primary" style="padding:12px 32px;">
+              <i data-lucide="log-in"></i> Kirish kerak
+            </a>
+          {% endif %}
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Darslar ro'yxati -->
+  <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:16px;">
+    <i data-lucide="list"></i> Darslar
+  </h2>
+
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    {% for lesson in lessons %}
+      {% with is_done=lesson.pk|stringformat:"s" in done_ids|join:"," %}
+      <div style="background:var(--card);border:1px solid rgba(108,99,255,{% if lesson.pk in done_ids %}.4{% else %}.12{% endif %});border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px;">
+        <!-- Raqam / check -->
+        <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;
+          {% if lesson.pk in done_ids %}background:rgba(67,233,123,.2);color:#43E97B;{% else %}background:rgba(108,99,255,.15);color:var(--primary);{% endif %}">
+          {% if lesson.pk in done_ids %}
+            <i data-lucide="check" style="width:16px;height:16px;"></i>
+          {% else %}
+            {{ lesson.order }}
+          {% endif %}
+        </div>
+
+        <div style="flex:1;">
+          <div style="font-weight:600;">{{ lesson.title }}</div>
+          {% if lesson.video_url %}
+            <div style="font-size:.78rem;color:var(--muted);margin-top:2px;">
+              <i data-lucide="play-circle"></i> Video dars
+            </div>
+          {% endif %}
+        </div>
+
+        {% if enrolled %}
+          {% if lesson.pk in done_ids %}
+            <span style="font-size:.78rem;color:#43E97B;font-weight:600;">Bajarildi</span>
+          {% else %}
+            <a href="{% url 'lesson_done' pk=lesson.pk %}"
+               onclick="return confirm('Bu darsni tugatdingizmi?')"
+               class="btn-primary" style="padding:6px 16px;font-size:.82rem;">
+              <i data-lucide="check-circle"></i> Tugatdim
+            </a>
+          {% endif %}
+        {% else %}
+          <span style="font-size:.78rem;color:var(--muted);">Yoziling</span>
+        {% endif %}
+      </div>
+      {% endwith %}
+    {% empty %}
+      <p style="color:var(--muted);text-align:center;padding:30px;">Darslar hali qo'shilmagan.</p>
+    {% endfor %}
+  </div>
+
+</section>
+{% endblock %}

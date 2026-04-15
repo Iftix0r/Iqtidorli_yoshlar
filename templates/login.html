@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Kirish{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <div class="auth-icon"><i data-lucide="smartphone"></i></div>
+    <h2>Tizimga <span>Kirish</span></h2>
+    <p class="auth-sub">Telefon raqamingiz orqali kiring</p>
+
+    {% if error %}
+      <div class="alert alert-error">
+        <i data-lucide="alert-circle"></i> {{ error }}
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label><i data-lucide="phone"></i> Telefon raqam</label>
+        <input type="tel" name="phone" class="form-control"
+               placeholder="+998 90 123 45 67" required/>
+      </div>
+      <div class="form-group">
+        <label><i data-lucide="lock"></i> Parol</label>
+        <input type="password" name="password" class="form-control"
+               placeholder="Parolingiz" required/>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+        <i data-lucide="log-in"></i> Kirish
+      </button>
+    </form>
+    <p class="auth-link">
+      Hisobingiz yo'qmi? <a href="{% url 'register' %}">Ro'yxatdan o'tish</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

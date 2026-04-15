@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Bildirishnomalar{% endblock %}
+
+{% block content %}
+<section style="padding-top:120px;max-width:700px;margin:0 auto;">
+  <div class="section-title">
+    <h2><i data-lucide="bell"></i> <span>Bildirishnomalar</span></h2>
+  </div>
+
+  {% if notifs %}
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      {% for n in notifs %}
+        <div style="background:var(--card);border:1px solid rgba(108,99,255,{% if not n.is_read %}.4{% else %}.1{% endif %});border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(108,99,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            {% if n.notif_type == 'mentor_req' %}<i data-lucide="handshake" style="color:var(--primary);"></i>
+            {% elif n.notif_type == 'msg' %}<i data-lucide="message-circle" style="color:var(--accent);"></i>
+            {% elif n.notif_type == 'contest' %}<i data-lucide="trophy" style="color:#FFD700;"></i>
+            {% else %}<i data-lucide="star" style="color:var(--secondary);"></i>{% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:.92rem;{% if not n.is_read %}font-weight:600;{% endif %}">{{ n.text }}</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:3px;">{{ n.created_at|timesince }} oldin</div>
+          </div>
+          {% if n.link %}
+            <a href="{{ n.link }}" style="color:var(--primary);"><i data-lucide="arrow-right"></i></a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align:center;padding:60px 20px;color:var(--muted);">
+      <i data-lucide="bell-off" style="width:48px;height:48px;margin-bottom:16px;opacity:.4;"></i>
+      <p>Hali bildirishnoma yo'q.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

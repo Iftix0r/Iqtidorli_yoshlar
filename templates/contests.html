@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Tanlovlar va Grantlar{% endblock %}
+
+{% block content %}
+<section style="padding-top:120px;">
+  <div class="section-title">
+    <h2>Tanlovlar va <span>Grantlar</span></h2>
+    <p>Davlat va xususiy sektor tomonidan e'lon qilingan imkoniyatlar</p>
+  </div>
+
+  {% if user.is_staff %}
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="{% url 'add_contest' %}" class="btn-primary">+ Yangi Tanlov Qo'shish</a>
+    </div>
+  {% endif %}
+
+  <div class="features-grid" style="max-width:1100px;margin:0 auto;">
+    {% for c in contests %}
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <h3>{{ c.title }}</h3>
+        <p>{{ c.description }}</p>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">
+          {% if c.deadline %}
+            <span style="font-size:.82rem;color:var(--accent);">📅 Muddat: {{ c.deadline|date:"d.m.Y" }}</span>
+          {% endif %}
+          {% if c.prize %}
+            <span style="font-size:.82rem;color:#FFD700;">💰 Mukofot: {{ c.prize }}</span>
+          {% endif %}
+        </div>
+        {% if user.is_authenticated %}
+          {% if c.pk in applied_ids %}
+            <span class="btn-outline" style="margin-top:14px;display:inline-flex;padding:8px 20px;font-size:.85rem;opacity:.6;cursor:default;">
+              <i data-lucide="check-circle"></i> Ariza Yuborilgan
+            </span>
+          {% else %}
+            <a href="{% url 'apply_contest' pk=c.pk %}" class="btn-primary" style="margin-top:14px;display:inline-flex;padding:8px 20px;font-size:.85rem;">
+              <i data-lucide="send"></i> Ariza Topshirish
+            </a>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'login' %}" class="btn-outline" style="margin-top:14px;display:inline-block;padding:8px 20px;font-size:.85rem;">Kirish kerak</a>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p style="color:var(--muted);text-align:center;padding:40px;grid-column:1/-1;">Hozircha tanlov yo'q.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

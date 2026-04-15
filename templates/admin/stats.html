@@ -1,0 +1,126 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<style>
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:32px; }
+  .stat-box { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px 16px; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .stat-box .num { font-size:2rem; font-weight:900; color:#4F46E5; }
+  .stat-box .lbl { font-size:.82rem; color:#6B7280; margin-top:4px; }
+  .section-h { font-size:1.1rem; font-weight:700; margin:24px 0 12px; color:#111827; border-left:4px solid #4F46E5; padding-left:10px; }
+  table.stats-table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .stats-table th { background:#4F46E5; color:#fff; padding:10px 14px; text-align:left; font-size:.85rem; }
+  .stats-table td { padding:10px 14px; border-bottom:1px solid #f3f4f6; font-size:.88rem; }
+  .stats-table tr:last-child td { border-bottom:none; }
+  .stats-table tr:nth-child(even) td { background:#f9fafb; }
+  .bar-wrap { display:flex; align-items:center; gap:8px; }
+  .bar { height:8px; background:linear-gradient(90deg,#4F46E5,#059669); border-radius:4px; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media(max-width:768px){ .two-col{ grid-template-columns:1fr; } }
+</style>
+
+<h2 style="margin-bottom:20px;">📊 Statistika Dashboard</h2>
+
+<!-- STAT BOXES -->
+<div class="stats-grid">
+  <div class="stat-box">
+    <div class="num">{{ total_users }}</div>
+    <div class="lbl">Jami Foydalanuvchilar</div>
+  </div>
+  <div class="stat-box">
+    <div class="num">{{ total_yoshlar }}</div>
+    <div class="lbl">Iqtidorli Yoshlar</div>
+  </div>
+  <div class="stat-box">
+    <div class="num">{{ total_mentors }}</div>
+    <div class="lbl">Mentorlar</div>
+  </div>
+  <div class="stat-box">
+    <div class="num">{{ total_investors }}</div>
+    <div class="lbl">Investorlar</div>
+  </div>
+  <div class="stat-box">
+    <div class="num">{{ total_projects }}</div>
+    <div class="lbl">Loyihalar</div>
+  </div>
+  <div class="stat-box">
+    <div class="num">{{ total_contests }}</div>
+    <div class="lbl">Tanlovlar</div>
+  </div>
+  <div class="stat-box">
+    <div class="num">{{ total_skills }}</div>
+    <div class="lbl">Ko'nikmalar</div>
+  </div>
+</div>
+
+<div class="two-col">
+
+  <!-- TOP 10 -->
+  <div>
+    <div class="section-h">🏆 Top 10 Iqtidorlar</div>
+    <table class="stats-table">
+      <thead><tr><th>#</th><th>Ism</th><th>Viloyat</th><th>Ball</th></tr></thead>
+      <tbody>
+        {% for u in top_users %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td><a href="/admin/core/user/{{ u.pk }}/change/">{{ u.get_full_name|default:u.phone }}</a></td>
+          <td>{{ u.region|default:"—" }}</td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar" style="width:{{ u.score|floatformat:0 }}px;max-width:80px;"></div>
+              <span>{{ u.score }}</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- VILOYATLAR -->
+  <div>
+    <div class="section-h">📍 Viloyatlar Bo'yicha</div>
+    <table class="stats-table">
+      <thead><tr><th>Viloyat</th><th>Yoshlar soni</th></tr></thead>
+      <tbody>
+        {% for r in by_region %}
+        <tr>
+          <td>{{ r.region }}</td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar" style="width:{{ r.cnt }}0px;max-width:100px;"></div>
+              <span>{{ r.cnt }}</span>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="2" style="color:#9ca3af;">Ma'lumot yo'q</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- SO'NGGI RO'YXATDAN O'TGANLAR -->
+<div class="section-h" style="margin-top:24px;">🆕 So'nggi Ro'yxatdan O'tganlar</div>
+<table class="stats-table">
+  <thead>
+    <tr><th>Ism</th><th>Telefon</th><th>Rol</th><th>Viloyat</th><th>Sana</th></tr>
+  </thead>
+  <tbody>
+    {% for u in recent_users %}
+    <tr>
+      <td><a href="/admin/core/user/{{ u.pk }}/change/">{{ u.get_full_name|default:u.phone }}</a></td>
+      <td>{{ u.phone }}</td>
+      <td>{{ u.get_role_display }}</td>
+      <td>{{ u.region|default:"—" }}</td>
+      <td>{{ u.date_joined|date:"d.m.Y H:i" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div style="margin-top:20px;">
+  <a href="/admin/" style="color:#4F46E5;">← Admin panelga qaytish</a>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Ariza — {{ contest.title }}{% endblock %}
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <div class="auth-icon"><i data-lucide="trophy"></i></div>
+    <h2><span>{{ contest.title }}</span></h2>
+    <p class="auth-sub">Tanlovga ariza topshirish</p>
+    {% if contest.deadline %}
+      <div class="alert alert-success" style="margin-bottom:16px;">
+        <i data-lucide="calendar"></i> Muddat: {{ contest.deadline|date:"d.m.Y" }}
+        {% if contest.prize %} · <i data-lucide="gift"></i> {{ contest.prize }}{% endif %}
+      </div>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group">
+          <label>{{ field.label }}</label>
+          {{ field }}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+        <i data-lucide="send"></i> Ariza Yuborish
+      </button>
+    </form>
+    <p class="auth-link"><a href="{% url 'contests' %}">← Tanlovlarga qaytish</a></p>
+  </div>
+</section>
+{% endblock %}

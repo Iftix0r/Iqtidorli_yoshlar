@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}{{ other.get_full_name }} bilan suhbat{% endblock %}
+
+{% block content %}
+<section style="padding-top:100px;max-width:700px;margin:0 auto;padding-bottom:40px;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px 20px;border:1px solid rgba(108,99,255,.15);">
+    <a href="{% url 'inbox' %}" style="color:var(--muted);"><i data-lucide="arrow-left"></i></a>
+    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#43E97B);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">
+      {{ other.initial }}
+    </div>
+    <div>
+      <div style="font-weight:700;">{{ other.get_full_name|default:other.phone }}</div>
+      <div style="font-size:.8rem;color:var(--muted);">{{ other.get_role_display }}</div>
+    </div>
+    <a href="{% url 'public_profile' pk=other.pk %}" class="btn-outline" style="margin-left:auto;padding:6px 14px;font-size:.82rem;">
+      Profil
+    </a>
+  </div>
+
+  <!-- Messages -->
+  <div id="chat-box" style="display:flex;flex-direction:column;gap:10px;min-height:300px;max-height:500px;overflow-y:auto;padding:4px 0;margin-bottom:16px;">
+    {% for m in msgs %}
+      <div style="display:flex;{% if m.sender == user %}justify-content:flex-end{% endif %};">
+        <div style="max-width:70%;padding:10px 16px;border-radius:{% if m.sender == user %}18px 18px 4px 18px{% else %}18px 18px 18px 4px{% endif %};
+          background:{% if m.sender == user %}var(--gradient){% else %}var(--card){% endif %};
+          color:{% if m.sender == user %}white{% else %}var(--text){% endif %};
+          border:{% if m.sender != user %}1px solid rgba(108,99,255,.15){% else %}none{% endif %};
+          font-size:.92rem;line-height:1.5;">
+          {{ m.body }}
+          <div style="font-size:.7rem;opacity:.6;margin-top:4px;text-align:right;">
+            {{ m.created_at|date:"H:i" }}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p style="text-align:center;color:var(--muted);padding:40px 0;">Suhbat boshlang...</p>
+    {% endfor %}
+  </div>
+
+  <!-- Send form -->
+  <form method="post" style="display:flex;gap:10px;align-items:flex-end;">
+    {% csrf_token %}
+    <div style="flex:1;">{{ form.body }}</div>
+    <button type="submit" class="btn-primary" style="padding:10px 20px;height:fit-content;">
+      <i data-lucide="send"></i>
+    </button>
+  </form>
+</section>
+
+<script>
+  // Pastga scroll
+  const box = document.getElementById('chat-box');
+  box.scrollTop = box.scrollHeight;
+</script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Qidiruv — {{ q }}{% endblock %}
+{% block content %}
+<section style="padding-top:120px;max-width:900px;margin:0 auto;">
+  <div class="section-title">
+    <h2><span>Qidiruv</span> Natijalari</h2>
+    {% if q %}<p>"{{ q }}" bo'yicha natijalar</p>{% endif %}
+  </div>
+
+  <!-- Search form -->
+  <form method="get" class="filter-form" style="margin-bottom:40px;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Qidirish..." class="form-control" style="max-width:400px;" autofocus/>
+    <button type="submit" class="btn-primary"><i data-lucide="search"></i> Qidirish</button>
+  </form>
+
+  {% if q %}
+
+  <!-- Foydalanuvchilar -->
+  {% if results.users %}
+  <div style="margin-bottom:32px;">
+    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+      <i data-lucide="users"></i> Foydalanuvchilar
+      <span class="tag">{{ results.users|length }}</span>
+    </h3>
+    <div class="talents-grid">
+      {% for u in results.users %}
+        <a href="{% url 'public_profile' pk=u.pk %}" style="text-decoration:none;">
+          <div class="talent-card">
+            <div class="talent-avatar" style="background:linear-gradient(135deg,#6C63FF,#43E97B);">
+              {% if u.avatar %}<img src="{{ u.avatar.url }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+              {% else %}{{ u.initial }}{% endif %}
+            </div>
+            <h4>{{ u.get_full_name|default:u.phone }}</h4>
+            <div class="role">{{ u.bio|default:"" }}</div>
+            <div class="region"><i data-lucide="map-pin"></i> {{ u.region|default:"—" }}</div>
+            <div class="talent-score"><i data-lucide="star"></i> {{ u.score }}</div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tanlovlar -->
+  {% if results.contests %}
+  <div style="margin-bottom:32px;">
+    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+      <i data-lucide="trophy"></i> Tanlovlar
+      <span class="tag">{{ results.contests|length }}</span>
+    </h3>
+    <div class="features-grid">
+      {% for c in results.contests %}
+        <div class="feature-card">
+          <div class="feature-icon"><i data-lucide="trophy"></i></div>
+          <h3>{{ c.title }}</h3>
+          <p>{{ c.description|truncatewords:15 }}</p>
+          {% if c.deadline %}<div style="font-size:.82rem;color:var(--accent);margin-top:8px;"><i data-lucide="calendar"></i> {{ c.deadline|date:"d.m.Y" }}</div>{% endif %}
+          <a href="{% url 'contests' %}" class="btn-outline" style="margin-top:10px;display:inline-flex;padding:6px 14px;font-size:.82rem;">Ko'rish</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Ish e'lonlari -->
+  {% if results.jobs %}
+  <div style="margin-bottom:32px;">
+    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+      <i data-lucide="briefcase"></i> Ish E'lonlari
+      <span class="tag">{{ results.jobs|length }}</span>
+    </h3>
+    <div class="features-grid">
+      {% for j in results.jobs %}
+        <div class="feature-card">
+          <h3>{{ j.title }}</h3>
+          <div style="color:var(--primary);font-weight:600;margin:4px 0;">{{ j.company }}</div>
+          <p>{{ j.description|truncatewords:12 }}</p>
+          <a href="{% url 'jobs' %}" class="btn-outline" style="margin-top:10px;display:inline-flex;padding:6px 14px;font-size:.82rem;">Ko'rish</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Resurslar -->
+  {% if results.resources %}
+  <div style="margin-bottom:32px;">
+    <h3 style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+      <i data-lucide="book-open"></i> Resurslar
+      <span class="tag">{{ results.resources|length }}</span>
+    </h3>
+    <div class="features-grid">
+      {% for r in results.resources %}
+        <div class="feature-card">
+          <div class="feature-icon"><i data-lucide="book-open"></i></div>
+          <h3>{{ r.title }}</h3>
+          <p>{{ r.description|truncatewords:12 }}</p>
+          <a href="{{ r.link }}" target="_blank" class="btn-primary" style="margin-top:10px;display:inline-flex;padding:6px 14px;font-size:.82rem;">
+            <i data-lucide="external-link"></i> Ochish
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not results.users and not results.contests and not results.jobs and not results.resources %}
+    <div style="text-align:center;padding:60px;color:var(--muted);">
+      <i data-lucide="search-x" style="width:48px;height:48px;opacity:.4;margin-bottom:16px;"></i>
+      <p>"{{ q }}" bo'yicha hech narsa topilmadi.</p>
+    </div>
+  {% endif %}
+
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Ish E'lonlari{% endblock %}
+{% block content %}
+<section style="padding-top:120px;">
+  <div class="section-title">
+    <h2>Ish <span>E'lonlari</span></h2>
+    <p>Kompaniyalar va startaplardan ish takliflari</p>
+  </div>
+
+  <!-- Filter -->
+  <form method="get" class="filter-form">
+    <input type="text" name="q" value="{{ q }}" placeholder="Lavozim yoki kompaniya..." class="form-control" style="max-width:240px;"/>
+    <select name="type" class="form-control" style="max-width:180px;">
+      <option value="">Barcha turlar</option>
+      {% for val, label in job_types %}
+        <option value="{{ val }}" {% if val == selected_type %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-primary"><i data-lucide="search"></i></button>
+    {% if q or selected_type %}<a href="{% url 'jobs' %}" class="btn-outline">Tozalash</a>{% endif %}
+  </form>
+
+  <div class="features-grid" style="max-width:1100px;margin:0 auto;">
+    {% for j in jobs %}
+      <div class="feature-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div class="feature-icon"><i data-lucide="briefcase"></i></div>
+          <span class="tag">{{ j.get_job_type_display }}</span>
+        </div>
+        <h3>{{ j.title }}</h3>
+        <div style="font-weight:600;color:var(--primary);margin:4px 0;">{{ j.company }}</div>
+        <p style="margin:8px 0;">{{ j.description|truncatewords:20 }}</p>
+        <div style="display:flex;flex-direction:column;gap:5px;margin:10px 0;font-size:.82rem;color:var(--muted);">
+          {% if j.location %}<span><i data-lucide="map-pin"></i> {{ j.location }}</span>{% endif %}
+          {% if j.salary %}<span><i data-lucide="banknote"></i> {{ j.salary }}</span>{% endif %}
+          {% if j.skills_req %}
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
+              {% for s in j.skills_req.split:"," %}
+                <span class="tag">{{ s|trim }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        {% if user.is_authenticated %}
+          <a href="{% url 'conversation' pk=j.posted_by.pk %}" class="btn-primary" style="padding:8px 18px;font-size:.85rem;margin-top:8px;">
+            <i data-lucide="message-circle"></i> Murojaat
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn-outline" style="padding:8px 18px;font-size:.85rem;margin-top:8px;">Kirish kerak</a>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p style="color:var(--muted);text-align:center;padding:40px;grid-column:1/-1;">Hozircha ish e'loni yo'q.</p>
+    {% endfor %}
+  </div>
+
+  <!-- E'lon qo'shish -->
+  {% if user.is_authenticated %}
+  <div style="max-width:700px;margin:48px auto 0;">
+    <div class="profile-card">
+      <h3><i data-lucide="plus-circle"></i> Ish E'loni Joylash</h3>
+      <form method="post" style="margin-top:16px;">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn-primary"><i data-lucide="send"></i> Joylash</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

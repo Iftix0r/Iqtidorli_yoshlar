@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Kurslar{% endblock %}
+{% block content %}
+<section style="padding-top:120px;">
+  <div class="section-title">
+    <h2>Platformadagi <span>Kurslar</span></h2>
+    <p>Kursni tugatib sertifikat oling va ballingizni oshiring</p>
+  </div>
+
+  <div class="filter-form" style="margin-bottom:32px;">
+    <a href="{% url 'courses' %}" class="{% if not selected_level %}btn-primary{% else %}btn-outline{% endif %}" style="padding:8px 20px;font-size:.88rem;">Barchasi</a>
+    {% for val, label in levels %}
+      <a href="?level={{ val }}" class="{% if selected_level == val %}btn-primary{% else %}btn-outline{% endif %}" style="padding:8px 20px;font-size:.88rem;">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="features-grid" style="max-width:1100px;margin:0 auto;">
+    {% for c in courses %}
+      <a href="{% url 'course_detail' pk=c.pk %}" style="text-decoration:none;">
+        <div class="feature-card" style="height:100%;">
+          {% if c.cover %}
+            <img src="{{ c.cover.url }}" alt="{{ c.title }}"
+                 style="width:100%;height:140px;object-fit:cover;border-radius:12px;margin-bottom:14px;"/>
+          {% else %}
+            <div style="width:100%;height:140px;background:var(--gradient);border-radius:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;">
+              <i data-lucide="book-open" style="width:40px;height:40px;color:white;"></i>
+            </div>
+          {% endif %}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span class="tag">{{ c.get_level_display }}</span>
+            {% if c.duration %}<span style="font-size:.78rem;color:var(--muted);"><i data-lucide="clock"></i> {{ c.duration }}</span>{% endif %}
+          </div>
+          <h3>{{ c.title }}</h3>
+          <p style="margin-top:8px;">{{ c.description|truncatewords:18 }}</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:.82rem;color:var(--muted);">
+            <span><i data-lucide="layers"></i> {{ c.lesson_count }} dars</span>
+            {% if c.author %}<span><i data-lucide="user"></i> {{ c.author.get_full_name }}</span>{% endif %}
+          </div>
+          {% if user.is_authenticated %}
+            {% with prog=c.progress|default:0 %}
+              {% if c.is_enrolled %}
+                <div style="margin-top:12px;">
+                  <div style="height:4px;background:rgba(108,99,255,.2);border-radius:2px;">
+                    <div style="height:100%;width:{{ prog }}%;background:var(--gradient);border-radius:2px;"></div>
+                  </div>
+                  <div style="font-size:.75rem;color:var(--muted);margin-top:4px;">{{ prog }}% bajarildi</div>
+                </div>
+              {% endif %}
+            {% endwith %}
+          {% endif %}
+        </div>
+      </a>
+    {% empty %}
+      <p style="color:var(--muted);text-align:center;padding:40px;grid-column:1/-1;">Hozircha kurs yo'q.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
