@@ -49,6 +49,9 @@
     <li><a href="{% url 'jobs' %}"><i data-lucide="briefcase"></i> Ish</a></li>
     <li><a href="{% url 'resources' %}"><i data-lucide="book-open"></i> Resurslar</a></li>
     {% if user.is_authenticated %}
+      <li><a href="{% url 'ai_mentor' %}"><i data-lucide="sparkles"></i> AI</a></li>
+    {% endif %}
+    {% if user.is_authenticated %}
       <li>
         <a href="{% url 'inbox' %}">
           <i data-lucide="message-circle"></i>
