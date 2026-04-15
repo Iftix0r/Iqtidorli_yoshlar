@@ -338,3 +338,33 @@ class FailedLoginAttempt(models.Model):
         if self.blocked_until and self.blocked_until > timezone.now():
             return True
         return False
+
+
+class ActivityLog(models.Model):
+    ACTION_TYPES = [
+        ('register',     'Ro\'yxatdan o\'tdi'),
+        ('login',        'Tizimga kirdi'),
+        ('logout',       'Tizimdan chiqdi'),
+        ('profile_edit', 'Profilni tahrirladi'),
+        ('skill_add',    'Ko\'nikma qo\'shdi'),
+        ('project_add',  'Loyiha qo\'shdi'),
+        ('cert_add',     'Sertifikat qo\'shdi'),
+        ('contest_apply','Tanlovga ariza topshirdi'),
+        ('msg_send',     'Xabar yubordi'),
+        ('mentor_req',   'Mentor so\'rovi yubordi'),
+        ('course_enroll','Kursga yozildi'),
+        ('course_done',  'Kursni tugatdi'),
+        ('job_post',     'Ish e\'loni joyladi'),
+        ('resource_add', 'Resurs qo\'shdi'),
+    ]
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    action     = models.CharField(max_length=30, choices=ACTION_TYPES)
+    detail     = models.CharField(max_length=300, blank=True)
+    link       = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} — {self.get_action_display()}"

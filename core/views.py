@@ -5,10 +5,11 @@ from django.contrib import messages
 from django.db.models import Q, Max
 from django.http import JsonResponse
 
-from .models import User, Contest, MentorRequest, Message, Notification, Resource, Certificate, ContestApplication, Job, ProfileView
+from .models import User, Contest, MentorRequest, Message, Notification, Resource, Certificate, ContestApplication, Job, ProfileView, ActivityLog
 from .forms  import (RegisterForm, ProfileForm, SkillForm, ProjectForm,
                      ContestForm, MessageForm, ResourceForm,
                      CertificateForm, ContestApplicationForm, JobForm)
+from .utils  import get_client_ip, record_login, check_brute_force, record_failed_attempt, reset_failed_attempts, log_activity
 
 
 # ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -51,6 +52,7 @@ def register_view(request):
     if form.is_valid():
         user = form.save()
         login(request, user)
+        log_activity(user, 'register', 'Platformaga ro\'yxatdan o\'tdi')
         messages.success(request, "Muvaffaqiyatli ro'yxatdan o'tdingiz!")
         return redirect('profile')
     return render(request, 'register.html', {'form': form})
@@ -78,6 +80,7 @@ def login_view(request):
                 login(request, user)
                 reset_failed_attempts(phone, ip)
                 record_login(request, user, success=True)
+                log_activity(user, 'login', f'IP: {ip}')
                 return redirect(request.GET.get('next', 'profile'))
             else:
                 record_failed_attempt(phone, ip)
@@ -87,6 +90,8 @@ def login_view(request):
 
 
 def logout_view(request):
+    if request.user.is_authenticated:
+        log_activity(request.user, 'logout', 'Tizimdan chiqdi')
     logout(request)
     return redirect('index')
 
@@ -106,6 +111,7 @@ def profile_view(request):
             profile_form = ProfileForm(request.POST, request.FILES, instance=user)
             if profile_form.is_valid():
                 profile_form.save()
+                log_activity(user, 'profile_edit', 'Profil ma\'lumotlari yangilandi')
                 messages.success(request, 'Profil yangilandi.')
                 return redirect('profile')
 
@@ -115,6 +121,7 @@ def profile_view(request):
                 s = skill_form.save(commit=False)
                 s.user = user
                 s.save()
+                log_activity(user, 'skill_add', f'Ko\'nikma: {s.skill_name}')
                 return redirect('profile')
 
         elif action == 'project':
@@ -123,6 +130,7 @@ def profile_view(request):
                 p = project_form.save(commit=False)
                 p.user = user
                 p.save()
+                log_activity(user, 'project_add', f'Loyiha: {p.title}', f'/profile/')
                 return redirect('profile')
 
         elif action == 'del_skill':
@@ -135,6 +143,7 @@ def profile_view(request):
                 c = cert_form.save(commit=False)
                 c.user = user
                 c.save()
+                log_activity(user, 'cert_add', f'Sertifikat: {c.title}')
                 return redirect('profile')
 
     cert_form = CertificateForm()
@@ -150,6 +159,7 @@ def profile_view(request):
         'unread_notif':    user.unread_notifications(),
         'mentor_requests': user.received_requests.filter(status='pending'),
         'login_history':   user.login_history.all()[:5],
+        'activities':      user.activities.all()[:15],
     })
 
 
@@ -240,6 +250,7 @@ def apply_contest(request, pk):
         app.contest = contest
         app.user    = request.user
         app.save()
+        log_activity(request.user, 'contest_apply', f'Tanlov: {contest.title}', f'/contests/')
         messages.success(request, f"'{contest.title}' tanloviga arizangiz qabul qilindi!")
         return redirect('contests')
     return render(request, 'apply_contest.html', {'contest': contest, 'form': form})
@@ -326,6 +337,7 @@ def conversation_view(request, pk):
             m.sender   = request.user
             m.receiver = other
             m.save()
+            log_activity(request.user, 'msg_send', f'{other.get_full_name()} ga xabar', f'/messages/{other.pk}/')
             notify(other, 'msg',
                    f"{request.user} sizga xabar yubordi.", f'/messages/{request.user.pk}/')
             return redirect('conversation', pk=pk)
@@ -467,6 +479,7 @@ def course_detail(request, pk):
 def course_enroll(request, pk):
     course = get_object_or_404(Course, pk=pk, is_active=True)
     CourseEnrollment.objects.get_or_create(user=request.user, course=course)
+    log_activity(request.user, 'course_enroll', f'Kurs: {course.title}', f'/courses/{course.pk}/')
     messages.success(request, f"'{course.title}' kursiga yozildingiz!")
     return redirect('course_detail', pk=pk)
 
@@ -511,6 +524,7 @@ def lesson_done(request, pk):
                 # Ball qo'shish
                 request.user.score += 50
                 request.user.save()
+                log_activity(request.user, 'course_done', f'Kurs tugatildi: {course.title}', f'/certificate/{cert.cert_number}/')
                 notify(request.user, 'score',
                        f"'{course.title}' kursini tugatdingiz! +50 ball va sertifikat olindiz.",
                        f"/certificate/{cert.cert_number}/")

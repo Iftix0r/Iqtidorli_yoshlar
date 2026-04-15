@@ -96,3 +96,8 @@ def record_failed_attempt(phone, ip):
 def reset_failed_attempts(phone, ip):
     from .models import FailedLoginAttempt
     FailedLoginAttempt.objects.filter(phone=phone, ip_address=ip).delete()
+
+
+def log_activity(user, action, detail='', link=''):
+    from .models import ActivityLog
+    ActivityLog.objects.create(user=user, action=action, detail=detail, link=link)

@@ -217,6 +217,37 @@
     </div>
   </div>
 
+  <!-- FAOLIYAT TARIXI -->
+  <div class="profile-card" style="margin-top:24px;">
+    <h3><i data-lucide="activity"></i> Faoliyat Tarixi</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+      {% for a in activities %}
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(108,99,255,.06);border-radius:10px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(108,99,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            {% if a.action == 'login' %}<i data-lucide="log-in" style="width:15px;color:var(--accent);"></i>
+            {% elif a.action == 'logout' %}<i data-lucide="log-out" style="width:15px;color:var(--muted);"></i>
+            {% elif a.action == 'profile_edit' %}<i data-lucide="edit-3" style="width:15px;color:var(--primary);"></i>
+            {% elif a.action == 'skill_add' %}<i data-lucide="zap" style="width:15px;color:#FFD700;"></i>
+            {% elif a.action == 'project_add' %}<i data-lucide="folder-plus" style="width:15px;color:var(--primary);"></i>
+            {% elif a.action == 'cert_add' %}<i data-lucide="award" style="width:15px;color:#43E97B;"></i>
+            {% elif a.action == 'contest_apply' %}<i data-lucide="trophy" style="width:15px;color:#FFD700;"></i>
+            {% elif a.action == 'msg_send' %}<i data-lucide="message-circle" style="width:15px;color:var(--accent);"></i>
+            {% elif a.action == 'course_enroll' %}<i data-lucide="book-open" style="width:15px;color:var(--primary);"></i>
+            {% elif a.action == 'course_done' %}<i data-lucide="check-circle" style="width:15px;color:#43E97B;"></i>
+            {% else %}<i data-lucide="circle" style="width:15px;color:var(--muted);"></i>{% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:.88rem;font-weight:600;">{{ a.get_action_display }}</div>
+            {% if a.detail %}<div style="font-size:.78rem;color:var(--muted);">{{ a.detail }}</div>{% endif %}
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);white-space:nowrap;">{{ a.created_at|timesince }} oldin</div>
+        </div>
+      {% empty %}
+        <p style="color:var(--muted);font-size:.9rem;">Hali faoliyat yo'q.</p>
+      {% endfor %}
+    </div>
+  </div>
+
   <!-- XAVFSIZLIK — LOGIN TARIXI -->
   <div class="profile-card" style="margin-top:24px;">
     <h3><i data-lucide="shield"></i> Kirish Tarixi</h3>

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from django.db.models import Count
-from .models import User, Skill, Project, Contest, Certificate, ContestApplication, Job, ProfileView, Course, Lesson, CourseEnrollment, CourseCertificate, LoginHistory, FailedLoginAttempt
+from .models import User, Skill, Project, Contest, Certificate, ContestApplication, Job, ProfileView, Course, Lesson, CourseEnrollment, CourseCertificate, LoginHistory, FailedLoginAttempt, ActivityLog
 
 
 # ── INLINE lar ────────────────────────────────────────────────────────────────
@@ -286,3 +286,38 @@ class FailedLoginAttemptAdmin(admin.ModelAdmin):
     def unblock_selected(self, request, queryset):
         queryset.delete()
         self.message_user(request, "Tanlangan IP lar blokdan chiqarildi.")
+
+
+@admin.register(ActivityLog)
+class ActivityLogAdmin(admin.ModelAdmin):
+    list_display  = ('user_link', 'action_badge', 'detail', 'created_at')
+    list_filter   = ('action', 'created_at')
+    search_fields = ('user__first_name', 'user__phone', 'detail')
+    readonly_fields = ('user', 'action', 'detail', 'link', 'created_at')
+    ordering      = ('-created_at',)
+    list_per_page = 50
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.display(description='Foydalanuvchi')
+    def user_link(self, obj):
+        return format_html(
+            '<a href="/admin/core/user/{}/change/">{}</a>',
+            obj.user.pk, obj.user
+        )
+
+    @admin.display(description='Amal')
+    def action_badge(self, obj):
+        colors = {
+            'login': '#43E97B', 'logout': '#A7A9BE',
+            'register': '#6C63FF', 'profile_edit': '#4FACFE',
+            'skill_add': '#FFD700', 'project_add': '#6C63FF',
+            'cert_add': '#43E97B', 'contest_apply': '#FF9A44',
+            'msg_send': '#38F9D7', 'course_done': '#43E97B',
+        }
+        color = colors.get(obj.action, '#A7A9BE')
+        return format_html(
+            '<span style="background:{};color:white;padding:2px 10px;border-radius:10px;font-size:11px;">{}</span>',
+            color, obj.get_action_display()
+        )
