@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .telegram_2fa import create_and_send_code, verify_code
+from .telegram_2fa import create_and_send_code, verify_code, parse_user_agent
 
 
 def tfa_required(view_func):
@@ -21,7 +21,7 @@ def tfa_required(view_func):
 
 
 def tfa_send_view(request):
-    """Kod yuborish"""
+    """Kod yuborish — IP va qurilma info bilan"""
     if not request.user.is_authenticated or not request.user.is_staff:
         return redirect('/login/')
 
@@ -29,19 +29,29 @@ def tfa_send_view(request):
     sent    = False
     resent  = request.GET.get('resend') == '1'
 
+    # IP va qurilma info olish (template uchun)
+    ip_address = (
+        request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+        or request.META.get('REMOTE_ADDR', 'Noma\'lum')
+    )
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+    device_info = parse_user_agent(user_agent)
+
     if request.method == 'GET' and not resent:
-        ok, err = create_and_send_code(request.user)
+        ok, err = create_and_send_code(request.user, request=request)
         sent  = ok
         error = err if not ok else ''
 
     if resent:
-        ok, err = create_and_send_code(request.user)
+        ok, err = create_and_send_code(request.user, request=request)
         sent  = ok
         error = err if not ok else ''
 
     return render(request, 'tfa/send.html', {
         'sent': sent, 'error': error,
         'user': request.user,
+        'ip_address': ip_address,
+        'device_info': device_info,
     })
 
 

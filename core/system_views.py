@@ -435,3 +435,243 @@ def sys_backup(request):
         return response
 
     return render(request, 'tizim/backup.html')
+
+
+# ── TERMINAL (buyruq bajarish) ─────────────────────────────────────────────────
+@superuser_required
+def sys_terminal(request):
+    output = ''
+    command = ''
+    error = ''
+
+    # Taqiqlangan buyruqlar
+    FORBIDDEN = ['rm -rf /', 'mkfs', 'dd if=', 'shutdown', 'reboot',
+                 'passwd', 'userdel', 'chmod 777 /', 'wget http', 'curl http']
+
+    if request.method == 'POST':
+        command = request.POST.get('command', '').strip()
+        if any(f in command.lower() for f in FORBIDDEN):
+            error = f"Bu buyruq taqiqlangan: {command}"
+        elif command:
+            import subprocess
+            try:
+                result = subprocess.run(
+                    command, shell=True, capture_output=True,
+                    text=True, timeout=30,
+                    cwd=str(settings.BASE_DIR)
+                )
+                output = result.stdout or ''
+                if result.stderr:
+                    error = result.stderr
+            except subprocess.TimeoutExpired:
+                error = "Buyruq 30 soniyadan oshdi."
+            except Exception as e:
+                error = str(e)
+
+    return render(request, 'tizim/terminal.html', {
+        'output': output, 'command': command, 'error': error,
+    })
+
+
+# ── JARAYONLAR ────────────────────────────────────────────────────────────────
+@superuser_required
+def sys_processes(request):
+    import subprocess
+    processes = []
+    try:
+        out = subprocess.check_output(
+            ['ps', 'aux', '--sort=-%cpu'],
+            stderr=subprocess.DEVNULL
+        ).decode()
+        lines = out.strip().split('\n')
+        headers = lines[0].split()
+        for line in lines[1:21]:  # Top 20
+            parts = line.split(None, 10)
+            if len(parts) >= 11:
+                processes.append({
+                    'user':    parts[0],
+                    'pid':     parts[1],
+                    'cpu':     parts[2],
+                    'mem':     parts[3],
+                    'status':  parts[7],
+                    'command': parts[10][:80],
+                })
+    except Exception as e:
+        processes = [{'user': 'xato', 'pid': '', 'cpu': '', 'mem': '', 'status': '', 'command': str(e)}]
+
+    # Disk holati
+    disk_info = []
+    try:
+        out = subprocess.check_output(['df', '-h'], stderr=subprocess.DEVNULL).decode()
+        for line in out.strip().split('\n')[1:]:
+            parts = line.split()
+            if len(parts) >= 6:
+                disk_info.append({
+                    'fs': parts[0], 'size': parts[1],
+                    'used': parts[2], 'avail': parts[3],
+                    'use_pct': parts[4], 'mount': parts[5],
+                })
+    except:
+        pass
+
+    # RAM holati
+    ram_info = {}
+    try:
+        out = subprocess.check_output(['free', '-h'], stderr=subprocess.DEVNULL).decode()
+        lines = out.strip().split('\n')
+        if len(lines) > 1:
+            parts = lines[1].split()
+            ram_info = {'total': parts[1], 'used': parts[2], 'free': parts[3]}
+    except:
+        pass
+
+    return render(request, 'tizim/processes.html', {
+        'processes': processes, 'disk_info': disk_info, 'ram_info': ram_info,
+    })
+
+
+# ── CRON / REJALASHTIRILGAN VAZIFALAR ─────────────────────────────────────────
+@superuser_required
+def sys_cron(request):
+    import subprocess
+    cron_list = []
+    cron_output = ''
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            schedule = request.POST.get('schedule', '').strip()
+            cmd      = request.POST.get('cmd', '').strip()
+            if schedule and cmd:
+                # Crontab ga qo'shish
+                try:
+                    existing = subprocess.check_output(
+                        ['crontab', '-l'], stderr=subprocess.DEVNULL
+                    ).decode()
+                except:
+                    existing = ''
+                new_line = f"{schedule} {cmd}\n"
+                new_cron = existing + new_line
+                proc = subprocess.run(
+                    ['crontab', '-'], input=new_cron.encode(),
+                    capture_output=True
+                )
+                cron_output = 'Qo\'shildi!' if proc.returncode == 0 else proc.stderr.decode()
+
+    # Mavjud cron larni ko'rish
+    try:
+        out = subprocess.check_output(['crontab', '-l'], stderr=subprocess.DEVNULL).decode()
+        for line in out.strip().split('\n'):
+            if line and not line.startswith('#'):
+                cron_list.append(line)
+    except:
+        cron_list = []
+
+    # Tayyor shablonlar
+    templates = [
+        {'label': 'Har kuni yarim tunda backup', 'schedule': '0 0 * * *',
+         'cmd': f'cd {settings.BASE_DIR} && python manage.py shell -c "print(\'backup\')"'},
+        {'label': 'Har soatda cache tozalash', 'schedule': '0 * * * *',
+         'cmd': f'cd {settings.BASE_DIR} && python manage.py shell -c "from django.core.cache import cache; cache.clear()"'},
+        {'label': 'Har 5 daqiqada health check', 'schedule': '*/5 * * * *',
+         'cmd': f'curl -s https://yoshiqtidorlar.uz/ > /dev/null'},
+    ]
+
+    return render(request, 'tizim/cron.html', {
+        'cron_list': cron_list, 'cron_output': cron_output, 'templates': templates,
+    })
+
+
+# ── TARMOQ MA'LUMOTLARI ───────────────────────────────────────────────────────
+@superuser_required
+def sys_network(request):
+    import subprocess
+    net_info = {}
+
+    # Ochiq portlar
+    open_ports = []
+    try:
+        out = subprocess.check_output(
+            ['ss', '-tlnp'], stderr=subprocess.DEVNULL
+        ).decode()
+        for line in out.strip().split('\n')[1:]:
+            parts = line.split()
+            if len(parts) >= 4:
+                open_ports.append({
+                    'state':   parts[0],
+                    'local':   parts[3],
+                    'process': parts[6] if len(parts) > 6 else '—',
+                })
+    except:
+        pass
+
+    # IP manzillar
+    ip_info = []
+    try:
+        out = subprocess.check_output(['ip', 'addr'], stderr=subprocess.DEVNULL).decode()
+        ip_info = out.strip().split('\n')
+    except:
+        pass
+
+    # DNS tekshirish
+    dns_check = {}
+    try:
+        import socket
+        dns_check['yoshiqtidorlar.uz'] = socket.gethostbyname('yoshiqtidorlar.uz')
+        dns_check['api.telegram.org']  = socket.gethostbyname('api.telegram.org')
+    except Exception as e:
+        dns_check['xato'] = str(e)
+
+    return render(request, 'tizim/network.html', {
+        'open_ports': open_ports, 'ip_info': ip_info, 'dns_check': dns_check,
+    })
+
+
+# ── DB OPTIMIZATSIYA ──────────────────────────────────────────────────────────
+@superuser_required
+def sys_db_optimize(request):
+    results = []
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        try:
+            with connection.cursor() as cur:
+                if action == 'analyze':
+                    cur.execute("ANALYZE;")
+                    results.append(('ANALYZE', 'OK — statistika yangilandi'))
+                elif action == 'vacuum':
+                    connection.connection.autocommit = True
+                    cur.execute("VACUUM ANALYZE;")
+                    connection.connection.autocommit = False
+                    results.append(('VACUUM ANALYZE', 'OK — bo\'sh joy tozalandi'))
+                elif action == 'indexes':
+                    cur.execute("""
+                        SELECT schemaname, tablename, indexname, idx_scan, idx_tup_read
+                        FROM pg_stat_user_indexes
+                        ORDER BY idx_scan DESC LIMIT 20;
+                    """)
+                    rows = cur.fetchall()
+                    results = [('Index', f"{r[1]}.{r[2]} — {r[3]} scan") for r in rows]
+        except Exception as e:
+            results.append(('Xato', str(e)))
+
+    # Jadval o'lchamlari
+    table_sizes = []
+    try:
+        with connection.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    relname as table_name,
+                    pg_size_pretty(pg_total_relation_size(relid)) as total_size,
+                    pg_size_pretty(pg_relation_size(relid)) as table_size,
+                    n_live_tup as rows
+                FROM pg_stat_user_tables
+                ORDER BY pg_total_relation_size(relid) DESC
+                LIMIT 20;
+            """)
+            table_sizes = cur.fetchall()
+    except:
+        pass
+
+    return render(request, 'tizim/db_optimize.html', {
+        'results': results, 'table_sizes': table_sizes,
+    })

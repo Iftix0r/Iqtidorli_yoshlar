@@ -11,7 +11,7 @@
     body{font-family:'Segoe UI',sans-serif;background:#0F0E17;color:#FFFFFE;
          min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
     .card{background:#16213E;border:1px solid rgba(108,99,255,.25);border-radius:20px;
-          padding:40px 36px;width:100%;max-width:420px;text-align:center;}
+          padding:40px 36px;width:100%;max-width:460px;text-align:center;}
     .icon{width:72px;height:72px;border-radius:50%;background:rgba(108,99,255,.15);
           display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;}
     h2{font-size:1.4rem;font-weight:800;margin-bottom:8px;}
@@ -30,6 +30,17 @@
     .btn:hover{opacity:.85;}
     .user-info{background:rgba(108,99,255,.08);border-radius:10px;padding:10px 14px;
                margin-bottom:20px;font-size:.85rem;color:#A7A9BE;}
+
+    /* Qurilma info boks */
+    .device-info{background:rgba(67,233,123,.06);border:1px solid rgba(67,233,123,.15);
+                 border-radius:12px;padding:14px 16px;margin-bottom:20px;text-align:left;}
+    .device-info .title{font-size:.72rem;color:#43E97B;font-weight:700;text-transform:uppercase;
+                        letter-spacing:1.5px;margin-bottom:10px;}
+    .device-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:.82rem;}
+    .device-row .label{color:#A7A9BE;min-width:80px;}
+    .device-row .value{color:#FFFFFE;font-weight:600;font-family:'Courier New',monospace;font-size:.8rem;
+                       word-break:break-all;}
+    .device-row .value.ip{color:#FFD700;}
   </style>
 </head>
 <body>
@@ -42,9 +53,30 @@
     👤 {{ user.get_full_name|default:user.phone }}
   </div>
 
+  <!-- Qurilma va IP ma'lumotlari -->
+  <div class="device-info">
+    <div class="title">📡 Kirish ma'lumotlari</div>
+    <div class="device-row">
+      <span class="label">🌐 IP:</span>
+      <span class="value ip">{{ ip_address }}</span>
+    </div>
+    <div class="device-row">
+      <span class="label">📱 Qurilma:</span>
+      <span class="value">{{ device_info.device }}</span>
+    </div>
+    <div class="device-row">
+      <span class="label">💻 OS:</span>
+      <span class="value">{{ device_info.os }}</span>
+    </div>
+    <div class="device-row">
+      <span class="label">🌍 Brauzer:</span>
+      <span class="value">{{ device_info.browser }}</span>
+    </div>
+  </div>
+
   {% if sent %}
     <div class="alert-ok">
-      ✅ Telegram ga kod yuborildi. Iltimos tekshiring.
+      ✅ Telegram ga kod yuborildi. IP va qurilma ma'lumotlari bilan birga yuborildi.
     </div>
     <a href="{% url 'tfa_verify' %}" class="btn btn-primary">
       🔑 Kodni Kiritish →
