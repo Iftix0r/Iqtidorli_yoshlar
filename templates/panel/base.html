@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Admin Panel{% endblock %} — Iqtidorli Yoshlar</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicon.svg' %}"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --bg:#0F0E17;--sidebar:#13122A;--card:#16213E;--border:rgba(108,99,255,.18);
+      --primary:#6C63FF;--accent:#43E97B;--text:#FFFFFE;--muted:#A7A9BE;
+      --grad:linear-gradient(135deg,#6C63FF,#43E97B);
+      --danger:#FF6584;--gold:#FFD700;
+    }
+    [data-theme="light"]{
+      --bg:#F4F4F8;--sidebar:#fff;--card:#fff;--border:rgba(108,99,255,.15);
+      --text:#0F0E17;--muted:#6B7280;
+    }
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+    /* SIDEBAR */
+    .sidebar{
+      width:240px;min-height:100vh;background:var(--sidebar);
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;
+    }
+    .sidebar-logo{
+      padding:24px 20px;font-size:1.2rem;font-weight:900;
+      background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+      border-bottom:1px solid var(--border);
+    }
+    .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+    .nav-section{padding:8px 20px 4px;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+    .nav-item{
+      display:flex;align-items:center;gap:10px;padding:10px 20px;
+      color:var(--muted);text-decoration:none;font-size:.88rem;
+      transition:background .2s,color .2s;border-left:3px solid transparent;
+    }
+    .nav-item:hover,.nav-item.active{
+      background:rgba(108,99,255,.1);color:var(--text);
+      border-left-color:var(--primary);
+    }
+    .nav-item [data-lucide]{width:16px;height:16px;}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);}
+
+    /* MAIN */
+    .main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+
+    /* TOPBAR */
+    .topbar{
+      height:60px;background:var(--sidebar);border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 28px;position:sticky;top:0;z-index:50;
+    }
+    .topbar-title{font-size:1rem;font-weight:700;}
+    .topbar-right{display:flex;align-items:center;gap:14px;}
+    .topbar-right a{color:var(--muted);text-decoration:none;font-size:.85rem;display:flex;align-items:center;gap:5px;}
+    .topbar-right a:hover{color:var(--text);}
+
+    /* CONTENT */
+    .content{padding:28px;flex:1;}
+
+    /* CARDS */
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+    .stat-card{
+      background:var(--card);border:1px solid var(--border);border-radius:16px;
+      padding:20px;display:flex;flex-direction:column;gap:8px;
+    }
+    .stat-card .icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+    .stat-card .num{font-size:1.8rem;font-weight:900;}
+    .stat-card .lbl{font-size:.8rem;color:var(--muted);}
+    .stat-card .trend{font-size:.75rem;margin-top:4px;}
+
+    /* TABLE */
+    .panel-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:24px;}
+    .panel-card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+    .panel-card-header h3{font-size:.95rem;font-weight:700;}
+    .panel-table{width:100%;border-collapse:collapse;}
+    .panel-table th{padding:10px 16px;text-align:left;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+    .panel-table td{padding:12px 16px;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,.04);}
+    .panel-table tr:last-child td{border-bottom:none;}
+    .panel-table tr:hover td{background:rgba(108,99,255,.05);}
+
+    /* BADGE */
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;}
+    .badge-green{background:rgba(67,233,123,.15);color:#43E97B;}
+    .badge-red{background:rgba(255,101,132,.15);color:#FF6584;}
+    .badge-blue{background:rgba(108,99,255,.15);color:#a89fff;}
+    .badge-gold{background:rgba(255,215,0,.15);color:#FFD700;}
+
+    /* AVATAR */
+    .mini-avatar{width:32px;height:32px;border-radius:50%;background:var(--grad);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:white;flex-shrink:0;}
+
+    /* THEME TOGGLE */
+    .theme-btn{background:rgba(108,99,255,.15);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+    /* FORM */
+    .panel-form .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:16px;}
+    .panel-form label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px;}
+    .panel-form input,.panel-form select,.panel-form textarea{
+      width:100%;padding:9px 14px;background:rgba(255,255,255,.05);
+      border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.88rem;font-family:inherit;
+    }
+    .panel-form input:focus,.panel-form select:focus,.panel-form textarea:focus{outline:none;border-color:var(--primary);}
+    .panel-form select option{background:var(--sidebar);}
+    [data-theme="light"] .panel-form input,[data-theme="light"] .panel-form select,[data-theme="light"] .panel-form textarea{background:#F9FAFB;color:var(--text);}
+
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:opacity .2s,transform .2s;}
+    .btn:hover{opacity:.85;transform:translateY(-1px);}
+    .btn-primary{background:var(--grad);color:white;}
+    .btn-danger{background:rgba(255,101,132,.2);color:var(--danger);border:1px solid rgba(255,101,132,.3);}
+    .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}
+
+    /* RESPONSIVE */
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%);transition:transform .3s;}
+      .sidebar.open{transform:translateX(0);}
+      .main{margin-left:0;}
+    }
+  </style>
+  <script>
+    (function(){
+      const t=localStorage.getItem('panel_theme')||'dark';
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">⚡ Admin Panel</div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Asosiy</div>
+    <a href="{% url 'panel_dashboard' %}" class="nav-item {% block nav_dashboard %}{% endblock %}">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </a>
+    <a href="{% url 'panel_users' %}" class="nav-item {% block nav_users %}{% endblock %}">
+      <i data-lucide="users"></i> Foydalanuvchilar
+    </a>
+    <a href="{% url 'panel_activities' %}" class="nav-item {% block nav_activities %}{% endblock %}">
+      <i data-lucide="activity"></i> Faoliyat Tarixi
+    </a>
+    <a href="{% url 'panel_logins' %}" class="nav-item {% block nav_logins %}{% endblock %}">
+      <i data-lucide="shield"></i> Kirish Tarixi
+    </a>
+
+    <div class="nav-section">Kontent</div>
+    <a href="{% url 'panel_contests' %}" class="nav-item {% block nav_contests %}{% endblock %}">
+      <i data-lucide="trophy"></i> Tanlovlar
+    </a>
+    <a href="{% url 'panel_courses' %}" class="nav-item {% block nav_courses %}{% endblock %}">
+      <i data-lucide="graduation-cap"></i> Kurslar
+    </a>
+    <a href="{% url 'panel_jobs' %}" class="nav-item {% block nav_jobs %}{% endblock %}">
+      <i data-lucide="briefcase"></i> Ish E'lonlari
+    </a>
+    <a href="{% url 'panel_resources' %}" class="nav-item {% block nav_resources %}{% endblock %}">
+      <i data-lucide="book-open"></i> Resurslar
+    </a>
+
+    <div class="nav-section">Tizim</div>
+    <a href="/" class="nav-item" target="_blank">
+      <i data-lucide="external-link"></i> Saytga O'tish
+    </a>
+  </nav>
+  <div class="sidebar-footer" style="font-size:.8rem;color:var(--muted);">
+    {{ request.user.get_full_name }}
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+    <div class="topbar-right">
+      <button class="theme-btn" id="themeBtn">
+        <i data-lucide="moon" id="themeIcon" style="width:16px;height:16px;"></i>
+      </button>
+      <a href="{% url 'logout' %}"><i data-lucide="log-out"></i> Chiqish</a>
+    </div>
+  </header>
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+  const btn  = document.getElementById('themeBtn');
+  const icon = document.getElementById('themeIcon');
+  const html = document.documentElement;
+  function applyTheme(t){
+    html.setAttribute('data-theme',t);
+    icon.setAttribute('data-lucide', t==='dark'?'moon':'sun');
+    lucide.createIcons();
+    localStorage.setItem('panel_theme',t);
+  }
+  applyTheme(localStorage.getItem('panel_theme')||'dark');
+  btn.addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+</script>
+</body>
+</html>

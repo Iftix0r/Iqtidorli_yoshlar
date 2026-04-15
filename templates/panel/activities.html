@@ -1,0 +1,45 @@
+{% extends 'panel/base.html' %}
+{% block title %}Faoliyat Tarixi{% endblock %}
+{% block page_title %}Faoliyat Tarixi{% endblock %}
+{% block nav_activities %}active{% endblock %}
+
+{% block content %}
+<form method="get" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Ism yoki tafsilot..." style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;min-width:200px;"/>
+  <select name="action" style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;">
+    <option value="">Barcha amallar</option>
+    {% for val, label in action_choices %}
+      <option value="{{ val }}" {% if val == action %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if q or action %}<a href="{% url 'panel_activities' %}" class="btn btn-outline">Tozalash</a>{% endif %}
+</form>
+
+<div class="panel-card">
+  <div class="panel-card-header"><h3>{{ activities|length }} ta faoliyat</h3></div>
+  <table class="panel-table">
+    <thead><tr><th>Foydalanuvchi</th><th>Amal</th><th>Tafsilot</th><th>Vaqt</th></tr></thead>
+    <tbody>
+      {% for a in activities %}
+      <tr>
+        <td style="display:flex;align-items:center;gap:8px;">
+          <div class="mini-avatar">{{ a.user.initial }}</div>
+          <div>
+            <div style="font-weight:600;">{{ a.user.get_full_name|default:a.user.phone }}</div>
+            <div style="font-size:.75rem;color:var(--muted);">{{ a.user.phone }}</div>
+          </div>
+        </td>
+        <td>
+          <span class="badge badge-blue">{{ a.get_action_display }}</span>
+        </td>
+        <td style="color:var(--muted);font-size:.82rem;">{{ a.detail|default:"—" }}</td>
+        <td style="color:var(--muted);font-size:.78rem;white-space:nowrap;">{{ a.created_at|date:"d.m.Y H:i" }}</td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:40px;">Faoliyat yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

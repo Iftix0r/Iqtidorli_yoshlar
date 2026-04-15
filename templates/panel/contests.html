@@ -1,0 +1,75 @@
+{% extends 'panel/base.html' %}
+{% block title %}Tanlovlar{% endblock %}
+{% block page_title %}Tanlovlar{% endblock %}
+{% block nav_contests %}active{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
+
+  <div class="panel-card">
+    <div class="panel-card-header"><h3>{{ contests|length }} ta tanlov</h3></div>
+    <table class="panel-table">
+      <thead><tr><th>Nomi</th><th>Muddat</th><th>Mukofot</th><th>Arizalar</th><th>Amal</th></tr></thead>
+      <tbody>
+        {% for c in contests %}
+        <tr>
+          <td style="font-weight:600;">{{ c.title }}</td>
+          <td style="font-size:.82rem;{% if c.deadline %}color:var(--accent);{% else %}color:var(--muted);{% endif %}">
+            {{ c.deadline|date:"d.m.Y"|default:"—" }}
+          </td>
+          <td style="font-size:.82rem;color:#FFD700;">{{ c.prize|default:"—" }}</td>
+          <td><span class="badge badge-blue">{{ c.app_count }}</span></td>
+          <td>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete"/>
+              <input type="hidden" name="contest_id" value="{{ c.pk }}"/>
+              <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:.75rem;"
+                      onclick="return confirm('O\'chirishni tasdiqlaysizmi?')">
+                <i data-lucide="trash-2" style="width:13px;"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">Tanlov yo'q.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Yangi tanlov qo'shish -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h3><i data-lucide="plus-circle" style="width:15px;margin-right:6px;"></i> Yangi Tanlov</h3></div>
+    <div style="padding:20px;">
+      <form method="post" class="panel-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add"/>
+        <div class="form-row">
+          <div>
+            <label>Nomi</label>
+            <input type="text" name="title" required placeholder="Tanlov nomi"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>Tavsif</label>
+            <textarea name="description" rows="3" placeholder="Qisqacha tavsif"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>Muddat</label>
+            <input type="date" name="deadline"/>
+          </div>
+          <div>
+            <label>Mukofot</label>
+            <input type="text" name="prize" placeholder="50,000,000 so'm"/>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Qo'shish</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

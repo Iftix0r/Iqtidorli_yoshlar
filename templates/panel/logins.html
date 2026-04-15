@@ -1,0 +1,49 @@
+{% extends 'panel/base.html' %}
+{% block title %}Kirish Tarixi{% endblock %}
+{% block page_title %}Kirish Tarixi{% endblock %}
+{% block nav_logins %}active{% endblock %}
+
+{% block content %}
+<form method="get" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Ism yoki IP..." style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;min-width:200px;"/>
+  <select name="status" style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;">
+    <option value="">Barchasi</option>
+    <option value="success" {% if status == 'success' %}selected{% endif %}>Muvaffaqiyatli</option>
+    <option value="failed" {% if status == 'failed' %}selected{% endif %}>Muvaffaqiyatsiz</option>
+  </select>
+  <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+<div class="panel-card">
+  <div class="panel-card-header"><h3>{{ logins|length }} ta kirish</h3></div>
+  <table class="panel-table">
+    <thead><tr><th>Foydalanuvchi</th><th>IP</th><th>Qurilma</th><th>OS / Brauzer</th><th>Holat</th><th>Vaqt</th></tr></thead>
+    <tbody>
+      {% for l in logins %}
+      <tr>
+        <td style="display:flex;align-items:center;gap:8px;">
+          <div class="mini-avatar">{{ l.user.initial }}</div>
+          {{ l.user.get_full_name|default:l.user.phone }}
+        </td>
+        <td style="font-family:monospace;font-size:.8rem;">{{ l.ip_address }}</td>
+        <td>
+          {% if l.device == 'Mobil' %}📱{% elif l.device == 'Planshet' %}📟{% else %}💻{% endif %}
+          {{ l.device }}
+        </td>
+        <td style="font-size:.8rem;color:var(--muted);">{{ l.os }} · {{ l.browser }}</td>
+        <td>
+          {% if l.is_success %}
+            <span class="badge badge-green">✓ Muvaffaqiyatli</span>
+          {% else %}
+            <span class="badge badge-red">✗ Xato</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.78rem;color:var(--muted);white-space:nowrap;">{{ l.created_at|date:"d.m.Y H:i" }}</td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px;">Ma'lumot yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, panel_views
 
 urlpatterns = [
     path('',                                  views.index,                 name='index'),
@@ -21,10 +21,18 @@ urlpatterns = [
     path('resources/',                        views.resources_view,        name='resources'),
     path('jobs/',                             views.jobs_view,             name='jobs'),
     path('search/',                           views.search_view,           name='search'),
-    # Kurslar
     path('courses/',                          views.courses_view,          name='courses'),
     path('courses/<int:pk>/',                 views.course_detail,         name='course_detail'),
     path('courses/<int:pk>/enroll/',          views.course_enroll,         name='course_enroll'),
     path('courses/lesson/<int:pk>/done/',     views.lesson_done,           name='lesson_done'),
     path('certificate/<str:cert_number>/',    views.certificate_view,      name='certificate_view'),
+    # Custom Admin Panel
+    path('panel/',                            panel_views.dashboard,       name='panel_dashboard'),
+    path('panel/users/',                      panel_views.users_view,      name='panel_users'),
+    path('panel/activities/',                 panel_views.activities_view, name='panel_activities'),
+    path('panel/logins/',                     panel_views.logins_view,     name='panel_logins'),
+    path('panel/contests/',                   panel_views.contests_view,   name='panel_contests'),
+    path('panel/courses/',                    panel_views.courses_view,    name='panel_courses'),
+    path('panel/jobs/',                       panel_views.jobs_view,       name='panel_jobs'),
+    path('panel/resources/',                  panel_views.resources_view,  name='panel_resources'),
 ]

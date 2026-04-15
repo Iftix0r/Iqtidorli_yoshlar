@@ -1,0 +1,35 @@
+{% extends 'panel/base.html' %}
+{% block title %}Resurslar{% endblock %}
+{% block page_title %}Resurslar{% endblock %}
+{% block nav_resources %}active{% endblock %}
+
+{% block content %}
+<div class="panel-card">
+  <div class="panel-card-header"><h3>{{ resources|length }} ta resurs</h3></div>
+  <table class="panel-table">
+    <thead><tr><th>Nomi</th><th>Tur</th><th>Qo'shgan</th><th>Havola</th><th>Amal</th></tr></thead>
+    <tbody>
+      {% for r in resources %}
+      <tr>
+        <td style="font-weight:600;">{{ r.title }}</td>
+        <td><span class="badge badge-blue">{{ r.get_res_type_display }}</span></td>
+        <td style="font-size:.82rem;color:var(--muted);">{{ r.added_by.get_full_name|default:"—" }}</td>
+        <td><a href="{{ r.link }}" target="_blank" style="color:var(--primary);font-size:.82rem;">Ko'rish →</a></td>
+        <td>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete"/>
+            <input type="hidden" name="resource_id" value="{{ r.pk }}"/>
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:.75rem;" onclick="return confirm('O\'chirishni tasdiqlaysizmi?')">
+              <i data-lucide="trash-2" style="width:13px;"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">Resurs yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'panel/base.html' %}
+{% block title %}Foydalanuvchilar{% endblock %}
+{% block page_title %}Foydalanuvchilar{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block content %}
+<!-- Filter -->
+<form method="get" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Ism yoki telefon..." style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;min-width:200px;"/>
+  <select name="role" style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;">
+    <option value="">Barcha rollar</option>
+    <option value="yosh" {% if role == 'yosh' %}selected{% endif %}>Iqtidorli Yosh</option>
+    <option value="mentor" {% if role == 'mentor' %}selected{% endif %}>Mentor</option>
+    <option value="investor" {% if role == 'investor' %}selected{% endif %}>Investor</option>
+  </select>
+  <select name="region" style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;">
+    <option value="">Barcha viloyatlar</option>
+    {% for r in regions %}<option value="{{ r }}" {% if r == region %}selected{% endif %}>{{ r }}</option>{% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary">Qidirish</button>
+  {% if q or role or region %}<a href="{% url 'panel_users' %}" class="btn btn-outline">Tozalash</a>{% endif %}
+</form>
+
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h3>Foydalanuvchilar — {{ users.count }} ta</h3>
+  </div>
+  <table class="panel-table">
+    <thead>
+      <tr><th>Foydalanuvchi</th><th>Telefon</th><th>Rol</th><th>Viloyat</th><th>Ball</th><th>Holat</th><th>Amallar</th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            {% if u.avatar %}
+              <img src="{{ u.avatar.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"/>
+            {% else %}
+              <div class="mini-avatar">{{ u.initial }}</div>
+            {% endif %}
+            <div>
+              <div style="font-weight:600;">{{ u.get_full_name|default:"—" }}</div>
+              <div style="font-size:.75rem;color:var(--muted);">{{ u.date_joined|date:"d.m.Y" }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-family:monospace;font-size:.82rem;">{{ u.phone }}</td>
+        <td>
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ u.pk }}"/>
+            <input type="hidden" name="action" value="role"/>
+            <select name="role_new" onchange="this.form.submit()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 8px;font-size:.78rem;">
+              <option value="yosh" {% if u.role == 'yosh' %}selected{% endif %}>Yosh</option>
+              <option value="mentor" {% if u.role == 'mentor' %}selected{% endif %}>Mentor</option>
+              <option value="investor" {% if u.role == 'investor' %}selected{% endif %}>Investor</option>
+            </select>
+          </form>
+        </td>
+        <td style="font-size:.82rem;color:var(--muted);">{{ u.region|default:"—" }}</td>
+        <td>
+          <form method="post" style="display:flex;gap:5px;align-items:center;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ u.pk }}"/>
+            <input type="hidden" name="action" value="score"/>
+            <input type="number" name="score" value="{{ u.score }}" style="width:65px;padding:3px 8px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem;"/>
+            <button type="submit" style="background:rgba(108,99,255,.2);border:none;color:var(--primary);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:.78rem;">✓</button>
+          </form>
+        </td>
+        <td>
+          {% if u.is_active %}
+            <span class="badge badge-green">Faol</span>
+          {% else %}
+            <span class="badge badge-red">Bloklangan</span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="{% url 'public_profile' pk=u.pk %}" class="btn btn-outline" style="padding:4px 10px;font-size:.75rem;">Ko'rish</a>
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="user_id" value="{{ u.pk }}"/>
+              <input type="hidden" name="action" value="toggle_active"/>
+              <button type="submit" class="btn {% if u.is_active %}btn-danger{% else %}btn-primary{% endif %}" style="padding:4px 10px;font-size:.75rem;">
+                {% if u.is_active %}Bloklash{% else %}Faollashtirish{% endif %}
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;">Hech narsa topilmadi.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
