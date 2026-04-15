@@ -112,7 +112,16 @@
   from { opacity:0; transform:translateX(-50%) translateY(20px); }
   to   { opacity:1; transform:translateX(-50%) translateY(0); }
 }
+/* ── LOADING BAR ── */
+#loading-bar {
+  position: fixed; top: 0; left: 0; width: 0; height: 3px;
+  background: linear-gradient(90deg, #6C63FF, #43E97B, #FF6584);
+  z-index: 99999; transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.5);
+  display: none;
+}
 </style>
+<div id="loading-bar"></div>
 
 <footer>
   <div class="logo"><i data-lucide="zap"></i> Iqtidorli Yoshlar</div>
@@ -126,6 +135,37 @@
 
 <script>
   lucide.createIcons();
+  
+  // ── LOADING BAR LOGIC ──
+  window.addEventListener('beforeunload', () => {
+    const bar = document.getElementById('loading-bar');
+    if (bar) {
+      bar.style.display = 'block';
+      bar.style.width = '30%';
+      let w = 30;
+      const interval = setInterval(() => {
+        w += Math.random() * 3;
+        if (w > 88) clearInterval(interval);
+        bar.style.width = w + '%';
+      }, 200);
+    }
+  });
+
+  window.addEventListener('load', () => {
+    const bar = document.getElementById('loading-bar');
+    if (bar) {
+      bar.style.width = '100%';
+      setTimeout(() => {
+        bar.style.opacity = '0';
+        setTimeout(() => {
+          bar.style.display = 'none';
+          bar.style.width = '0';
+          bar.style.opacity = '1';
+        }, 400);
+      }, 200);
+    }
+  });
+
   const btn   = document.getElementById('themeToggle');
   const moon  = btn.querySelector('.icon-moon');
   const sun   = btn.querySelector('.icon-sun');
