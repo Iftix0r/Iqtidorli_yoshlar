@@ -154,15 +154,18 @@
   window.addEventListener('load', () => {
     const bar = document.getElementById('loading-bar');
     if (bar) {
-      bar.style.width = '100%';
+      // Sayt tez ochilsa ham, animatsiya tugashi uchun kamida 400ms kutamiz
       setTimeout(() => {
-        bar.style.opacity = '0';
+        bar.style.width = '100%';
         setTimeout(() => {
-          bar.style.display = 'none';
-          bar.style.width = '0';
-          bar.style.opacity = '1';
-        }, 400);
-      }, 200);
+          bar.style.opacity = '0';
+          setTimeout(() => {
+            bar.style.display = 'none';
+            bar.style.width = '0';
+            bar.style.opacity = '1';
+          }, 400);
+        }, 300);
+      }, 400);
     }
   });
 
