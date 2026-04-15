@@ -1,6 +1,5 @@
 from django.urls import path
-from . import views, panel_views, system_views
-from . import tfa_views
+from . import views
 
 urlpatterns = [
     path('',                                  views.index,                 name='index'),
@@ -27,48 +26,4 @@ urlpatterns = [
     path('courses/<int:pk>/enroll/',          views.course_enroll,         name='course_enroll'),
     path('courses/lesson/<int:pk>/done/',     views.lesson_done,           name='lesson_done'),
     path('certificate/<str:cert_number>/',    views.certificate_view,      name='certificate_view'),
-    # Custom Admin Panel
-    path('panel/',                            panel_views.dashboard,            name='panel_dashboard'),
-    path('panel/users/',                      panel_views.users_view,           name='panel_users'),
-    path('panel/users/create/',               panel_views.user_create_view,     name='panel_user_create'),
-    path('panel/users/<int:pk>/',             panel_views.user_detail_view,     name='panel_user_detail'),
-    path('panel/users/<int:pk>/edit/',        panel_views.user_edit_view,       name='panel_user_edit'),
-    path('panel/users/<int:pk>/delete/',      panel_views.user_delete_view,     name='panel_user_delete'),
-    path('panel/activities/',                 panel_views.activities_view,      name='panel_activities'),
-    path('panel/logins/',                     panel_views.logins_view,          name='panel_logins'),
-    path('panel/contests/',                   panel_views.contests_view,        name='panel_contests'),
-    path('panel/applications/',               panel_views.applications_view,    name='panel_applications'),
-    path('panel/courses/',                    panel_views.courses_view,         name='panel_courses'),
-    path('panel/courses/<int:pk>/lessons/',   panel_views.course_lessons_view,  name='panel_course_lessons'),
-    path('panel/jobs/',                       panel_views.jobs_view,            name='panel_jobs'),
-    path('panel/resources/',                  panel_views.resources_view,       name='panel_resources'),
-    path('panel/messages/',                   panel_views.messages_view,        name='panel_messages'),
-    path('panel/mentor-requests/',            panel_views.mentor_requests_view, name='panel_mentor_requests'),
-    path('panel/broadcast/',                  panel_views.broadcast_view,          name='panel_broadcast'),
-    path('panel/notifications/',              panel_views.notifications_panel_view, name='panel_notifications'),
-    path('panel/notif-list/',                 panel_views.notif_list_api,           name='panel_notif_list'),
-    path('panel/stats-api/',                  panel_views.stats_api,            name='panel_stats_api'),
-    path('panel/realtime/',                   panel_views.realtime_api,         name='panel_realtime'),
-    path('panel/courses/create/',             panel_views.course_create_view,   name='panel_course_create'),
-    path('panel/settings/',                   panel_views.settings_view,        name='panel_settings'),
-    path('panel/export/users/',               panel_views.export_users_csv,     name='panel_export_users'),
-    path('panel/blocked-ips/',                panel_views.blocked_ips_view,     name='panel_blocked_ips'),
-    # Tizim paneli (superuser only)
-    path('tizim/',                            system_views.sys_dashboard,   name='sys_dashboard'),
-    path('tizim/sql/',                        system_views.sys_sql,         name='sys_sql'),
-    path('tizim/logs/',                       system_views.sys_logs,        name='sys_logs'),
-    path('tizim/migrations/',                 system_views.sys_migrations,  name='sys_migrations'),
-    path('tizim/api/',                        system_views.sys_api,         name='sys_api'),
-    path('tizim/cache/clear/',                system_views.sys_clear_cache, name='sys_clear_cache'),
-    path('tizim/restart/',                    system_views.sys_restart,     name='sys_restart'),
-    path('tizim/errors/',                     system_views.sys_errors,      name='sys_errors'),
-    path('tizim/packages/',                   system_views.sys_packages,    name='sys_packages'),
-    path('tizim/env/',                        system_views.sys_env,         name='sys_env'),
-    path('tizim/files/',                      system_views.sys_files,       name='sys_files'),
-    path('tizim/health/',                     system_views.sys_health,      name='sys_health'),
-    path('tizim/backup/',                     system_views.sys_backup,      name='sys_backup'),
-    # 2FA
-    path('2fa/send/',                         tfa_views.tfa_send_view,      name='tfa_send'),
-    path('2fa/verify/',                       tfa_views.tfa_verify_view,    name='tfa_verify'),
-    path('2fa/logout/',                       tfa_views.tfa_logout_view,    name='tfa_logout'),
 ]
