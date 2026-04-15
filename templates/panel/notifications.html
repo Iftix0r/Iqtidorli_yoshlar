@@ -1,0 +1,158 @@
+{% extends 'panel/base.html' %}
+{% block title %}Bildirishnomalar{% endblock %}
+{% block page_title %}Bildirishnomalar{% endblock %}
+{% block nav_notifications %}active{% endblock %}
+
+{% block content %}
+
+<!-- Statistika -->
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+  <div class="stat-card">
+    <div class="icon" style="background:rgba(108,99,255,.15);"><i data-lucide="bell" style="width:20px;color:#6C63FF;"></i></div>
+    <div class="num">{{ notifications|length }}</div>
+    <div class="lbl">Ko'rsatilgan</div>
+  </div>
+  <div class="stat-card">
+    <div class="icon" style="background:rgba(255,101,132,.15);"><i data-lucide="bell-ring" style="width:20px;color:#FF6584;"></i></div>
+    <div class="num" id="rt-notifs-count">{{ unread_count }}</div>
+    <div class="lbl">O'qilmagan</div>
+  </div>
+  <div class="stat-card" style="flex-direction:row;align-items:center;gap:12px;">
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+      <form method="post" style="display:inline;">
+        {% csrf_token %}
+        <button name="action" value="mark_all_read" type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:8px;">
+          <i data-lucide="check-check"></i> Barchasini o'qilgan deb belgilash
+        </button>
+      </form>
+      <form method="post" style="display:inline;">
+        {% csrf_token %}
+        <button name="action" value="delete_all" type="submit" class="btn btn-danger" style="width:100%;justify-content:center;padding:8px;"
+                onclick="return confirm('O\'qilgan bildirishnomalarni o\'chirishni tasdiqlaysizmi?')">
+          <i data-lucide="trash-2"></i> O'qilganlarni o'chirish
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Filter -->
+<form method="get" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Foydalanuvchi yoki matn..."
+         style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;min-width:220px;"/>
+  <select name="type" style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;">
+    <option value="">Barcha turlar</option>
+    {% for val, label in type_choices %}
+      <option value="{{ val }}" {% if ntype == val %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="status" style="padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.85rem;">
+    <option value="">Barchasi</option>
+    <option value="unread" {% if status == 'unread' %}selected{% endif %}>O'qilmagan</option>
+    <option value="read"   {% if status == 'read'   %}selected{% endif %}>O'qilgan</option>
+  </select>
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if q or ntype or status %}
+    <a href="{% url 'panel_notifications' %}" class="btn btn-outline">Tozalash</a>
+  {% endif %}
+</form>
+
+<!-- Jadval -->
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h3>{{ notifications|length }} ta bildirishnoma</h3>
+    <span style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:#43E97B;">
+      <span style="width:7px;height:7px;border-radius:50%;background:#43E97B;animation:pulse 2s infinite;display:inline-block;"></span>
+      Real vaqt
+    </span>
+  </div>
+  <table class="panel-table">
+    <thead>
+      <tr>
+        <th>Foydalanuvchi</th>
+        <th>Tur</th>
+        <th>Matn</th>
+        <th>Holat</th>
+        <th>Vaqt</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="notif-table-body">
+      {% for n in notifications %}
+      <tr style="{% if not n.is_read %}background:rgba(108,99,255,.04);{% endif %}">
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="mini-avatar">{{ n.user.initial }}</div>
+            <div>
+              <a href="{% url 'panel_user_detail' pk=n.user.pk %}"
+                 style="color:var(--text);text-decoration:none;font-weight:600;">
+                {{ n.user.get_full_name|default:n.user.phone }}
+              </a>
+              <div style="font-size:.72rem;color:var(--muted);">{{ n.user.get_role_display }}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          {% if n.notif_type == 'mentor_req' %}
+            <span class="badge badge-blue"><i data-lucide="handshake" style="width:11px;margin-right:3px;"></i>Mentor</span>
+          {% elif n.notif_type == 'msg' %}
+            <span class="badge" style="background:rgba(67,233,123,.15);color:#43E97B;"><i data-lucide="message-circle" style="width:11px;margin-right:3px;"></i>Xabar</span>
+          {% elif n.notif_type == 'contest' %}
+            <span class="badge badge-gold"><i data-lucide="trophy" style="width:11px;margin-right:3px;"></i>Tanlov</span>
+          {% elif n.notif_type == 'score' %}
+            <span class="badge" style="background:rgba(255,154,68,.15);color:#FF9A44;"><i data-lucide="star" style="width:11px;margin-right:3px;"></i>Ball</span>
+          {% endif %}
+        </td>
+        <td style="max-width:280px;">
+          <div style="font-size:.85rem;">{{ n.text|truncatechars:60 }}</div>
+          {% if n.link %}
+            <a href="{{ n.link }}" style="font-size:.75rem;color:var(--primary);">{{ n.link }}</a>
+          {% endif %}
+        </td>
+        <td>
+          {% if n.is_read %}
+            <span class="badge badge-green">O'qilgan</span>
+          {% else %}
+            <span class="badge badge-red">Yangi</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.78rem;color:var(--muted);white-space:nowrap;">
+          {{ n.created_at|date:"d.m.Y H:i" }}
+        </td>
+        <td>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete"/>
+            <input type="hidden" name="notif_id" value="{{ n.pk }}"/>
+            <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:.75rem;">
+              <i data-lucide="trash-2" style="width:13px;"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6" style="text-align:center;color:var(--muted);padding:40px;">
+            <i data-lucide="bell-off" style="width:32px;height:32px;opacity:.3;display:block;margin:0 auto 10px;"></i>
+            Bildirishnoma yo'q.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+// Real-time yangilanish — har 20 soniyada o'qilmagan sonini yangilash
+async function updateNotifCount() {
+  try {
+    const res  = await fetch('{% url "panel_realtime" %}');
+    const data = await res.json();
+    const el   = document.getElementById('rt-notifs-count');
+    if (el) el.textContent = data.unread_notifs;
+  } catch(e) {}
+}
+setInterval(updateNotifCount, 20000);
+</script>
+
+{% endblock %}

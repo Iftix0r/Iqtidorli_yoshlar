@@ -541,7 +541,7 @@ def blocked_ips_view(request):
 @panel_required
 def realtime_api(request):
     from django.http import JsonResponse
-    from .models import ActivityLog, LoginHistory, Message, MentorRequest, ContestApplication
+    from .models import ActivityLog, LoginHistory, Message, MentorRequest, ContestApplication, Notification
 
     today = timezone.now().date()
     return JsonResponse({
@@ -551,6 +551,7 @@ def realtime_api(request):
         'unread_messages': Message.objects.filter(is_read=False).count(),
         'pending_mentor':  MentorRequest.objects.filter(status='pending').count(),
         'pending_apps':    ContestApplication.objects.filter(status='pending').count(),
+        'unread_notifs':   Notification.objects.filter(is_read=False).count(),
         'last_activity':   list(
             ActivityLog.objects.select_related('user')
             .order_by('-created_at')
@@ -562,3 +563,40 @@ def realtime_api(request):
             .values('user__first_name', 'user__phone', 'ip_address', 'device', 'is_success', 'created_at')[:5]
         ),
     }, json_dumps_params={'default': str})
+
+
+# ── ADMIN BILDIRISHNOMALAR ────────────────────────────────────────────────────
+@panel_required
+def notifications_panel_view(request):
+    from .models import Notification
+    q      = request.GET.get('q', '').strip()
+    ntype  = request.GET.get('type', '')
+    status = request.GET.get('status', '')
+
+    qs = Notification.objects.select_related('user').order_by('-created_at')
+    if q:
+        qs = qs.filter(Q(user__first_name__icontains=q) | Q(text__icontains=q))
+    if ntype:
+        qs = qs.filter(notif_type=ntype)
+    if status == 'read':
+        qs = qs.filter(is_read=True)
+    elif status == 'unread':
+        qs = qs.filter(is_read=False)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'delete':
+            Notification.objects.filter(pk=request.POST.get('notif_id')).delete()
+        elif action == 'delete_all':
+            Notification.objects.filter(is_read=True).delete()
+        elif action == 'mark_all_read':
+            Notification.objects.filter(is_read=False).update(is_read=True)
+        return redirect('panel_notifications')
+
+    unread_count = Notification.objects.filter(is_read=False).count()
+    return render(request, 'panel/notifications.html', {
+        'notifications': qs[:300],
+        'q': q, 'ntype': ntype, 'status': status,
+        'unread_count': unread_count,
+        'type_choices': Notification.TYPES,
+    })
