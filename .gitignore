@@ -7,4 +7,5 @@ staticfiles/
 public/static/
 public/media/
 venv/
+logs/
 .DS_Store
