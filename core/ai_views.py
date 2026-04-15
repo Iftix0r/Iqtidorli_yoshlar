@@ -118,10 +118,12 @@ def ai_portfolio_review(request):
         cert_list = '\n'.join(f"- {c.title} ({c.issuer})" for c in certs) or 'Sertifikatlar yo\'q'
         skill_list = ', '.join(s.skill_name for s in skills) or 'Ko\'nikmalar yo\'q'
 
+        region_str = user.region or "ko'rsatilmagan"
+        bio_str = user.bio or "yo'q"
         prompt = (
             f"Foydalanuvchi: {user.get_full_name()}, rol: {user.get_role_display()}, "
-            f"viloyat: {user.region or 'ko\'rsatilmagan'}.\n"
-            f"Bio: {user.bio or 'yo\'q'}\n\n"
+            f"viloyat: {region_str}.\n"
+            f"Bio: {bio_str}\n\n"
             f"Ko'nikmalar: {skill_list}\n\n"
             f"Loyihalar:\n{proj_list}\n\n"
             f"Sertifikatlar:\n{cert_list}\n\n"
@@ -169,14 +171,19 @@ def ai_smart_match(request):
             role_label = 'hamkor yosh'
 
         cand_list = '\n'.join(
-            f"- {c.get_full_name()} (ID:{c.pk}): ko'nikmalar: {', '.join(s.skill_name for s in c.skills.all()) or 'yo\'q'}, bio: {c.bio[:80] or 'yo\'q'}"
+            "- {} (ID:{}): ko'nikmalar: {}, bio: {}".format(
+                c.get_full_name(), c.pk,
+                ', '.join(s.skill_name for s in c.skills.all()) or "yo'q",
+                c.bio[:80] or "yo'q"
+            )
             for c in candidates
         ) or 'Nomzodlar topilmadi'
 
+        user_bio = user.bio or "yo'q"
         prompt = (
             f"Foydalanuvchi: {user.get_full_name()}, rol: {user.get_role_display()}\n"
             f"Ko'nikmalar: {skills}\n"
-            f"Bio: {user.bio or 'yo\'q'}\n\n"
+            f"Bio: {user_bio}\n\n"
             f"Quyidagi {role_label}lar ro'yxatidan eng mos 3 tasini tanlang va nima uchun mos ekanligini tushuntiring:\n"
             f"{cand_list}\n\n"
             f"Har bir tavsiya uchun: ism, ID, moslik sababi. O'zbek tilida yoz."
