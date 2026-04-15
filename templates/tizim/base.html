@@ -107,11 +107,20 @@
     <a href="{% url 'sys_terminal' %}" class="nav-item {% block nav_term %}{% endblock %}">
       <i data-lucide="terminal"></i> Terminal
     </a>
+    <a href="{% url 'sys_git' %}" class="nav-item {% block nav_git %}{% endblock %}">
+      <i data-lucide="github"></i> Git Holati
+    </a>
+    <a href="{% url 'sys_services' %}" class="nav-item {% block nav_svc %}{% endblock %}">
+      <i data-lucide="server"></i> Xizmatlar
+    </a>
     <a href="{% url 'sys_sql' %}" class="nav-item {% block nav_sql %}{% endblock %}">
       <i data-lucide="database"></i> SQL Konsol
     </a>
     <a href="{% url 'sys_config' %}" class="nav-item {% block nav_config %}{% endblock %}">
       <i data-lucide="sliders"></i> Konfiguratsiya
+    </a>
+    <a href="{% url 'sys_cache' %}" class="nav-item {% block nav_cache %}{% endblock %}">
+      <i data-lucide="zap"></i> Kesh (Cache)
     </a>
     <a href="{% url 'sys_files' %}" class="nav-item {% block nav_files %}{% endblock %}">
       <i data-lucide="folder"></i> Fayllar

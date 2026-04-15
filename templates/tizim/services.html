@@ -1,0 +1,38 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Server Xizmatlari{% endblock %}
+{% block page_title %}services{% endblock %}
+{% block nav_svc %}active{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+    <h3 style="font-size:1rem; font-weight:800; margin-bottom:4px;">
+      <i data-lucide="server" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+      Server Xizmatlari
+    </h3>
+    <p style="font-size:.75rem;color:var(--muted);">Serverdagi asosiy texnologik xizmatlar holati.</p>
+</div>
+
+<div class="sys-grid">
+    {% for svc in services %}
+    <div class="sys-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div class="label">{{ svc.label }}</div>
+                <div class="value {% if svc.status == 'active' %}ok{% else %}err{% endif %}" style="font-size: 1.1rem; margin-top: 8px;">
+                    {{ svc.status|upper }}
+                </div>
+                <div class="sub">{{ svc.name }} service</div>
+            </div>
+            <i data-lucide="{{ svc.icon }}" style="width: 24px; height: 24px; color: {% if svc.status == 'active' %}var(--primary){% else %}var(--danger){% endif %};"></i>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: rgba(108, 99, 255, 0.05); border: 1px dashed var(--border); border-radius: 12px; font-size: 0.8rem; color: var(--muted);">
+    <i data-lucide="info" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px;"></i>
+    Ma'lumot: Bu xizmatlar holati serverda `systemctl is-active` buyrug'i orqali tekshiriladi.
+</div>
+
+<script>lucide.createIcons();</script>
+{% endblock %}

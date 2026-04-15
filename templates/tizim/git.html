@@ -1,0 +1,55 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Git Monitoring{% endblock %}
+{% block page_title %}git-monitoring{% endblock %}
+{% block nav_git %}active{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h3 style="font-size:1rem; font-weight:800; margin-bottom:4px;">
+      <i data-lucide="github" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+      Git Monitoring
+    </h3>
+    <p style="font-size:.75rem;color:var(--muted);">Proyekt versiyasi va branch holati.</p>
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="pull">
+    <button type="submit" class="btn btn-blue" onclick="return confirm('Haqiqatdan ham serverdan git pull qilmoqchimisiz?')">
+        <i data-lucide="download" style="width:14px;height:14px;"></i> Git Pull
+    </button>
+  </form>
+</div>
+
+<!-- JORIY BRANCH -->
+<div class="sys-grid" style="grid-template-columns: 1fr;">
+    <div class="sys-card">
+        <div class="label">Joriy Branch</div>
+        <div class="value ok" style="font-size: 1.2rem;"> {{ branch }}</div>
+    </div>
+</div>
+
+<!-- GIT STATUS -->
+<div class="sys-table-wrap" style="margin-top: 20px;">
+    <div class="sys-table-header">
+        <span>📂 Git Status</span>
+    </div>
+    <div class="code-block" style="max-height: 300px; overflow-y: auto; font-size: 0.8rem;">
+{{ status }}
+    </div>
+</div>
+
+<!-- OXIRGI COMMITLAR -->
+<div class="sys-table-wrap" style="margin-top: 20px;">
+    <div class="sys-table-header">
+        <span>📜 Oxirgi 10 ta Commit</span>
+    </div>
+    <div class="code-block" style="max-height: 400px; overflow-y: auto; font-size: 0.8rem;">
+{% for log in logs %}
+{{ log }}
+{% endfor %}
+    </div>
+</div>
+
+<script>lucide.createIcons();</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'tizim/base.html' %}
+{% block title %}Kesh Boshqaruvi{% endblock %}
+{% block page_title %}cache-management{% endblock %}
+{% block nav_cache %}active{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+    <h3 style="font-size:1rem; font-weight:800; margin-bottom:4px;">
+      <i data-lucide="zap" style="width:16px;height:16px;display:inline;vertical-align:middle;color:var(--primary);"></i>
+      Kesh (Cache) Boshqaruvi
+    </h3>
+    <p style="font-size:.75rem;color:var(--muted);">Django keshini tahlil qilish va tozalash.</p>
+</div>
+
+<div class="sys-grid">
+    <div class="sys-card">
+        <div class="label">Kesh Turi (Backend)</div>
+        <div class="value ok" style="font-size: 0.9rem; word-break: break-all;">{{ backend }}</div>
+        <div class="sub">settings.py dan olingan</div>
+    </div>
+</div>
+
+<div class="sys-table-wrap" style="margin-top: 24px;">
+    <div class="sys-table-header">
+        <span>🧹 Keshni Tozalash</span>
+    </div>
+    <div style="padding: 24px; text-align: center;">
+        <p style="color: var(--muted); margin-bottom: 20px; font-size: 0.9rem;">
+            Keshni tozalash sayt tezligini vaqtincha sekinlashtirishi mumkin, <br>
+            lekin ma'lumotlar yangilanmagan hollarda yordam beradi.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear">
+            <button type="submit" class="btn btn-red" style="padding: 12px 30px;">
+                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Barcha Keshni Tozalash
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>lucide.createIcons();</script>
+{% endblock %}
