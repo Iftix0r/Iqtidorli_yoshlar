@@ -1,33 +1,42 @@
 {% extends "ai/base.html" %}
+{% block title %}Iqtidor Tahlili{% endblock %}
 {% block ai_content %}
-<h1 class="text-2xl font-bold mb-6">🧠 Iqtidor Tahlili — Mos Kasblar</h1>
 
-<form method="post" class="bg-white rounded-xl shadow p-6 mb-6 space-y-4">
-  {% csrf_token %}
-  <div>
-    <label class="block text-sm font-medium text-gray-700 mb-1">Qiziqishlaringiz</label>
-    <textarea name="interests" rows="3" required
-      placeholder="Masalan: matematika, ijodiy fikrlash, texnologiya, san'at..."
-      class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"></textarea>
-  </div>
-  <div>
-    <label class="block text-sm font-medium text-gray-700 mb-1">Yutuqlaringiz (ixtiyoriy)</label>
-    <textarea name="achievements" rows="3"
-      placeholder="Masalan: olimpiada g'olibi, loyiha yaratdim, kurs tugatdim..."
-      class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none"></textarea>
-  </div>
-  <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 font-medium">
-    🤖 Kasblarni Tahlil Qil
-  </button>
-</form>
+<div class="section-title" style="text-align:left;margin-bottom:24px;">
+  <h2><i data-lucide="brain" style="width:28px;height:28px;vertical-align:middle;"></i> Iqtidor <span>Tahlili</span></h2>
+  <p>Qiziqishlaringizni kiriting — AI sizga mos kasblarni taklif qiladi</p>
+</div>
+
+<div class="profile-card">
+  <form method="post" style="display:flex;flex-direction:column;gap:16px;">
+    {% csrf_token %}
+    <div>
+      <label style="display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px;">Qiziqishlaringiz *</label>
+      <textarea name="interests" rows="3" required
+        placeholder="Masalan: matematika, ijodiy fikrlash, texnologiya, san'at..."
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:.9rem;outline:none;resize:vertical;"></textarea>
+    </div>
+    <div>
+      <label style="display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px;">Yutuqlaringiz (ixtiyoriy)</label>
+      <textarea name="achievements" rows="3"
+        placeholder="Masalan: olimpiada g'olibi, loyiha yaratdim, kurs tugatdim..."
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:.9rem;outline:none;resize:vertical;"></textarea>
+    </div>
+    <button type="submit" class="btn-primary" style="padding:12px;font-size:.95rem;justify-content:center;">
+      <i data-lucide="sparkles"></i> Kasblarni Tahlil Qil
+    </button>
+  </form>
+</div>
 
 {% if error %}
-  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-4">{{ error }}</div>
+  <div class="alert alert-error" style="margin-top:20px;">{{ error }}</div>
 {% endif %}
+
 {% if result %}
-  <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="font-semibold text-lg mb-3">💼 Sizga Mos Kasblar</h2>
-    <div class="prose max-w-none text-gray-700 whitespace-pre-wrap">{{ result }}</div>
+  <div class="profile-card" style="margin-top:24px;">
+    <h3 style="margin-bottom:16px;"><i data-lucide="briefcase"></i> Sizga Mos Kasblar</h3>
+    <div style="color:var(--text);line-height:1.8;white-space:pre-wrap;font-size:.9rem;">{{ result }}</div>
   </div>
 {% endif %}
+
 {% endblock %}

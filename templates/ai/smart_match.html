@@ -1,41 +1,73 @@
 {% extends "ai/base.html" %}
+{% block title %}Smart Matching{% endblock %}
 {% block ai_content %}
-<h1 class="text-2xl font-bold mb-6">🤝 Smart Matching</h1>
 
-<form method="post" class="bg-white rounded-xl shadow p-6 mb-6 space-y-4">
-  {% csrf_token %}
-  <div>
-    <label class="block text-sm font-medium text-gray-700 mb-2">Kim bilan moslashtirish?</label>
-    <div class="grid grid-cols-3 gap-3">
-      <label class="flex flex-col items-center border-2 rounded-lg p-4 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
-        <input type="radio" name="match_type" value="mentor" class="sr-only" checked>
-        <span class="text-2xl mb-1">👨‍🏫</span>
-        <span class="text-sm font-medium">Mentor</span>
-      </label>
-      <label class="flex flex-col items-center border-2 rounded-lg p-4 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
-        <input type="radio" name="match_type" value="investor" class="sr-only">
-        <span class="text-2xl mb-1">💼</span>
-        <span class="text-sm font-medium">Investor</span>
-      </label>
-      <label class="flex flex-col items-center border-2 rounded-lg p-4 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
-        <input type="radio" name="match_type" value="yosh" class="sr-only">
-        <span class="text-2xl mb-1">🤝</span>
-        <span class="text-sm font-medium">Hamkor</span>
-      </label>
+<div class="section-title" style="text-align:left;margin-bottom:24px;">
+  <h2><i data-lucide="handshake" style="width:28px;height:28px;vertical-align:middle;"></i> Smart <span>Matching</span></h2>
+  <p>AI sizga mos mentor, investor yoki hamkorni topib beradi</p>
+</div>
+
+<div class="profile-card">
+  <form method="post" style="display:flex;flex-direction:column;gap:20px;">
+    {% csrf_token %}
+    <div>
+      <label style="display:block;font-size:.85rem;color:var(--muted);margin-bottom:12px;">Kim bilan moslashtirish?</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <label style="cursor:pointer;">
+          <input type="radio" name="match_type" value="mentor" checked style="display:none;" class="match-radio">
+          <div class="match-option" style="border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:.2s;">
+            <div style="font-size:1.8rem;margin-bottom:6px;">👨‍🏫</div>
+            <div style="font-size:.88rem;font-weight:600;">Mentor</div>
+          </div>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="match_type" value="investor" style="display:none;" class="match-radio">
+          <div class="match-option" style="border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:.2s;">
+            <div style="font-size:1.8rem;margin-bottom:6px;">💼</div>
+            <div style="font-size:.88rem;font-weight:600;">Investor</div>
+          </div>
+        </label>
+        <label style="cursor:pointer;">
+          <input type="radio" name="match_type" value="yosh" style="display:none;" class="match-radio">
+          <div class="match-option" style="border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:.2s;">
+            <div style="font-size:1.8rem;margin-bottom:6px;">🤝</div>
+            <div style="font-size:.88rem;font-weight:600;">Hamkor</div>
+          </div>
+        </label>
+      </div>
     </div>
-  </div>
-  <button type="submit" class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 font-medium">
-    🤖 Eng Mos Odamlarni Top
-  </button>
-</form>
+    <button type="submit" class="btn-primary" style="padding:12px;font-size:.95rem;justify-content:center;">
+      <i data-lucide="sparkles"></i> Eng Mos Odamlarni Top
+    </button>
+  </form>
+</div>
 
 {% if error %}
-  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-4">{{ error }}</div>
+  <div class="alert alert-error" style="margin-top:20px;">{{ error }}</div>
 {% endif %}
+
 {% if result %}
-  <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="font-semibold text-lg mb-3">✨ Sizga Mos Nomzodlar</h2>
-    <div class="prose max-w-none text-gray-700 whitespace-pre-wrap">{{ result }}</div>
+  <div class="profile-card" style="margin-top:24px;">
+    <h3 style="margin-bottom:16px;"><i data-lucide="users"></i> Sizga Mos Nomzodlar</h3>
+    <div style="color:var(--text);line-height:1.8;white-space:pre-wrap;font-size:.9rem;">{{ result }}</div>
   </div>
 {% endif %}
+
+<script>
+document.querySelectorAll('.match-radio').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('.match-option').forEach(opt => {
+      opt.style.borderColor = 'var(--border)';
+      opt.style.background = 'transparent';
+    });
+    radio.nextElementSibling.style.borderColor = 'var(--primary)';
+    radio.nextElementSibling.style.background = 'rgba(108,99,255,.1)';
+  });
+  if (radio.checked) {
+    radio.nextElementSibling.style.borderColor = 'var(--primary)';
+    radio.nextElementSibling.style.background = 'rgba(108,99,255,.1)';
+  }
+});
+</script>
+
 {% endblock %}

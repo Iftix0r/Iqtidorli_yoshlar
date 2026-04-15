@@ -1,44 +1,49 @@
 {% extends "ai/base.html" %}
+{% block title %}Portfolio Baholash{% endblock %}
 {% block ai_content %}
-<h1 class="text-2xl font-bold mb-6">📋 Portfolio Baholash</h1>
 
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm text-blue-700">
-  AI sizning profilingizdagi loyihalar, sertifikatlar va ko'nikmalarni tahlil qiladi.
-  Avval <a href="{% url 'profile' %}" class="underline font-medium">profilingizni</a> to'ldiring.
+<div class="section-title" style="text-align:left;margin-bottom:24px;">
+  <h2><i data-lucide="clipboard-check" style="width:28px;height:28px;vertical-align:middle;"></i> Portfolio <span>Baholash</span></h2>
+  <p>AI portfoliongizni tahlil qilib, kuchli va zaif tomonlarini ko'rsatadi</p>
 </div>
 
-<div class="bg-white rounded-xl shadow p-6 mb-6">
-  <h2 class="font-semibold mb-3">Sizning Portfolio Ma'lumotlaringiz</h2>
-  <div class="grid grid-cols-3 gap-4 text-center text-sm">
-    <div class="bg-gray-50 rounded-lg p-3">
-      <div class="text-2xl font-bold text-indigo-600">{{ user.skills.count }}</div>
-      <div class="text-gray-500">Ko'nikma</div>
+<div class="profile-card" style="margin-bottom:20px;">
+  <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px;">
+    <i data-lucide="info" style="width:14px;height:14px;vertical-align:middle;"></i>
+    AI profilingizdagi loyihalar, sertifikatlar va ko'nikmalarni tahlil qiladi.
+    Avval <a href="{% url 'profile' %}" style="color:var(--primary);">profilingizni</a> to'ldiring.
+  </p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">{{ user.skills.count }}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px;">Ko'nikma</div>
     </div>
-    <div class="bg-gray-50 rounded-lg p-3">
-      <div class="text-2xl font-bold text-green-600">{{ user.projects.count }}</div>
-      <div class="text-gray-500">Loyiha</div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">{{ user.projects.count }}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px;">Loyiha</div>
     </div>
-    <div class="bg-gray-50 rounded-lg p-3">
-      <div class="text-2xl font-bold text-purple-600">{{ user.certificates.count }}</div>
-      <div class="text-gray-500">Sertifikat</div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">{{ user.certificates.count }}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px;">Sertifikat</div>
     </div>
   </div>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn-primary" style="width:100%;padding:12px;font-size:.95rem;justify-content:center;">
+      <i data-lucide="sparkles"></i> Portfoliomni Baholash
+    </button>
+  </form>
 </div>
-
-<form method="post">
-  {% csrf_token %}
-  <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-medium text-lg">
-    🤖 Portfoliomni Baholash
-  </button>
-</form>
 
 {% if error %}
-  <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mt-4">{{ error }}</div>
+  <div class="alert alert-error">{{ error }}</div>
 {% endif %}
+
 {% if result %}
-  <div class="bg-white rounded-xl shadow p-6 mt-6">
-    <h2 class="font-semibold text-lg mb-3">📊 AI Baholash Natijasi</h2>
-    <div class="prose max-w-none text-gray-700 whitespace-pre-wrap">{{ result }}</div>
+  <div class="profile-card" style="margin-top:24px;">
+    <h3 style="margin-bottom:16px;"><i data-lucide="bar-chart-2"></i> AI Baholash Natijasi</h3>
+    <div style="color:var(--text);line-height:1.8;white-space:pre-wrap;font-size:.9rem;">{{ result }}</div>
   </div>
 {% endif %}
+
 {% endblock %}

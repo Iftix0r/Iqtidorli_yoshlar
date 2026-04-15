@@ -1,12 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 py-8">
-  <div class="flex gap-3 mb-8 flex-wrap">
-    <a href="{% url 'ai_mentor' %}" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">🎯 AI Mentor</a>
-    <a href="{% url 'ai_talent_analysis' %}" class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700">🧠 Iqtidor Tahlili</a>
-    <a href="{% url 'ai_portfolio_review' %}" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700">📋 Portfolio Baholash</a>
-    <a href="{% url 'ai_smart_match' %}" class="px-4 py-2 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700">🤝 Smart Matching</a>
+<section style="padding-top:100px;padding-bottom:60px;">
+  <div style="max-width:800px;margin:0 auto;padding:0 20px;">
+
+    <!-- Tab navigatsiya -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;">
+      <a href="{% url 'ai_mentor' %}"
+         style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;
+                {% if request.resolver_match.url_name == 'ai_mentor' %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+        <i data-lucide="target" style="width:15px;height:15px;"></i> AI Mentor
+      </a>
+      <a href="{% url 'ai_talent_analysis' %}"
+         style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;
+                {% if request.resolver_match.url_name == 'ai_talent_analysis' %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+        <i data-lucide="brain" style="width:15px;height:15px;"></i> Iqtidor Tahlili
+      </a>
+      <a href="{% url 'ai_portfolio_review' %}"
+         style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;
+                {% if request.resolver_match.url_name == 'ai_portfolio_review' %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+        <i data-lucide="clipboard-check" style="width:15px;height:15px;"></i> Portfolio Baholash
+      </a>
+      <a href="{% url 'ai_smart_match' %}"
+         style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;
+                {% if request.resolver_match.url_name == 'ai_smart_match' %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+        <i data-lucide="handshake" style="width:15px;height:15px;"></i> Smart Matching
+      </a>
+    </div>
+
+    {% block ai_content %}{% endblock %}
   </div>
-  {% block ai_content %}{% endblock %}
-</div>
+</section>
 {% endblock %}
