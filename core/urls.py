@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import gamification_views
+from . import market_views
 
 urlpatterns = [
     path('',                                  views.index,                        name='index'),
@@ -29,4 +30,9 @@ urlpatterns = [
     path('courses/<int:pk>/enroll/',          views.course_enroll,         name='course_enroll'),
     path('courses/lesson/<int:pk>/done/',     views.lesson_done,           name='lesson_done'),
     path('certificate/<str:cert_number>/',    views.certificate_view,      name='certificate_view'),
+
+    # Market
+    path('market/',              market_views.market_view,  name='market'),
+    path('market/<int:pk>/buy/', market_views.market_buy,   name='market_buy'),
+    path('market/orders/',       market_views.my_orders,    name='my_orders'),
 ]

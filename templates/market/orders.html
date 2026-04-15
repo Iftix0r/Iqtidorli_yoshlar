@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Buyurtmalarim{% endblock %}
+{% block content %}
+<section style="padding-top:100px;padding-bottom:60px;">
+<div style="max-width:800px;margin:0 auto;padding:0 20px;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+    <h2 style="font-size:1.5rem;font-weight:900;">📦 Buyurtmalarim</h2>
+    <a href="{% url 'market' %}" class="btn-outline" style="padding:8px 16px;font-size:.88rem;">
+      <i data-lucide="arrow-left"></i> Marketga qaytish
+    </a>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    {% for order in orders %}
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;
+         display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="font-size:2rem;flex-shrink:0;">
+        {% if order.item.category == 'certificate' %}📜{% elif order.item.category == 'mentoring' %}👨‍🏫
+        {% elif order.item.category == 'course' %}🎓{% elif order.item.category == 'badge' %}🏅
+        {% elif order.item.category == 'gift' %}🎁{% else %}✨{% endif %}
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:.95rem;">{{ order.item.title }}</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:2px;">{{ order.created_at|date:"d.m.Y H:i" }}</div>
+        {% if order.note %}
+          <div style="font-size:.82rem;color:var(--muted);margin-top:4px;font-style:italic;">{{ order.note }}</div>
+        {% endif %}
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:1rem;font-weight:700;color:var(--primary);">-{{ order.price_paid }} ⚡</div>
+        <span style="font-size:.78rem;padding:3px 12px;border-radius:20px;font-weight:600;margin-top:4px;display:inline-block;
+          {% if order.status == 'approved' %}background:rgba(67,233,123,.15);color:#43E97B;
+          {% elif order.status == 'delivered' %}background:rgba(67,233,123,.2);color:#43E97B;
+          {% elif order.status == 'rejected' %}background:rgba(255,101,132,.15);color:#FF6584;
+          {% else %}background:rgba(255,215,0,.15);color:#FFD700;{% endif %}">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+    </div>
+    {% empty %}
+      <div style="text-align:center;padding:60px;color:var(--muted);">
+        <div style="font-size:3rem;margin-bottom:12px;">📦</div>
+        <p>Hali buyurtma yo'q</p>
+        <a href="{% url 'market' %}" class="btn-primary" style="margin-top:16px;display:inline-flex;">Marketga o'tish</a>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+</section>
+{% endblock %}

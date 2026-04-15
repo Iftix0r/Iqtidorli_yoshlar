@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Sotib olishni tasdiqlash{% endblock %}
+{% block content %}
+<section style="padding-top:120px;padding-bottom:60px;">
+<div style="max-width:480px;margin:0 auto;padding:0 20px;">
+
+  <div class="profile-card" style="text-align:center;">
+    {% if item.image %}
+      <img src="{{ item.image.url }}" alt="{{ item.title }}"
+           style="width:100%;height:180px;object-fit:cover;border-radius:12px;margin-bottom:20px;">
+    {% else %}
+      <div style="font-size:4rem;margin-bottom:16px;">
+        {% if item.category == 'certificate' %}📜{% elif item.category == 'mentoring' %}👨‍🏫
+        {% elif item.category == 'course' %}🎓{% elif item.category == 'badge' %}🏅
+        {% elif item.category == 'gift' %}🎁{% else %}✨{% endif %}
+      </div>
+    {% endif %}
+
+    <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:8px;">{{ item.title }}</h2>
+    <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:20px;">{{ item.description }}</p>
+
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:24px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--muted);font-size:.88rem;">Narxi</span>
+        <span style="font-weight:700;color:var(--primary);">⚡ {{ item.price }} ball</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--muted);font-size:.88rem;">Sizning balingiz</span>
+        <span style="font-weight:700;">⚡ {{ request.user.score }}</span>
+      </div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--muted);font-size:.88rem;">Keyin qoladi</span>
+        <span style="font-weight:700;color:{% if request.user.score >= item.price %}#43E97B{% else %}#FF6584{% endif %};">
+          ⚡ {{ request.user.score|add:item.price|add:"-"|add:item.price }}
+        </span>
+      </div>
+    </div>
+
+    <form method="post" style="display:flex;flex-direction:column;gap:10px;">
+      {% csrf_token %}
+      <button type="submit" class="btn-primary" style="padding:12px;font-size:1rem;justify-content:center;">
+        <i data-lucide="check-circle"></i> Tasdiqlash
+      </button>
+      <a href="{% url 'market' %}" class="btn-outline" style="padding:12px;text-align:center;">
+        Bekor qilish
+      </a>
+    </form>
+  </div>
+
+</div>
+</section>
+{% endblock %}

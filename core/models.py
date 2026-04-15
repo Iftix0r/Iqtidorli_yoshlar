@@ -560,3 +560,55 @@ class AIChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.role}: {self.content[:60]}"
+
+
+# ── IQTIDOR MARKET ────────────────────────────────────────────────────────────
+
+class MarketItem(models.Model):
+    CATEGORIES = [
+        ('certificate', '📜 Sertifikat'),
+        ('mentoring',   '👨‍🏫 Mentoring Sessiyasi'),
+        ('course',      '🎓 Kurs Kirish'),
+        ('badge',       '🏅 Maxsus Nishon'),
+        ('gift',        '🎁 Sovg\'a'),
+        ('other',       '✨ Boshqa'),
+    ]
+    title       = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    image       = models.ImageField(upload_to=uuid_path_gen, blank=True, null=True)
+    category    = models.CharField(max_length=20, choices=CATEGORIES, default='gift')
+    price       = models.PositiveIntegerField(help_text="Ball narxi")
+    stock       = models.IntegerField(default=-1, help_text="-1 = cheksiz")
+    is_active   = models.BooleanField(default=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['price']
+
+    def __str__(self):
+        return f"{self.title} ({self.price} ball)"
+
+    def in_stock(self):
+        return self.stock == -1 or self.stock > 0
+
+
+class MarketOrder(models.Model):
+    STATUS = [
+        ('pending',   '⏳ Kutilmoqda'),
+        ('approved',  '✅ Tasdiqlandi'),
+        ('rejected',  '❌ Rad etildi'),
+        ('delivered', '🎁 Yetkazildi'),
+    ]
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='market_orders')
+    item       = models.ForeignKey(MarketItem, on_delete=models.CASCADE, related_name='orders')
+    price_paid = models.PositiveIntegerField()
+    status     = models.CharField(max_length=20, choices=STATUS, default='pending')
+    note       = models.TextField(blank=True, help_text="Admin izohi")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} → {self.item} ({self.status})"

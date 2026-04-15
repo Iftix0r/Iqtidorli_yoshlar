@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Iqtidor Market{% endblock %}
+{% block content %}
+<section style="padding-top:100px;padding-bottom:60px;">
+<div style="max-width:1100px;margin:0 auto;padding:0 20px;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;">
+    <div>
+      <div class="section-badge">🛍️ Market</div>
+      <h2 style="font-size:1.8rem;font-weight:900;margin-top:8px;">Iqtidor <span style="color:var(--primary);">Market</span></h2>
+      <p style="color:var(--muted);margin-top:4px;">Ballaringizni sovg'alarga almashtiring</p>
+    </div>
+    {% if user.is_authenticated %}
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div style="background:var(--card);border:1px solid rgba(108,99,255,.3);border-radius:14px;padding:12px 20px;text-align:center;">
+        <div style="font-size:.75rem;color:var(--muted);">Sizning balingiz</div>
+        <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">⚡ {{ user.score }}</div>
+      </div>
+      <a href="{% url 'my_orders' %}" class="btn-outline" style="padding:10px 18px;">
+        <i data-lucide="package"></i> Buyurtmalarim
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Kategoriya filtri -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
+    <a href="{% url 'market' %}"
+       style="padding:7px 16px;border-radius:20px;font-size:.85rem;font-weight:600;text-decoration:none;
+              {% if not selected %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+      Barchasi
+    </a>
+    {% for val, label in categories %}
+    <a href="?cat={{ val }}"
+       style="padding:7px 16px;border-radius:20px;font-size:.85rem;font-weight:600;text-decoration:none;
+              {% if selected == val %}background:var(--gradient);color:#fff;{% else %}background:var(--card);color:var(--muted);border:1px solid var(--border);{% endif %}">
+      {{ label }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Mahsulotlar -->
+  <div class="features-grid">
+    {% for item in items %}
+    <div class="feature-card" style="position:relative;display:flex;flex-direction:column;">
+      {% if not item.in_stock %}
+        <div style="position:absolute;top:12px;right:12px;background:#FF6584;color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;">Tugagan</div>
+      {% endif %}
+      {% if item.image %}
+        <img src="{{ item.image.url }}" alt="{{ item.title }}"
+             style="width:100%;height:140px;object-fit:cover;border-radius:12px;margin-bottom:14px;">
+      {% else %}
+        <div style="width:100%;height:120px;background:linear-gradient(135deg,rgba(108,99,255,.2),rgba(67,233,123,.1));
+             border-radius:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;">
+          {% if item.category == 'certificate' %}📜
+          {% elif item.category == 'mentoring' %}👨‍🏫
+          {% elif item.category == 'course' %}🎓
+          {% elif item.category == 'badge' %}🏅
+          {% elif item.category == 'gift' %}🎁
+          {% else %}✨{% endif %}
+        </div>
+      {% endif %}
+
+      <span style="font-size:.72rem;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:8px;width:fit-content;">
+        {{ item.get_category_display }}
+      </span>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:6px;">{{ item.title }}</h3>
+      <p style="font-size:.85rem;color:var(--muted);flex:1;line-height:1.5;">{{ item.description|truncatewords:15 }}</p>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
+        <div style="font-size:1.2rem;font-weight:900;color:var(--primary);">⚡ {{ item.price }}</div>
+        {% if item.stock != -1 %}
+          <span style="font-size:.75rem;color:var(--muted);">{{ item.stock }} ta qoldi</span>
+        {% endif %}
+      </div>
+
+      {% if user.is_authenticated %}
+        {% if item.in_stock %}
+          {% if user.score >= item.price %}
+            <a href="{% url 'market_buy' pk=item.pk %}" class="btn-primary"
+               style="margin-top:12px;justify-content:center;padding:10px;">
+              <i data-lucide="shopping-cart"></i> Sotib olish
+            </a>
+          {% else %}
+            <button disabled style="margin-top:12px;width:100%;padding:10px;border-radius:10px;
+                    background:var(--bg);border:1px solid var(--border);color:var(--muted);
+                    font-size:.88rem;cursor:not-allowed;">
+              ⚡ {{ item.price }} ball kerak
+            </button>
+          {% endif %}
+        {% else %}
+          <button disabled style="margin-top:12px;width:100%;padding:10px;border-radius:10px;
+                  background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:.88rem;cursor:not-allowed;">
+            Tugagan
+          </button>
+        {% endif %}
+      {% else %}
+        <a href="{% url 'login' %}" class="btn-outline" style="margin-top:12px;justify-content:center;padding:10px;">
+          Kirish kerak
+        </a>
+      {% endif %}
+    </div>
+    {% empty %}
+      <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted);">
+        <div style="font-size:3rem;margin-bottom:12px;">🛍️</div>
+        <p>Hozircha mahsulot yo'q</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- So'nggi buyurtmalar -->
+  {% if my_orders %}
+  <div class="profile-card" style="margin-top:40px;">
+    <h3 style="margin-bottom:16px;"><i data-lucide="clock"></i> So'nggi Buyurtmalarim</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for order in my_orders %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+           background:var(--bg);border-radius:10px;border:1px solid var(--border);flex-wrap:wrap;gap:8px;">
+        <div style="font-size:.88rem;font-weight:600;">{{ order.item.title }}</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:.82rem;color:var(--primary);">-{{ order.price_paid }} ⚡</span>
+          <span style="font-size:.78rem;padding:2px 10px;border-radius:20px;font-weight:600;
+            {% if order.status == 'approved' or order.status == 'delivered' %}background:rgba(67,233,123,.15);color:#43E97B;
+            {% elif order.status == 'rejected' %}background:rgba(255,101,132,.15);color:#FF6584;
+            {% else %}background:rgba(255,215,0,.15);color:#FFD700;{% endif %}">
+            {{ order.get_status_display }}
+          </span>
+          <span style="font-size:.72rem;color:var(--muted);">{{ order.created_at|date:"d.m.Y" }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+</section>
+{% endblock %}

@@ -10,6 +10,7 @@ from .models import (
     MentorRequest, Message, Notification,
     Badge, UserStreak, XPLog,
     AIChatSession, AIChatMessage,
+    MarketItem, MarketOrder,
     BADGE_DEFINITIONS,
 )
 
@@ -470,3 +471,93 @@ class NotificationAdmin(admin.ModelAdmin):
     @admin.display(description='Matn')
     def text_short(self, obj):
         return obj.text[:60]
+
+
+# ── MARKET ADMIN ──────────────────────────────────────────────────────────────
+@admin.register(MarketItem)
+class MarketItemAdmin(admin.ModelAdmin):
+    list_display  = ('item_preview', 'category_badge', 'price_display', 'stock_display', 'is_active')
+    list_filter   = ('category', 'is_active')
+    list_editable = ('is_active',)
+    search_fields = ('title',)
+    list_per_page = 20
+
+    @admin.display(description='Mahsulot')
+    def item_preview(self, obj):
+        icons = {
+            'certificate': '📜', 'mentoring': '👨‍🏫', 'course': '🎓',
+            'badge': '🏅', 'gift': '🎁', 'other': '✨'
+        }
+        icon = icons.get(obj.category, '✨')
+        return format_html('{} <b>{}</b>', icon, obj.title)
+
+    @admin.display(description='Kategoriya')
+    def category_badge(self, obj):
+        return obj.get_category_display()
+
+    @admin.display(description='Narxi')
+    def price_display(self, obj):
+        return format_html('<b style="color:var(--primary);">⚡ {}</b>', obj.price)
+
+    @admin.display(description='Stok')
+    def stock_display(self, obj):
+        if obj.stock == -1:
+            return format_html('<span style="color:#43E97B;">♾️ Cheksiz</span>')
+        if obj.stock == 0:
+            return format_html('<span style="color:#FF6584;">Tugagan</span>')
+        return format_html('<span style="color:#FFD700;">{} ta</span>', obj.stock)
+
+
+@admin.register(MarketOrder)
+class MarketOrderAdmin(admin.ModelAdmin):
+    list_display  = ('user_link', 'item_link', 'price_paid', 'status', 'status_badge', 'created_at')
+    list_filter   = ('status', 'created_at')
+    list_editable = ('status',)
+    search_fields = ('user__first_name', 'user__phone', 'item__title')
+    ordering      = ('-created_at',)
+    list_per_page = 30
+    readonly_fields = ('user', 'item', 'price_paid', 'created_at')
+    fields        = ('user', 'item', 'price_paid', 'status', 'note', 'created_at')
+
+    @admin.display(description='Foydalanuvchi')
+    def user_link(self, obj):
+        return format_html('<a href="/admin/core/user/{}/change/">{}</a>', obj.user.pk, obj.user)
+
+    @admin.display(description='Mahsulot')
+    def item_link(self, obj):
+        return format_html('<a href="/admin/core/marketitem/{}/change/">{}</a>', obj.item.pk, obj.item.title)
+
+    @admin.display(description='Holat')
+    def status_badge(self, obj):
+        colors = {
+            'pending':   '#FFD700',
+            'approved':  '#43E97B',
+            'rejected':  '#FF6584',
+            'delivered': '#6C63FF',
+        }
+        return format_html(
+            '<span style="color:{};font-weight:700;">{}</span>',
+            colors.get(obj.status, '#aaa'), obj.get_status_display()
+        )
+
+    def save_model(self, request, obj, form, change):
+        """Status o'zgarganda foydalanuvchiga bildirishnoma"""
+        old_status = None
+        if obj.pk:
+            old_status = MarketOrder.objects.get(pk=obj.pk).status
+        super().save_model(request, obj, form, change)
+        if old_status and old_status != obj.status:
+            text_map = {
+                'approved':  f"'{obj.item.title}' buyurtmangiz tasdiqlandi! 🎉",
+                'rejected':  f"'{obj.item.title}' buyurtmangiz rad etildi. Balingiz qaytarildi.",
+                'delivered': f"'{obj.item.title}' yetkazildi! Tabriklaymiz 🎁",
+            }
+            if obj.status in text_map:
+                Notification.objects.create(
+                    user=obj.user, notif_type='score',
+                    text=text_map[obj.status], link='/market/orders/'
+                )
+            # Rad etilsa — ballarni qaytarish
+            if obj.status == 'rejected' and old_status == 'pending':
+                obj.user.score += obj.price_paid
+                obj.user.save(update_fields=['score'])
