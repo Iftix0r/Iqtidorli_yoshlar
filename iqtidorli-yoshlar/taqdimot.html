@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iqtidorli Yoshlar — Taqdimot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6C63FF;
+      --accent: #43E97B;
+      --secondary: #FF6584;
+      --dark: #0F0E17;
+      --dark2: #1A1A2E;
+      --card: #16213E;
+      --text: #FFFFFE;
+      --muted: #A7A9BE;
+      --grad: linear-gradient(135deg, #6C63FF, #43E97B);
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    /* SLIDES WRAPPER */
+    .slides {
+      display: flex;
+      width: 900vw;
+      height: 100vh;
+      transition: transform 0.6s cubic-bezier(0.77,0,0.175,1);
+    }
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 60px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    /* GLOW BG */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(80px);
+      opacity: 0.25;
+    }
+    .glow-purple { background: #6C63FF; width: 400px; height: 400px; top: -100px; left: -100px; }
+    .glow-green  { background: #43E97B; width: 300px; height: 300px; bottom: -80px; right: -80px; }
+    .glow-pink   { background: #FF6584; width: 250px; height: 250px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    /* SLIDE NUMBER */
+    .slide-num {
+      position: absolute;
+      bottom: 28px;
+      right: 40px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    /* BADGE */
+    .badge {
+      display: inline-block;
+      background: rgba(108,99,255,0.18);
+      border: 1px solid rgba(108,99,255,0.45);
+      color: #b0a8ff;
+      padding: 6px 20px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    /* GRADIENT TEXT */
+    .grad-text {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* SLIDE 1 — COVER */
+    .s1 { background: var(--dark); text-align: center; }
+    .s1 h1 { font-size: clamp(2.8rem, 6vw, 5.5rem); font-weight: 900; line-height: 1.1; margin-bottom: 20px; }
+    .s1 p  { color: var(--muted); font-size: 1.1rem; max-width: 560px; line-height: 1.7; margin-bottom: 36px; }
+    .s1 .tag-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .s1 .tag-row span {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--muted);
+    }
+
+    /* SLIDE 2 — MUAMMO */
+    .s2 { background: var(--dark2); }
+    .s2 .content { max-width: 900px; width: 100%; }
+    .s2 h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: 40px; }
+    .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .prob-card {
+      background: var(--card);
+      border: 1px solid rgba(255,101,132,0.2);
+      border-radius: 18px;
+      padding: 28px 22px;
+    }
+    .prob-card .icon { font-size: 2rem; margin-bottom: 14px; }
+    .prob-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: #ff8fa3; }
+    .prob-card p  { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+
+    /* SLIDE 3 — YECHIM */
+    .s3 { background: var(--dark); }
+    .s3 .content { max-width: 900px; width: 100%; }
+    .s3 h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: 40px; }
+    .solution-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .sol-card {
+      background: var(--card);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 18px;
+      padding: 28px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .sol-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--grad);
+    }
+    .sol-card .icon { font-size: 2rem; margin-bottom: 14px; }
+    .sol-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .sol-card p  { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+    /* SLIDE 4 — FUNKSIYALAR */
+    .s4 { background: var(--dark2); }
+    .s4 .content { max-width: 960px; width: 100%; }
+    .s4 h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: 40px; }
+    .func-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .func-item {
+      display: flex; gap: 18px; align-items: flex-start;
+      background: var(--card);
+      border: 1px solid rgba(108,99,255,0.15);
+      border-radius: 16px;
+      padding: 22px 20px;
+    }
+    .func-item .fi { font-size: 1.8rem; min-width: 44px; }
+    .func-item h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 5px; }
+    .func-item p  { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+    /* SLIDE 5 — KIM UCHUN */
+    .s5 { background: var(--dark); }
+    .s5 .content { max-width: 900px; width: 100%; }
+    .s5 h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: 40px; }
+    .audience-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .aud-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 30px 22px;
+      text-align: center;
+      border: 1px solid rgba(67,233,123,0.15);
+    }
+    .aud-card .icon { font-size: 2.5rem; margin-bottom: 14px; }
+    .aud-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; color: #7effc4; }
+    .aud-card p  { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
+
+    /* SLIDE 6 — ROADMAP */
+    .s6 { background: var(--dark2); }
+    .s6 .content { max-width: 860px; width: 100%; }
+    .s6 h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: 40px; }
+    .road-row { display: flex; gap: 16px; }
+    .road-step {
+      flex: 1;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 22px 18px;
+      border: 1px solid rgba(108,99,255,0.15);
+      position: relative;
+    }
+    .road-step .step-num {
+      width: 36px; height: 36px;
+      background: var(--grad);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+    .road-step h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; }
+    .road-step p  { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    .road-step .phase { font-size: 0.7rem; color: var(--accent); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* SLIDE 7 — STACK */
+    .s7 { background: var(--dark); }
+    .s7 .content { max-width: 860px; width: 100%; }
+    .s7 h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: 40px; }
+    .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stack-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 22px 16px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .stack-card .icon { font-size: 2rem; margin-bottom: 10px; }
+    .stack-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .stack-card p  { font-size: 0.75rem; color: var(--muted); }
+
+    /* SLIDE 8 — STATISTIKA */
+    .s8 { background: var(--dark2); text-align: center; }
+    .s8 h2 { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: 50px; }
+    .stats-big { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+    .stat-big { background: var(--card); border-radius: 20px; padding: 36px 40px; border: 1px solid rgba(108,99,255,0.2); min-width: 180px; }
+    .stat-big .num { font-size: 3rem; font-weight: 900; }
+    .stat-big .lbl { font-size: 0.85rem; color: var(--muted); margin-top: 6px; }
+
+    /* SLIDE 9 — XULOSA */
+    .s9 { background: var(--dark); text-align: center; }
+    .s9 h2 { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; line-height: 1.15; margin-bottom: 24px; }
+    .s9 p  { color: var(--muted); font-size: 1.05rem; max-width: 540px; margin: 0 auto 36px; line-height: 1.7; }
+    .s9 .contact-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .contact-item {
+      background: var(--card);
+      border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 14px;
+      padding: 14px 24px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .contact-item span { color: var(--text); font-weight: 600; }
+
+    /* NAV BUTTONS */
+    .nav-controls {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+    }
+    .nav-controls button {
+      background: rgba(108,99,255,0.2);
+      border: 1px solid rgba(108,99,255,0.4);
+      color: white;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .nav-controls button:hover { background: rgba(108,99,255,0.5); transform: scale(1.1); }
+
+    /* PROGRESS BAR */
+    .progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: var(--grad);
+      transition: width 0.4s ease;
+      z-index: 200;
+    }
+
+    /* DOTS */
+    .dots {
+      position: fixed;
+      bottom: 30px;
+      right: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .dot.active { background: var(--primary); transform: scale(1.4); }
+
+    /* KEYBOARD HINT */
+    .hint {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.25);
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="slides" id="slides">
+
+  <!-- SLIDE 1: COVER -->
+  <div class="slide s1">
+    <div class="glow glow-purple"></div>
+    <div class="glow glow-green"></div>
+    <div class="badge">🇺🇿 2025 · Loyiha Taqdimoti</div>
+    <h1>⚡ <span class="grad-text">Iqtidorli</span><br/>Yoshlar</h1>
+    <p>O'zbekistondagi iqtidorli yoshlarni kashf qilish, ularga portfolio yaratish va mentorlar hamda investorlar bilan bog'lash uchun yagona raqamli platforma.</p>
+    <div class="tag-row">
+      <span>🎯 Portfolio</span>
+      <span>🏆 Reyting</span>
+      <span>🤝 Networking</span>
+      <span>📚 Bilim</span>
+      <span>💼 Grantlar</span>
+    </div>
+    <div class="slide-num">01 / 09</div>
+  </div>
+
+  <!-- SLIDE 2: MUAMMO -->
+  <div class="slide s2">
+    <div class="glow glow-pink"></div>
+    <div class="content">
+      <div class="badge">Muammo nima?</div>
+      <h2>Bugungi <span class="grad-text">Asosiy Muammolar</span></h2>
+      <div class="problem-grid">
+        <div class="prob-card">
+          <div class="icon">🌍</div>
+          <h4>Hududiy Tengsizlik</h4>
+          <p>Chekka viloyatlardagi iqtidorli yoshlar ko'rinmas bo'lib qolmoqda. Imkoniyatlar faqat poytaxtda.</p>
+        </div>
+        <div class="prob-card">
+          <div class="icon">🔗</div>
+          <h4>Aloqa Yo'qligi</h4>
+          <p>Iqtidorli yoshlar, mentorlar va investorlar o'rtasida samarali bog'lovchi platforma mavjud emas.</p>
+        </div>
+        <div class="prob-card">
+          <div class="icon">📂</div>
+          <h4>Portfolio Muammosi</h4>
+          <p>Yoshlar o'z yutuqlarini professional tarzda namoyish eta olmaydi. CV yetarli emas.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">02 / 09</div>
+  </div>
+
+  <!-- SLIDE 3: YECHIM -->
+  <div class="slide s3">
+    <div class="glow glow-purple"></div>
+    <div class="content">
+      <div class="badge">Yechim</div>
+      <h2>Biz <span class="grad-text">Nima Taklif Qilamiz?</span></h2>
+      <div class="solution-grid">
+        <div class="sol-card">
+          <div class="icon">🎯</div>
+          <h4>Iste'dodlar Markazi</h4>
+          <p>Barcha viloyatlardan iqtidorli yoshlarni bir platformada jamlash va ko'rinishini ta'minlash.</p>
+        </div>
+        <div class="sol-card">
+          <div class="icon">🤝</div>
+          <h4>Mentor — Yosh Bog'lanishi</h4>
+          <p>Tajribali mentorlar va investorlar bilan to'g'ridan-to'g'ri muloqot va hamkorlik.</p>
+        </div>
+        <div class="sol-card">
+          <div class="icon">📊</div>
+          <h4>Raqamli Portfolio</h4>
+          <p>Har bir yosh uchun professional portfolio, sertifikatlar va loyihalar galereyasi.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">03 / 09</div>
+  </div>
+
+  <!-- SLIDE 4: FUNKSIYALAR -->
+  <div class="slide s4">
+    <div class="glow glow-green"></div>
+    <div class="content">
+      <div class="badge">Imkoniyatlar</div>
+      <h2>Platforma <span class="grad-text">Funksiyalari</span></h2>
+      <div class="func-grid">
+        <div class="func-item">
+          <div class="fi">🎯</div>
+          <div>
+            <h4>Shaxsiy Portfolio</h4>
+            <p>Yutuqlar, sertifikatlar va loyihalar galereyasi. Professional profil yaratish.</p>
+          </div>
+        </div>
+        <div class="func-item">
+          <div class="fi">🏆</div>
+          <div>
+            <h4>Reyting Tizimi</h4>
+            <p>Faollik va natijalarga qarab "Top Iqtidorlar" ro'yxati va ball tizimi.</p>
+          </div>
+        </div>
+        <div class="func-item">
+          <div class="fi">🎓</div>
+          <div>
+            <h4>Tanlovlar va Grantlar</h4>
+            <p>Davlat va xususiy sektor tanlovlarini kuzatish va ariza topshirish.</p>
+          </div>
+        </div>
+        <div class="func-item">
+          <div class="fi">💬</div>
+          <div>
+            <h4>Networking va Chat</h4>
+            <p>Iqtidorli yoshlar bilan tanishish, jamoa tuzish va loyihalar ustida ishlash.</p>
+          </div>
+        </div>
+        <div class="func-item">
+          <div class="fi">📚</div>
+          <div>
+            <h4>Bilim Xazinasi</h4>
+            <p>Kurslar, video-darsliklar va kitoblar bazasidan bepul foydalanish.</p>
+          </div>
+        </div>
+        <div class="func-item">
+          <div class="fi">📈</div>
+          <div>
+            <h4>Statistika va Tahlil</h4>
+            <p>Davlat uchun yoshlar salohiyatini viloyatlar kesimida ko'rish imkoniyati.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">04 / 09</div>
+  </div>
+
+  <!-- SLIDE 5: KIM UCHUN -->
+  <div class="slide s5">
+    <div class="glow glow-purple"></div>
+    <div class="content">
+      <div class="badge">Auditoriya</div>
+      <h2>Kim Uchun <span class="grad-text">Foydali?</span></h2>
+      <div class="audience-grid">
+        <div class="aud-card">
+          <div class="icon">🧑‍💻</div>
+          <h4>Iqtidorli Yoshlar</h4>
+          <p>O'zini ko'rsatish, jamoa topish, grant va moddiy qo'llab-quvvatlanish imkoniyati.</p>
+        </div>
+        <div class="aud-card">
+          <div class="icon">🏛️</div>
+          <h4>Davlat Tashkilotlari</h4>
+          <p>Kadrlar zaxirasini shakllantirish va yoshlar salohiyatini statistik kuzatish.</p>
+        </div>
+        <div class="aud-card">
+          <div class="icon">💼</div>
+          <h4>Investorlar</h4>
+          <p>Istiqbolli startaplar va aqlli kadrlarni oson va tez topish platformasi.</p>
+        </div>
+        <div class="aud-card">
+          <div class="icon">👨‍🏫</div>
+          <h4>Mentorlar</h4>
+          <p>Iqtidorli shogirdlar topish va bilim-tajribalarini ulashish maydoni.</p>
+        </div>
+        <div class="aud-card">
+          <div class="icon">🏢</div>
+          <h4>Kompaniyalar</h4>
+          <p>Tayyor mutaxassislarni arzon va samarali tarzda topish imkoniyati.</p>
+        </div>
+        <div class="aud-card">
+          <div class="icon">🌐</div>
+          <h4>Xalqaro Tashkilotlar</h4>
+          <p>O'zbekiston yoshlari bilan hamkorlik va xalqaro dasturlarga jalb qilish.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">05 / 09</div>
+  </div>
+
+  <!-- SLIDE 6: ROADMAP -->
+  <div class="slide s6">
+    <div class="glow glow-green"></div>
+    <div class="content">
+      <div class="badge">Amalga Oshirish</div>
+      <h2>Loyiha <span class="grad-text">Roadmap</span></h2>
+      <div class="road-row">
+        <div class="road-step">
+          <div class="step-num">1</div>
+          <div class="phase">1–2 oy</div>
+          <h4>Analiz va Dizayn</h4>
+          <p>UI/UX Figma orqali. Foydalanuvchi yo'llari va prototip.</p>
+        </div>
+        <div class="road-step">
+          <div class="step-num">2</div>
+          <div class="phase">2–3 oy</div>
+          <h4>MVP Yaratish</h4>
+          <p>Ro'yxatdan o'tish, profil va portfolio asosiy funksiyalari.</p>
+        </div>
+        <div class="road-step">
+          <div class="step-num">3</div>
+          <div class="phase">3–4 oy</div>
+          <h4>Backend & DB</h4>
+          <p>Xavfsiz API, PostgreSQL va autentifikatsiya tizimi.</p>
+        </div>
+        <div class="road-step">
+          <div class="step-num">4</div>
+          <div class="phase">1 oy</div>
+          <h4>Beta-Test</h4>
+          <p>Kichik guruhda sinov, xatolarni topish va tuzatish.</p>
+        </div>
+        <div class="road-step">
+          <div class="step-num">5</div>
+          <div class="phase">Taqdimot</div>
+          <h4>Rasmiy Launch</h4>
+          <p>Keng ommaga, davlat va investorlarga taqdimot.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">06 / 09</div>
+  </div>
+
+  <!-- SLIDE 7: TEXNIK STACK -->
+  <div class="slide s7">
+    <div class="glow glow-purple"></div>
+    <div class="content">
+      <div class="badge">Texnologiyalar</div>
+      <h2>Texnik <span class="grad-text">Stack</span></h2>
+      <div class="stack-grid">
+        <div class="stack-card">
+          <div class="icon">⚛️</div>
+          <h4>Next.js</h4>
+          <p>Frontend — tez, SEO-friendly</p>
+        </div>
+        <div class="stack-card">
+          <div class="icon">🟢</div>
+          <h4>Node.js</h4>
+          <p>Backend — API server</p>
+        </div>
+        <div class="stack-card">
+          <div class="icon">🐘</div>
+          <h4>PostgreSQL</h4>
+          <p>Ma'lumotlar bazasi</p>
+        </div>
+        <div class="stack-card">
+          <div class="icon">🔐</div>
+          <h4>JWT + OAuth</h4>
+          <p>Xavfsiz autentifikatsiya</p>
+        </div>
+        <div class="stack-card">
+          <div class="icon">☁️</div>
+          <h4>Cloudflare R2</h4>
+          <p>Fayl va rasm saqlash</p>
+        </div>
+        <div class="stack-card">
+          <div class="icon">▲</div>
+          <h4>Vercel</h4>
+          <p>Frontend hosting</p>
+        </div>
+        <div class="stack-card">
+          <div class="icon">🚂</div>
+          <h4>Railway</h4>
+          <p>Backend hosting</p>
+        </div>
+        <div class="stack-card">
+          <div class="icon">📱</div>
+          <h4>PWA</h4>
+          <p>Mobil qurilmalar uchun</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">07 / 09</div>
+  </div>
+
+  <!-- SLIDE 8: STATISTIKA -->
+  <div class="slide s8">
+    <div class="glow glow-green"></div>
+    <div class="glow glow-purple" style="left:auto;right:-100px;top:auto;bottom:-100px;"></div>
+    <div class="badge">Maqsadli Ko'rsatkichlar</div>
+    <h2>Birinchi Yil <span class="grad-text">Maqsadlar</span></h2>
+    <div class="stats-big">
+      <div class="stat-big">
+        <div class="num grad-text">10K+</div>
+        <div class="lbl">Ro'yxatdan o'tgan yosh</div>
+      </div>
+      <div class="stat-big">
+        <div class="num grad-text">14</div>
+        <div class="lbl">Viloyat qamrovi</div>
+      </div>
+      <div class="stat-big">
+        <div class="num grad-text">500+</div>
+        <div class="lbl">Faol mentorlar</div>
+      </div>
+      <div class="stat-big">
+        <div class="num grad-text">150+</div>
+        <div class="lbl">Investorlar</div>
+      </div>
+    </div>
+    <div class="slide-num">08 / 09</div>
+  </div>
+
+  <!-- SLIDE 9: XULOSA -->
+  <div class="slide s9">
+    <div class="glow glow-purple"></div>
+    <div class="glow glow-green"></div>
+    <div class="badge">Xulosa</div>
+    <h2>Keling, <span class="grad-text">Birgalikda</span><br/>Quraylik!</h2>
+    <p>Iqtidorli Yoshlar platformasi — bu shunchaki sayt emas, balki O'zbekiston kelajagi uchun raqamli ko'prik. Har bir iqtidorli yosh ko'rinishi kerak.</p>
+    <div class="contact-row">
+      <div class="contact-item">📧 Email: <span>info@iqtidorli.uz</span></div>
+      <div class="contact-item">📱 Telegram: <span>@iqtidorli_yoshlar</span></div>
+      <div class="contact-item">🌐 Web: <span>iqtidorli.uz</span></div>
+    </div>
+    <div class="slide-num">09 / 09</div>
+  </div>
+
+</div><!-- /slides -->
+
+<!-- NAVIGATION -->
+<div class="nav-controls">
+  <button onclick="prevSlide()" title="Oldingi">◀</button>
+  <button onclick="nextSlide()" title="Keyingi">▶</button>
+</div>
+
+<!-- DOTS -->
+<div class="dots" id="dots"></div>
+
+<!-- HINT -->
+<div class="hint">← → klavishlar yoki tugmalar</div>
+
+<script>
+  const total = 9;
+  let current = 0;
+
+  const slidesEl  = document.getElementById('slides');
+  const progressEl = document.getElementById('progress');
+  const dotsEl    = document.getElementById('dots');
+
+  // Create dots
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(n) {
+    current = Math.max(0, Math.min(total - 1, n));
+    slidesEl.style.transform = `translateX(-${current * 100}vw)`;
+    progressEl.style.width = `${((current + 1) / total) * 100}%`;
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function nextSlide() { goTo(current + 1); }
+  function prevSlide() { goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prevSlide();
+  });
+
+  // Touch swipe
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) diff > 0 ? nextSlide() : prevSlide();
+  });
+
+  goTo(0);
+</script>
+</body>
+</html>
