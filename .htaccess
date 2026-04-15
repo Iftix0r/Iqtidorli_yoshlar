@@ -1,6 +1,11 @@
-# ── SERVER XAVFSIZLIGI ────────────────────────────────────────────────────────
 # Papkalar ro'yxatini ko'rishni taqiqlash
 Options -Indexes
+
+# Barcha so'rovlarni Django-ga yo'naltirish
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ passenger_wsgi.py/$1 [QSA,L]
 
 # Muhim fayllarga kirishni to'liq yopish
 <FilesMatch "^\.|\.(env|git|sqlite3|py|sh|log|bak|config|swp)$">
