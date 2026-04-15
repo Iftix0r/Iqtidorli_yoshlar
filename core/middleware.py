@@ -44,22 +44,30 @@ class SecurityHeadersMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        from django.utils.crypto import get_random_string
+        nonce = get_random_string(32)
+        request.csp_nonce = nonce
+
         response = self.get_response(request)
         response['X-Content-Type-Options']    = 'nosniff'
         response['X-Frame-Options']           = 'DENY'
         response['X-XSS-Protection']          = '1; mode=block'
         response['Referrer-Policy']           = 'strict-origin-when-cross-origin'
         response['Permissions-Policy']        = 'geolocation=(), microphone=(), camera=()'
-        response['Content-Security-Policy']   = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        
+        csp = (
+            "default-src 'none'; "
+            f"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' 'unsafe-eval' https: http:; "
+            f"style-src 'self' 'nonce-{nonce}' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: blob:; "
             "object-src 'none'; "
             "base-uri 'self'; "
-            "connect-src 'self';"
+            "connect-src 'self'; "
+            "frame-ancestors 'none'; "
+            "form-action 'self';"
         )
+        response['Content-Security-Policy']   = csp
         return response
 
 

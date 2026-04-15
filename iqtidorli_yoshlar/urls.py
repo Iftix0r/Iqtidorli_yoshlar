@@ -41,6 +41,8 @@ handler404 = 'core.views.error_404'
 handler500 = 'core.views.error_500'
 handler403 = 'core.views.error_403'
 
+from django.views.generic import TemplateView
+
 urlpatterns = [
     path(f'{ADMIN_URL}/stats/', admin_stats,       name='admin_stats'),
     path(f'{ADMIN_URL}/',       admin.site.urls),
@@ -102,6 +104,10 @@ urlpatterns = [
     path('2fa/send/',    tfa_views.tfa_send_view,   name='tfa_send'),
     path('2fa/verify/',  tfa_views.tfa_verify_view, name='tfa_verify'),
     path('2fa/logout/',  tfa_views.tfa_logout_view, name='tfa_logout'),
+
+    # SEO URLs
+    path('robots.txt', TemplateView.as_view(template_name='seo/robots.txt', content_type='text/plain')),
+    path('sitemap.xml', TemplateView.as_view(template_name='seo/sitemap.xml', content_type='application/xml')),
 
     path('', include('core.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -4,11 +4,31 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="{% block meta_description %}Iqtidorli Yoshlar - O'zbekiston yoshlari uchun raqamli platforma. Tanlovlar, kurslar, ish o'rinlari va reyting tizimi.{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}iqtidorli yoshlar, talabalar, o'quvchilar, tanlovlar, kurslar, grantlar, O'zbekiston, reyting{% endblock %}">
+  <meta name="author" content="Iqtidorli Yoshlar">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook / Telegram -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="{% block og_title %}Iqtidorli Yoshlar{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Iqtidorli Yoshlar - O'zbekiston yoshlari uchun raqamli platforma.{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{% static 'assets/favicon.svg' %}{% endblock %}">
+  
   <title>{% block title %}Iqtidorli Yoshlar{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicon.svg' %}"/>
-  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
-  <script src="{% static 'js/lucide.min.js' %}"></script>
-  <script>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" nonce="{{ csp_nonce }}"/>
+  <script src="{% static 'js/lucide.min.js' %}" nonce="{{ csp_nonce }}"></script>
+  
+  <!-- Google Search Console verification meta tag or other extra tags -->
+  {% block extra_head %}
+  <meta name="google-site-verification" content="GdHbVnvkjU--IeBmwxD7et76rCvCXA4Vw1NHUfTyJbI" />
+  {% endblock %}
+  
+  <script nonce="{{ csp_nonce }}">
     (function(){
       const t = localStorage.getItem('theme') || 'dark';
       document.documentElement.setAttribute('data-theme', t);

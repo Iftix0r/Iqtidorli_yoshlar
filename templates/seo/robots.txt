@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /panel/
+Disallow: /tizim/
+Disallow: /2fa/
+Allow: /
+
+Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml
