@@ -28,5 +28,10 @@ jobs:
             python manage.py makemigrations --noinput
             python manage.py migrate --noinput
             python manage.py collectstatic --noinput
+            # Fayl huquqlari
+            find . -type d -not -path './.git/*' -exec chmod 755 {} \;
+            find . -type f -not -path './.git/*' -exec chmod 644 {} \;
+            chmod 600 .env 2>/dev/null || true
+            chmod 755 manage.py
             touch tmp/restart.txt
             echo "Deploy muvaffaqiyatli!"

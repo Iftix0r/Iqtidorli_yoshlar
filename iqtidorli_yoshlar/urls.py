@@ -5,6 +5,9 @@ from django.conf.urls.static import static
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
 
+# Admin URL ni settings dan olish (xavfsizlik uchun)
+ADMIN_URL = getattr(settings, 'ADMIN_URL', 'admin')
+
 
 @staff_member_required
 def admin_stats(request):
@@ -32,7 +35,7 @@ def admin_stats(request):
 
 
 urlpatterns = [
-    path('admin/stats/', admin_stats, name='admin_stats'),
-    path('admin/', admin.site.urls),
+    path(f'{ADMIN_URL}/stats/', admin_stats, name='admin_stats'),
+    path(f'{ADMIN_URL}/', admin.site.urls),
     path('', include('core.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
