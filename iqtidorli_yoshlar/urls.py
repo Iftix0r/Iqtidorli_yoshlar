@@ -50,6 +50,7 @@ urlpatterns = [
     path(f'{PANEL_URL}/logins/',                       panel_views.logins_view,             name='panel_logins'),
     path(f'{PANEL_URL}/contests/',                     panel_views.contests_view,           name='panel_contests'),
     path(f'{PANEL_URL}/applications/',                 panel_views.applications_view,       name='panel_applications'),
+    path(f'{PANEL_URL}/certificates/',                panel_views.certificates_view,       name='panel_certificates'),
     path(f'{PANEL_URL}/courses/',                      panel_views.courses_view,            name='panel_courses'),
     path(f'{PANEL_URL}/courses/create/',               panel_views.course_create_view,      name='panel_course_create'),
     path(f'{PANEL_URL}/courses/<int:pk>/lessons/',     panel_views.course_lessons_view,     name='panel_course_lessons'),

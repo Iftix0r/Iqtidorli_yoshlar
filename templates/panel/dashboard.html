@@ -4,6 +4,24 @@
 {% block nav_dashboard %}active{% endblock %}
 {% block content %}
 
+<!-- TEZKOR AMALLAR -->
+<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+  <a href="{% url 'panel_broadcast' %}" class="btn btn-primary" style="padding:10px 20px;">
+    <i data-lucide="send" style="width:16px;"></i> Ommaviy Xabar
+  </a>
+  <a href="{% url 'panel_user_create' %}" class="btn btn-outline" style="padding:10px 20px;">
+    <i data-lucide="user-plus" style="width:16px;"></i> Yangi Foydalanuvchi
+  </a>
+  <a href="{% url 'panel_export_users' %}" class="btn btn-outline" style="padding:10px 20px;">
+    <i data-lucide="file-spreadsheet" style="width:16px;"></i> CSV Eksport
+  </a>
+  {% if request.user.is_superuser %}
+  <a href="{% url 'sys_cache' %}" class="btn btn-danger" style="padding:10px 20px;">
+    <i data-lucide="zap" style="width:16px;"></i> Keshni Tozalash
+  </a>
+  {% endif %}
+</div>
+
 <!-- STAT CARDS -->
 <div class="stat-grid">
   <div class="stat-card">

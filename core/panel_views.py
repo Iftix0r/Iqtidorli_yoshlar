@@ -36,6 +36,19 @@ def dashboard(request):
     today = timezone.now().date()
     week_ago = timezone.now() - timedelta(days=7)
 
+    # Grafiklar uchun oxirgi 7 kunlik ma'lumotlar
+    from django.db.models.functions import TruncDate
+    reg_stats = (
+        User.objects.filter(date_joined__gte=week_ago)
+        .annotate(day=TruncDate('date_joined'))
+        .values('day').annotate(cnt=Count('id')).order_by('day')
+    )
+    login_stats = (
+        LoginHistory.objects.filter(created_at__gte=week_ago, is_success=True)
+        .annotate(day=TruncDate('created_at'))
+        .values('day').annotate(cnt=Count('id')).order_by('day')
+    )
+
     ctx = {
         'total_users':    User.objects.count(),
         'new_users_week': User.objects.filter(date_joined__gte=week_ago).count(),
@@ -54,6 +67,10 @@ def dashboard(request):
         'by_region':      User.objects.filter(role='yosh').exclude(region='')
                               .values('region').annotate(cnt=Count('id')).order_by('-cnt')[:10],
         'top_users':      User.objects.order_by('-score')[:5],
+        'chart_labels':   [str(r['day']) for r in reg_stats],
+        'chart_reg_data': [r['cnt'] for r in reg_stats],
+        'chart_login_labels': [str(l['day']) for l in login_stats],
+        'chart_login_data':   [l['cnt'] for l in login_stats],
     }
     return render(request, 'panel/dashboard.html', ctx)
 
@@ -638,4 +655,31 @@ def notif_list_api(request):
             }
             for n in notifs
         ]
+    })
+
+
+# ── SERTIFIKATLAR MONITORINGI ────────────────────────────────────────────────
+@panel_tfa_required
+def certificates_view(request):
+    """Barcha berilgan kurs sertifikatlarini ko'rish"""
+    q      = request.GET.get('q', '').strip()
+    course_id = request.GET.get('course', '')
+    
+    qs = CourseCertificate.objects.select_related('user', 'course').order_by('-issued_at')
+    
+    if q:
+        qs = qs.filter(Q(user__first_name__icontains=q) | Q(cert_number__icontains=q))
+    if course_id:
+        qs = qs.filter(course_id=course_id)
+        
+    if request.method == 'POST' and request.POST.get('action') == 'delete':
+        CourseCertificate.objects.filter(pk=request.POST.get('cert_id')).delete()
+        return redirect('panel_certificates')
+
+    courses = Course.objects.all()
+    return render(request, 'panel/certificates.html', {
+        'certificates': qs,
+        'courses': courses,
+        'q': q,
+        'selected_course': course_id
     })

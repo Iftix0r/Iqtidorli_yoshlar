@@ -1,0 +1,94 @@
+{% extends 'panel/base.html' %}
+{% block title %}Sertifikatlar Monitoringi{% endblock %}
+{% block page_title %}Sertifikatlar{% endblock %}
+{% block nav_certs %}active{% endblock %}
+
+{% block content %}
+
+<!-- FILTR VA QIDIRUV -->
+<div class="panel-card" style="margin-bottom:24px;">
+    <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+        <form method="get" style="display:flex;gap:10px;flex:1;min-width:300px;">
+            <div style="flex:1;position:relative;">
+                <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;color:var(--muted);"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Ism yoki sertifikat raqami..." style="padding-left:36px;">
+            </div>
+            <select name="course" style="width:200px;">
+                <option value="">Barcha kurslar</option>
+                {% for c in courses %}
+                <option value="{{ c.pk }}" {% if selected_course == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.title }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Filtrlash</button>
+        </form>
+        <div class="badge badge-blue">{{ certificates|length }} ta sertifikat</div>
+    </div>
+</div>
+
+<!-- SERTIFIKATLAR JADVALI -->
+<div class="panel-card">
+    <div class="panel-card-header">
+        <h3><i data-lucide="award" style="width:16px;margin-right:8px;vertical-align:middle;"></i> Berilgan Sertifikatlar</h3>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="panel-table">
+            <thead>
+                <tr>
+                    <th>Sertifikat #</th>
+                    <th>Foydalanuvchi</th>
+                    <th>Kurs nomi</th>
+                    <th>Berilgan sana</th>
+                    <th>Amallar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cert in certificates %}
+                <tr>
+                    <td>
+                        <span style="font-family:monospace;font-weight:700;color:var(--primary);">#{{ cert.cert_number }}</span>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div class="mini-avatar">{{ cert.user.initial }}</div>
+                            <div>
+                                <div style="font-weight:600;">{{ cert.user.get_full_name|default:cert.user.phone }}</div>
+                                <div style="font-size:.72rem;color:var(--muted);">{{ cert.user.phone }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight:600;font-size:0.85rem;">{{ cert.course.title }}</div>
+                    </td>
+                    <td style="color:var(--muted);font-size:0.8rem;">
+                        {{ cert.issued_at|date:"d.m.Y H:i" }}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:8px;">
+                            <a href="{% url 'certificate_view' cert_number=cert.cert_number %}" target="_blank" class="btn btn-outline" style="padding:4px 8px;" title="Ko'rish">
+                                <i data-lucide="external-link" style="width:14px;"></i>
+                            </a>
+                            <form method="post" style="margin:0;" onsubmit="return confirm('Sertifikatni o\'chirishni xohlaysizmi?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="cert_id" value="{{ cert.pk }}">
+                                <button type="submit" class="btn btn-danger" style="padding:4px 8px;" title="O'chirish">
+                                    <i data-lucide="trash-2" style="width:14px;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">
+                        Sertifikatlar topilmadi.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>lucide.createIcons();</script>
+{% endblock %}
