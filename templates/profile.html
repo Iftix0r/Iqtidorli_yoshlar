@@ -217,6 +217,35 @@
     </div>
   </div>
 
+  <!-- XAVFSIZLIK — LOGIN TARIXI -->
+  <div class="profile-card" style="margin-top:24px;">
+    <h3><i data-lucide="shield"></i> Kirish Tarixi</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+      {% for l in login_history %}
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba({% if l.is_success %}67,233,123{% else %}255,101,132{% endif %},.08);border-radius:10px;border:1px solid rgba({% if l.is_success %}67,233,123{% else %}255,101,132{% endif %},.2);">
+          <div style="font-size:1.2rem;">
+            {% if l.device == 'Mobil' %}📱{% elif l.device == 'Planshet' %}📟{% else %}💻{% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:.88rem;font-weight:600;">
+              {{ l.browser }} · {{ l.os }} · {{ l.device }}
+            </div>
+            <div style="font-size:.78rem;color:var(--muted);">
+              <i data-lucide="map-pin"></i> {{ l.ip_address }} · {{ l.created_at|timesince }} oldin
+            </div>
+          </div>
+          {% if l.is_success %}
+            <span style="font-size:.78rem;color:#43E97B;font-weight:600;">✓ Muvaffaqiyatli</span>
+          {% else %}
+            <span style="font-size:.78rem;color:#FF6584;font-weight:600;">✗ Xato</span>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p style="color:var(--muted);font-size:.9rem;">Kirish tarixi yo'q.</p>
+      {% endfor %}
+    </div>
+  </div>
+
 </section>
 
 <script>

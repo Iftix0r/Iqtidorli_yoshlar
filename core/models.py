@@ -301,3 +301,40 @@ class CourseCertificate(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.course} sertifikati"
+
+
+# ── LOGIN TARIXI VA XAVFSIZLIK ────────────────────────────────────────────────
+class LoginHistory(models.Model):
+    user        = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_history')
+    ip_address  = models.GenericIPAddressField(null=True, blank=True)
+    user_agent  = models.TextField(blank=True)
+    device      = models.CharField(max_length=100, blank=True)
+    os          = models.CharField(max_length=100, blank=True)
+    browser     = models.CharField(max_length=100, blank=True)
+    location    = models.CharField(max_length=200, blank=True)
+    is_success  = models.BooleanField(default=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} — {self.ip_address} — {self.created_at:%d.%m.%Y %H:%M}"
+
+
+class FailedLoginAttempt(models.Model):
+    """Muvaffaqiyatsiz kirish urinishlari"""
+    phone      = models.CharField(max_length=20)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    attempts   = models.PositiveIntegerField(default=1)
+    blocked_until = models.DateTimeField(null=True, blank=True)
+    last_attempt  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('phone', 'ip_address')
+
+    def is_blocked(self):
+        from django.utils import timezone
+        if self.blocked_until and self.blocked_until > timezone.now():
+            return True
+        return False

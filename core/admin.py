@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from django.db.models import Count
-from .models import User, Skill, Project, Contest, Certificate, ContestApplication, Job, ProfileView, Course, Lesson, CourseEnrollment, CourseCertificate
+from .models import User, Skill, Project, Contest, Certificate, ContestApplication, Job, ProfileView, Course, Lesson, CourseEnrollment, CourseCertificate, LoginHistory, FailedLoginAttempt
 
 
 # ── INLINE lar ────────────────────────────────────────────────────────────────
@@ -244,3 +244,45 @@ class CourseCertificateAdmin(admin.ModelAdmin):
     list_display  = ('cert_number', 'user', 'course', 'issued_at')
     search_fields = ('cert_number', 'user__first_name', 'course__title')
     readonly_fields = ('cert_number', 'issued_at')
+
+
+@admin.register(LoginHistory)
+class LoginHistoryAdmin(admin.ModelAdmin):
+    list_display  = ('user_link', 'ip_address', 'device_info', 'is_success', 'created_at')
+    list_filter   = ('is_success', 'device', 'os', 'browser')
+    search_fields = ('user__first_name', 'user__phone', 'ip_address')
+    readonly_fields = ('user', 'ip_address', 'user_agent', 'device', 'os', 'browser', 'is_success', 'created_at')
+    ordering      = ('-created_at',)
+    list_per_page = 50
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.display(description='Foydalanuvchi')
+    def user_link(self, obj):
+        return format_html(
+            '<a href="/admin/core/user/{}/change/">{}</a>',
+            obj.user.pk, obj.user
+        )
+
+    @admin.display(description='Qurilma')
+    def device_info(self, obj):
+        icon = {'Mobil': '📱', 'Planshet': '📟', 'Kompyuter': '💻'}.get(obj.device, '❓')
+        color = '#43E97B' if obj.is_success else '#FF6584'
+        return format_html(
+            '<span style="color:{};">{} {} · {} · {}</span>',
+            color, icon, obj.device, obj.os, obj.browser
+        )
+
+
+@admin.register(FailedLoginAttempt)
+class FailedLoginAttemptAdmin(admin.ModelAdmin):
+    list_display  = ('phone', 'ip_address', 'attempts', 'blocked_until', 'last_attempt')
+    list_filter   = ('last_attempt',)
+    search_fields = ('phone', 'ip_address')
+    actions       = ['unblock_selected']
+
+    @admin.action(description='Blokdan chiqarish')
+    def unblock_selected(self, request, queryset):
+        queryset.delete()
+        self.message_user(request, "Tanlangan IP lar blokdan chiqarildi.")

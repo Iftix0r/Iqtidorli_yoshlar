@@ -8,7 +8,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 @staff_member_required
 def admin_stats(request):
-    from core.models import User, Project, Contest, Skill
+    from core.models import User, Project, Contest, Skill, LoginHistory
     from django.db.models import Count
     ctx = {
         'total_users':     User.objects.count(),
@@ -22,6 +22,11 @@ def admin_stats(request):
         'by_region':       User.objects.filter(role='yosh').exclude(region='')
                                .values('region').annotate(cnt=Count('id')).order_by('-cnt')[:14],
         'recent_users':    User.objects.order_by('-date_joined')[:8],
+        'recent_logins':   LoginHistory.objects.select_related('user').order_by('-created_at')[:20],
+        'failed_logins':   LoginHistory.objects.filter(is_success=False).count(),
+        'today_logins':    LoginHistory.objects.filter(
+                               created_at__date=__import__('django.utils.timezone', fromlist=['timezone']).timezone.now().date()
+                           ).count() if False else LoginHistory.objects.filter(is_success=True).count(),
     }
     return render(request, 'admin/stats.html', ctx)
 

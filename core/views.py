@@ -62,13 +62,27 @@ def login_view(request):
     error = ''
     if request.method == 'POST':
         from .forms import normalize_phone
+        from .utils import get_client_ip, record_login, check_brute_force, record_failed_attempt, reset_failed_attempts
+
         phone    = normalize_phone(request.POST.get('phone', ''))
         password = request.POST.get('password', '')
-        user     = authenticate(request, phone=phone, password=password)
-        if user:
-            login(request, user)
-            return redirect(request.GET.get('next', 'profile'))
-        error = "Telefon raqam yoki parol noto'g'ri."
+        ip       = get_client_ip(request)
+
+        # Brute-force tekshirish
+        allowed, block_msg = check_brute_force(phone, ip)
+        if not allowed:
+            error = block_msg
+        else:
+            user = authenticate(request, phone=phone, password=password)
+            if user:
+                login(request, user)
+                reset_failed_attempts(phone, ip)
+                record_login(request, user, success=True)
+                return redirect(request.GET.get('next', 'profile'))
+            else:
+                record_failed_attempt(phone, ip)
+                error = "Telefon raqam yoki parol noto'g'ri."
+
     return render(request, 'login.html', {'error': error})
 
 
@@ -135,6 +149,7 @@ def profile_view(request):
         'notifs':          user.notifications.all()[:10],
         'unread_notif':    user.unread_notifications(),
         'mentor_requests': user.received_requests.filter(status='pending'),
+        'login_history':   user.login_history.all()[:5],
     })
 
 

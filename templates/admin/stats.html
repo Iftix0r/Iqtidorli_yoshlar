@@ -124,3 +124,41 @@
   <a href="/admin/" style="color:#4F46E5;">← Admin panelga qaytish</a>
 </div>
 {% endblock %}
+
+
+<!-- LOGIN TARIXI -->
+<div class="section-h" style="margin-top:24px;">🔐 So'nggi Kirish Tarixi</div>
+<table class="stats-table">
+  <thead>
+    <tr>
+      <th>Foydalanuvchi</th>
+      <th>IP</th>
+      <th>Qurilma</th>
+      <th>OS</th>
+      <th>Brauzer</th>
+      <th>Holat</th>
+      <th>Vaqt</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for l in recent_logins %}
+    <tr>
+      <td><a href="/admin/core/user/{{ l.user.pk }}/change/">{{ l.user }}</a></td>
+      <td style="font-family:monospace;font-size:.82rem;">{{ l.ip_address }}</td>
+      <td>{% if l.device == 'Mobil' %}📱{% elif l.device == 'Planshet' %}📟{% else %}💻{% endif %} {{ l.device }}</td>
+      <td>{{ l.os }}</td>
+      <td>{{ l.browser }}</td>
+      <td>
+        {% if l.is_success %}
+          <span style="color:#059669;font-weight:600;">✓ Muvaffaqiyatli</span>
+        {% else %}
+          <span style="color:#DC2626;font-weight:600;">✗ Xato</span>
+        {% endif %}
+      </td>
+      <td style="font-size:.8rem;color:#6B7280;">{{ l.created_at|date:"d.m.Y H:i" }}</td>
+    </tr>
+    {% empty %}
+      <tr><td colspan="7" style="text-align:center;color:#9ca3af;">Hali kirish yo'q</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
