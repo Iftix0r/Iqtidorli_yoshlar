@@ -535,3 +535,30 @@ def blocked_ips_view(request):
     return render(request, 'panel/blocked_ips.html', {
         'blocked': blocked, 'all_attempts': all_attempts,
     })
+
+
+# ── REAL-TIME API ─────────────────────────────────────────────────────────────
+@panel_required
+def realtime_api(request):
+    from django.http import JsonResponse
+    from .models import ActivityLog, LoginHistory, Message, MentorRequest, ContestApplication
+
+    today = timezone.now().date()
+    return JsonResponse({
+        'total_users':     User.objects.count(),
+        'today_logins':    LoginHistory.objects.filter(created_at__date=today, is_success=True).count(),
+        'failed_logins':   LoginHistory.objects.filter(created_at__date=today, is_success=False).count(),
+        'unread_messages': Message.objects.filter(is_read=False).count(),
+        'pending_mentor':  MentorRequest.objects.filter(status='pending').count(),
+        'pending_apps':    ContestApplication.objects.filter(status='pending').count(),
+        'last_activity':   list(
+            ActivityLog.objects.select_related('user')
+            .order_by('-created_at')
+            .values('user__first_name', 'user__last_name', 'action', 'detail', 'created_at')[:5]
+        ),
+        'last_logins': list(
+            LoginHistory.objects.select_related('user')
+            .order_by('-created_at')
+            .values('user__first_name', 'user__phone', 'ip_address', 'device', 'is_success', 'created_at')[:5]
+        ),
+    }, json_dumps_params={'default': str})

@@ -8,7 +8,7 @@
 <div class="stat-grid">
   <div class="stat-card">
     <div class="icon" style="background:rgba(108,99,255,.15);"><i data-lucide="users" style="width:20px;color:#6C63FF;"></i></div>
-    <div class="num">{{ total_users }}</div>
+    <div class="num" id="rt-total-users">{{ total_users }}</div>
     <div class="lbl">Jami Foydalanuvchilar</div>
     <div class="trend" style="color:#43E97B;">+{{ new_users_week }} bu hafta</div>
   </div>
@@ -39,9 +39,9 @@
   </div>
   <div class="stat-card">
     <div class="icon" style="background:rgba(67,233,123,.15);"><i data-lucide="log-in" style="width:20px;color:#43E97B;"></i></div>
-    <div class="num">{{ today_logins }}</div>
+    <div class="num" id="rt-today-logins">{{ today_logins }}</div>
     <div class="lbl">Bugungi Kirishlar</div>
-    {% if failed_logins %}<div class="trend" style="color:#FF6584;">{{ failed_logins }} muvaffaqiyatsiz</div>{% endif %}
+    {% if failed_logins %}<div class="trend" style="color:#FF6584;" id="rt-failed-logins">{{ failed_logins }} muvaffaqiyatsiz</div>{% endif %}
   </div>
   <div class="stat-card">
     <div class="icon" style="background:rgba(255,154,68,.15);"><i data-lucide="briefcase" style="width:20px;color:#FF9A44;"></i></div>
@@ -106,12 +106,19 @@
 <div class="panel-card">
   <div class="panel-card-header">
     <h3><i data-lucide="activity" style="width:15px;margin-right:6px;"></i> So'nggi Faoliyatlar</h3>
-    <a href="{% url 'panel_activities' %}" style="font-size:.8rem;color:var(--primary);text-decoration:none;">Barchasi →</a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:#43E97B;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#43E97B;animation:pulse 2s infinite;display:inline-block;"></span>
+        Real vaqt
+      </span>
+      <a href="{% url 'panel_activities' %}" style="font-size:.8rem;color:var(--primary);text-decoration:none;">Barchasi →</a>
+    </div>
   </div>
-  <table class="panel-table">
-    <thead><tr><th>Foydalanuvchi</th><th>Amal</th><th>Tafsilot</th><th>Vaqt</th></tr></thead>
-    <tbody>
-      {% for a in recent_activities %}
+  <div id="rt-activity-box" style="padding:0 16px;">
+    <table class="panel-table">
+      <thead><tr><th>Foydalanuvchi</th><th>Amal</th><th>Tafsilot</th><th>Vaqt</th></tr></thead>
+      <tbody>
+        {% for a in recent_activities %}
       <tr>
         <td style="display:flex;align-items:center;gap:8px;">
           <div class="mini-avatar">{{ a.user.initial }}</div>
@@ -122,8 +129,9 @@
         <td style="color:var(--muted);font-size:.78rem;">{{ a.created_at|timesince }} oldin</td>
       </tr>
       {% endfor %}
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- GRAFIK -->

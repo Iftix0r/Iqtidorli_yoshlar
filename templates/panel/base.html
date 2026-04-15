@@ -120,6 +120,11 @@
       .sidebar.open{transform:translateX(0);}
       .main{margin-left:0;}
     }
+
+    @keyframes pulse {
+      0%,100%{opacity:1;transform:scale(1);}
+      50%{opacity:.5;transform:scale(1.3);}
+    }
   </style>
   <script>
     (function(){
@@ -168,9 +173,11 @@
     <div class="nav-section">Muloqot</div>
     <a href="{% url 'panel_messages' %}" class="nav-item {% block nav_messages %}{% endblock %}">
       <i data-lucide="message-circle"></i> Xabarlar
+      <span id="rt-messages" style="display:none;background:#FF6584;color:white;border-radius:10px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:auto;"></span>
     </a>
     <a href="{% url 'panel_mentor_requests' %}" class="nav-item {% block nav_mentor %}{% endblock %}">
       <i data-lucide="handshake"></i> Mentor So'rovlari
+      <span id="rt-mentor" style="display:none;background:#FF9A44;color:white;border-radius:10px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:auto;"></span>
     </a>
     <a href="{% url 'panel_broadcast' %}" class="nav-item {% block nav_broadcast %}{% endblock %}">
       <i data-lucide="send"></i> Ommaviy Xabar
@@ -182,6 +189,7 @@
     </a>
     <a href="{% url 'panel_blocked_ips' %}" class="nav-item {% block nav_blocked %}{% endblock %}">
       <i data-lucide="shield-off"></i> Bloklangan IPlar
+      <span id="rt-failed" style="display:none;background:#FF6584;color:white;border-radius:10px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:auto;"></span>
     </a>
     <a href="{% url 'panel_export_users' %}" class="nav-item">
       <i data-lucide="download"></i> CSV Eksport
@@ -200,6 +208,10 @@
   <header class="topbar">
     <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
     <div class="topbar-right">
+      <span style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:#43E97B;" title="Real vaqt yangilanish faol">
+        <span style="width:7px;height:7px;border-radius:50%;background:#43E97B;animation:pulse 2s infinite;display:inline-block;"></span>
+        Live
+      </span>
       <button class="theme-btn" id="themeBtn">
         <i data-lucide="moon" id="themeIcon" style="width:16px;height:16px;"></i>
       </button>
@@ -225,6 +237,68 @@
   }
   applyTheme(localStorage.getItem('panel_theme')||'dark');
   btn.addEventListener('click',()=>applyTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+
+  // ── REAL-TIME POLLING ──────────────────────────────────────────────────────
+  const REALTIME_URL = '/panel/realtime/';
+
+  function updateBadge(id, val) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (val > 0) {
+      el.textContent = val;
+      el.style.display = 'inline-flex';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  function updateStat(id, val) {
+    const el = document.getElementById(id);
+    if (el && el.textContent !== String(val)) {
+      el.textContent = val;
+      el.style.transition = 'color .3s';
+      el.style.color = '#43E97B';
+      setTimeout(() => el.style.color = '', 1500);
+    }
+  }
+
+  async function pollRealtime() {
+    try {
+      const res  = await fetch(REALTIME_URL);
+      const data = await res.json();
+
+      // Sidebar badge lar
+      updateBadge('rt-messages',  data.unread_messages);
+      updateBadge('rt-mentor',    data.pending_mentor);
+      updateBadge('rt-apps',      data.pending_apps);
+      updateBadge('rt-failed',    data.failed_logins);
+
+      // Dashboard stat kartalar
+      updateStat('rt-total-users',   data.total_users);
+      updateStat('rt-today-logins',  data.today_logins);
+      updateStat('rt-failed-logins', data.failed_logins);
+
+      // So'nggi faoliyat (dashboard da bo'lsa)
+      const actBox = document.getElementById('rt-activity-box');
+      if (actBox && data.last_activity.length) {
+        actBox.innerHTML = data.last_activity.map(a => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+            <div class="mini-avatar">${(a.user__first_name||'?')[0].toUpperCase()}</div>
+            <div style="flex:1;">
+              <div style="font-size:.85rem;font-weight:600;">${a.user__first_name||''} ${a.user__last_name||''}</div>
+              <div style="font-size:.75rem;color:var(--muted);">${a.action} · ${a.detail||''}</div>
+            </div>
+            <div style="font-size:.72rem;color:var(--muted);">${new Date(a.created_at).toLocaleTimeString('uz')}</div>
+          </div>
+        `).join('');
+      }
+
+    } catch(e) { /* tarmoq xatosi — jimgina o'tkazib yuborish */ }
+  }
+
+  // Darhol va har 30 soniyada
+  pollRealtime();
+  setInterval(pollRealtime, 30000);
 </script>
 </body>
 </html>
