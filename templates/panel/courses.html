@@ -6,8 +6,8 @@
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
   <span style="color:var(--muted);font-size:.88rem;">{{ courses|length }} ta kurs</span>
-  <a href="/admin/core/course/add/" class="btn btn-primary" target="_blank">
-    <i data-lucide="plus"></i> Yangi Kurs (Admin)
+  <a href="{% url 'panel_course_create' %}" class="btn btn-primary">
+    <i data-lucide="plus"></i> Yangi Kurs
   </a>
 </div>
 

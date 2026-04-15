@@ -1,0 +1,74 @@
+{% extends 'panel/base.html' %}
+{% block title %}Bloklangan IPlar{% endblock %}
+{% block page_title %}Bloklangan IPlar{% endblock %}
+{% block nav_blocked %}active{% endblock %}
+
+{% block content %}
+
+{% if blocked %}
+<div class="panel-card" style="margin-bottom:20px;">
+  <div class="panel-card-header">
+    <h3 style="color:#FF6584;"><i data-lucide="shield-off" style="width:15px;margin-right:6px;"></i> Hozir Bloklangan ({{ blocked|length }})</h3>
+  </div>
+  <table class="panel-table">
+    <thead><tr><th>Telefon</th><th>IP</th><th>Urinishlar</th><th>Blok tugaydi</th><th>Amal</th></tr></thead>
+    <tbody>
+      {% for b in blocked %}
+      <tr>
+        <td style="font-weight:600;">{{ b.phone }}</td>
+        <td style="font-family:monospace;font-size:.82rem;">{{ b.ip_address }}</td>
+        <td><span class="badge badge-red">{{ b.attempts }} marta</span></td>
+        <td style="color:#FF6584;font-size:.82rem;">{{ b.blocked_until|date:"d.m.Y H:i" }}</td>
+        <td>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ b.pk }}"/>
+            <button type="submit" class="btn btn-primary" style="padding:4px 12px;font-size:.78rem;">
+              <i data-lucide="unlock" style="width:13px;"></i> Blokdan chiqarish
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h3>Barcha Urinishlar (so'nggi 50)</h3>
+  </div>
+  <table class="panel-table">
+    <thead><tr><th>Telefon</th><th>IP</th><th>Urinishlar</th><th>Holat</th><th>Oxirgi urinish</th><th>Amal</th></tr></thead>
+    <tbody>
+      {% for a in all_attempts %}
+      <tr>
+        <td>{{ a.phone }}</td>
+        <td style="font-family:monospace;font-size:.82rem;">{{ a.ip_address }}</td>
+        <td>{{ a.attempts }}</td>
+        <td>
+          {% if a.is_blocked %}
+            <span class="badge badge-red">Bloklangan</span>
+          {% else %}
+            <span class="badge badge-green">Faol</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.78rem;color:var(--muted);">{{ a.last_attempt|date:"d.m.Y H:i" }}</td>
+        <td>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ a.pk }}"/>
+            <button type="submit" class="btn btn-outline" style="padding:4px 10px;font-size:.75rem;">
+              <i data-lucide="trash-2" style="width:13px;"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Urinish yo'q.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

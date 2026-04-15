@@ -1,0 +1,77 @@
+{% extends 'panel/base.html' %}
+{% block title %}Sozlamalar{% endblock %}
+{% block page_title %}Sayt Sozlamalari{% endblock %}
+{% block nav_settings %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;">
+
+  {% if saved %}
+    <div style="background:rgba(67,233,123,.12);border:1px solid rgba(67,233,123,.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;color:#43E97B;display:flex;align-items:center;gap:8px;">
+      <i data-lucide="check-circle" style="width:16px;"></i> Sozlamalar saqlandi!
+    </div>
+  {% endif %}
+
+  <div class="panel-card">
+    <div class="panel-card-header"><h3><i data-lucide="settings" style="width:15px;margin-right:6px;"></i> Umumiy Sozlamalar</h3></div>
+    <div style="padding:24px;">
+      <form method="post" class="panel-form">
+        {% csrf_token %}
+        <div style="margin-bottom:16px;">
+          <label>Sayt nomi</label>
+          <input type="text" name="site_name" value="{{ settings.site_name }}"/>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label>Sayt tavsifi</label>
+          <textarea name="site_desc" rows="3">{{ settings.site_desc }}</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <label>Telefon</label>
+            <input type="text" name="contact_phone" value="{{ settings.contact_phone }}" placeholder="+998 90 000 00 00"/>
+          </div>
+          <div>
+            <label>Email</label>
+            <input type="email" name="contact_email" value="{{ settings.contact_email }}" placeholder="info@example.com"/>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <label>Telegram</label>
+            <input type="text" name="telegram" value="{{ settings.telegram }}" placeholder="@username"/>
+          </div>
+          <div>
+            <label>Instagram</label>
+            <input type="text" name="instagram" value="{{ settings.instagram }}" placeholder="@username"/>
+          </div>
+        </div>
+        <div style="margin-bottom:20px;padding:16px;background:rgba(255,101,132,.08);border:1px solid rgba(255,101,132,.2);border-radius:10px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;">
+            <input type="checkbox" name="maintenance" {% if settings.maintenance %}checked{% endif %} style="width:auto;"/>
+            <div>
+              <div style="font-weight:600;color:#FF6584;">Texnik ishlar rejimi</div>
+              <div style="font-size:.8rem;color:var(--muted);">Yoqilsa, foydalanuvchilar saytga kira olmaydi.</div>
+            </div>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save"></i> Saqlash
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tizim ma'lumotlari -->
+  <div class="panel-card" style="margin-top:20px;">
+    <div class="panel-card-header"><h3>Tizim Ma'lumotlari</h3></div>
+    <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.85rem;">
+      <div><span style="color:var(--muted);">Django versiyasi:</span>
+        {% load static %}
+        <strong>4.2</strong>
+      </div>
+      <div><span style="color:var(--muted);">Oxirgi yangilanish:</span> <strong>{{ settings.updated_at|date:"d.m.Y H:i" }}</strong></div>
+      <div><span style="color:var(--muted);">Jami foydalanuvchilar:</span> <strong>{% with User.objects.count as cnt %}{{ cnt }}{% endwith %}</strong></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

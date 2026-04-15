@@ -2,7 +2,6 @@
 {% block title %}Dashboard{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 {% block nav_dashboard %}active{% endblock %}
-
 {% block content %}
 
 <!-- STAT CARDS -->
@@ -126,5 +125,77 @@
     </tbody>
   </table>
 </div>
+
+<!-- GRAFIK -->
+<div class="panel-card" style="margin-top:20px;">
+  <div class="panel-card-header">
+    <h3><i data-lucide="trending-up" style="width:15px;margin-right:6px;"></i> O'sish Grafigi</h3>
+    <div style="display:flex;gap:8px;">
+      <button onclick="loadChart(7)"  class="btn btn-outline" style="padding:4px 12px;font-size:.78rem;" id="btn7">7 kun</button>
+      <button onclick="loadChart(30)" class="btn btn-primary" style="padding:4px 12px;font-size:.78rem;" id="btn30">30 kun</button>
+    </div>
+  </div>
+  <div style="padding:20px;">
+    <canvas id="growthChart" height="80"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let chart = null;
+
+async function loadChart(days) {
+  document.getElementById('btn7').className  = days===7  ? 'btn btn-primary' : 'btn btn-outline';
+  document.getElementById('btn30').className = days===30 ? 'btn btn-primary' : 'btn btn-outline';
+  document.getElementById('btn7').style.cssText  = 'padding:4px 12px;font-size:.78rem;';
+  document.getElementById('btn30').style.cssText = 'padding:4px 12px;font-size:.78rem;';
+
+  const res  = await fetch(`{% url 'panel_stats_api' %}?days=${days}`);
+  const data = await res.json();
+
+  const labels = [...new Set([
+    ...data.registrations.map(r=>r.day),
+    ...data.logins.map(r=>r.day)
+  ])].sort();
+
+  const regMap   = Object.fromEntries(data.registrations.map(r=>[r.day,r.cnt]));
+  const loginMap = Object.fromEntries(data.logins.map(r=>[r.day,r.cnt]));
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  const textColor = isDark ? '#A7A9BE' : '#6B7280';
+
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('growthChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Ro'yxatdan o'tishlar",
+          data: labels.map(l => regMap[l] || 0),
+          borderColor: '#6C63FF', backgroundColor: 'rgba(108,99,255,.1)',
+          tension: 0.4, fill: true, pointRadius: 4,
+        },
+        {
+          label: 'Kirishlar',
+          data: labels.map(l => loginMap[l] || 0),
+          borderColor: '#43E97B', backgroundColor: 'rgba(67,233,123,.08)',
+          tension: 0.4, fill: true, pointRadius: 4,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: textColor } } },
+      scales: {
+        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+        y: { ticks: { color: textColor }, grid: { color: gridColor }, beginAtZero: true },
+      }
+    }
+  });
+}
+loadChart(30);
+</script>
 
 {% endblock %}

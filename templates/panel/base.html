@@ -175,6 +175,17 @@
     <a href="{% url 'panel_broadcast' %}" class="nav-item {% block nav_broadcast %}{% endblock %}">
       <i data-lucide="send"></i> Ommaviy Xabar
     </a>
+
+    <div class="nav-section">Tizim</div>
+    <a href="{% url 'panel_settings' %}" class="nav-item {% block nav_settings %}{% endblock %}">
+      <i data-lucide="settings"></i> Sozlamalar
+    </a>
+    <a href="{% url 'panel_blocked_ips' %}" class="nav-item {% block nav_blocked %}{% endblock %}">
+      <i data-lucide="shield-off"></i> Bloklangan IPlar
+    </a>
+    <a href="{% url 'panel_export_users' %}" class="nav-item">
+      <i data-lucide="download"></i> CSV Eksport
+    </a>
     <a href="/" class="nav-item" target="_blank">
       <i data-lucide="external-link"></i> Saytga O'tish
     </a>

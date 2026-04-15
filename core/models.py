@@ -368,3 +368,26 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.get_action_display()}"
+
+
+class SiteSettings(models.Model):
+    """Sayt sozlamalari — faqat bitta yozuv bo'ladi"""
+    site_name    = models.CharField(max_length=100, default='Iqtidorli Yoshlar')
+    site_desc    = models.TextField(blank=True)
+    contact_phone= models.CharField(max_length=20, blank=True)
+    contact_email= models.EmailField(blank=True)
+    telegram     = models.CharField(max_length=100, blank=True)
+    instagram    = models.CharField(max_length=100, blank=True)
+    maintenance  = models.BooleanField(default=False, verbose_name='Texnik ishlar rejimi')
+    updated_at   = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Sayt Sozlamalari'
+
+    def __str__(self):
+        return self.site_name
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

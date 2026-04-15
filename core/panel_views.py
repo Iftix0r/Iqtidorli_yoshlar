@@ -422,3 +422,116 @@ def user_delete_view(request, pk):
         target.delete()
         return redirect('panel_users')
     return render(request, 'panel/user_delete.html', {'target': target})
+
+
+# ── STATISTIKA (JSON API) ─────────────────────────────────────────────────────
+@panel_required
+def stats_api(request):
+    from django.http import JsonResponse
+    from django.db.models.functions import TruncDate
+    days = int(request.GET.get('days', 30))
+    since = timezone.now() - timedelta(days=days)
+
+    # Kunlik ro'yxatdan o'tishlar
+    reg_data = (
+        User.objects.filter(date_joined__gte=since)
+        .annotate(day=TruncDate('date_joined'))
+        .values('day').annotate(cnt=Count('id'))
+        .order_by('day')
+    )
+    # Kunlik kirishlar
+    login_data = (
+        LoginHistory.objects.filter(created_at__gte=since, is_success=True)
+        .annotate(day=TruncDate('created_at'))
+        .values('day').annotate(cnt=Count('id'))
+        .order_by('day')
+    )
+    return JsonResponse({
+        'registrations': [{'day': str(r['day']), 'cnt': r['cnt']} for r in reg_data],
+        'logins':        [{'day': str(r['day']), 'cnt': r['cnt']} for r in login_data],
+    })
+
+
+# ── KURS YARATISH ─────────────────────────────────────────────────────────────
+@panel_required
+def course_create_view(request):
+    error = ''
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        desc  = request.POST.get('description', '').strip()
+        level = request.POST.get('level', 'beginner')
+        dur   = request.POST.get('duration', '').strip()
+        if not title:
+            error = 'Kurs nomi majburiy.'
+        else:
+            course = Course.objects.create(
+                title       = title,
+                description = desc,
+                level       = level,
+                duration    = dur,
+                author      = request.user,
+                is_active   = True,
+            )
+            if request.FILES.get('cover'):
+                course.cover = request.FILES['cover']
+                course.save()
+            return redirect('panel_course_lessons', pk=course.pk)
+    return render(request, 'panel/course_create.html', {
+        'error': error, 'levels': Course.LEVELS,
+    })
+
+
+# ── SAYT SOZLAMALARI ──────────────────────────────────────────────────────────
+@panel_required
+def settings_view(request):
+    from .models import SiteSettings
+    settings = SiteSettings.get()
+    saved = False
+    if request.method == 'POST':
+        settings.site_name     = request.POST.get('site_name', settings.site_name)
+        settings.site_desc     = request.POST.get('site_desc', settings.site_desc)
+        settings.contact_phone = request.POST.get('contact_phone', '')
+        settings.contact_email = request.POST.get('contact_email', '')
+        settings.telegram      = request.POST.get('telegram', '')
+        settings.instagram     = request.POST.get('instagram', '')
+        settings.maintenance   = request.POST.get('maintenance') == 'on'
+        settings.save()
+        saved = True
+    return render(request, 'panel/settings.html', {'settings': settings, 'saved': saved})
+
+
+# ── CSV EKSPORT ───────────────────────────────────────────────────────────────
+@panel_required
+def export_users_csv(request):
+    import csv
+    from django.http import HttpResponse
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="users.csv"'
+    response.write('\ufeff')  # BOM for Excel
+
+    writer = csv.writer(response)
+    writer.writerow(['ID', 'Ism', 'Familiya', 'Telefon', 'Rol', 'Viloyat', 'Ball', 'Faol', 'Sana'])
+    for u in User.objects.all().order_by('-date_joined'):
+        writer.writerow([
+            u.pk, u.first_name, u.last_name, u.phone,
+            u.get_role_display(), u.region, u.score,
+            'Ha' if u.is_active else "Yo'q",
+            u.date_joined.strftime('%d.%m.%Y'),
+        ])
+    return response
+
+
+# ── BLOKLANGAN IPlar ──────────────────────────────────────────────────────────
+@panel_required
+def blocked_ips_view(request):
+    from .models import FailedLoginAttempt
+    if request.method == 'POST':
+        FailedLoginAttempt.objects.filter(pk=request.POST.get('id')).delete()
+        return redirect('panel_blocked_ips')
+    blocked = FailedLoginAttempt.objects.filter(
+        blocked_until__isnull=False
+    ).order_by('-last_attempt')
+    all_attempts = FailedLoginAttempt.objects.order_by('-last_attempt')[:50]
+    return render(request, 'panel/blocked_ips.html', {
+        'blocked': blocked, 'all_attempts': all_attempts,
+    })

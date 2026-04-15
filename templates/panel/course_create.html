@@ -1,0 +1,55 @@
+{% extends 'panel/base.html' %}
+{% block title %}Yangi Kurs{% endblock %}
+{% block page_title %}Yangi Kurs Yaratish{% endblock %}
+{% block nav_courses %}active{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;">
+  <div style="margin-bottom:16px;">
+    <a href="{% url 'panel_courses' %}" class="btn btn-outline">← Kurslarga qaytish</a>
+  </div>
+
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h3><i data-lucide="plus-circle" style="width:15px;margin-right:6px;"></i> Yangi Kurs</h3>
+    </div>
+    <div style="padding:24px;">
+      {% if error %}
+        <div style="background:rgba(255,101,132,.12);border:1px solid rgba(255,101,132,.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;color:#ff8fa3;font-size:.88rem;">{{ error }}</div>
+      {% endif %}
+      <form method="post" enctype="multipart/form-data" class="panel-form">
+        {% csrf_token %}
+        <div style="margin-bottom:16px;">
+          <label>Kurs nomi *</label>
+          <input type="text" name="title" required placeholder="Kurs nomi"/>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label>Tavsif</label>
+          <textarea name="description" rows="4" placeholder="Kurs haqida batafsil..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <label>Daraja</label>
+            <select name="level">
+              {% for val, label in levels %}
+                <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>Davomiyligi</label>
+            <input type="text" name="duration" placeholder="Masalan: 4 soat"/>
+          </div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <label>Muqova rasmi</label>
+          <input type="file" name="cover" accept="image/*"/>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save"></i> Yaratish va Darslar Qo'shish →
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -44,4 +44,9 @@ urlpatterns = [
     path('panel/messages/',                   panel_views.messages_view,        name='panel_messages'),
     path('panel/mentor-requests/',            panel_views.mentor_requests_view, name='panel_mentor_requests'),
     path('panel/broadcast/',                  panel_views.broadcast_view,       name='panel_broadcast'),
+    path('panel/stats-api/',                  panel_views.stats_api,            name='panel_stats_api'),
+    path('panel/courses/create/',             panel_views.course_create_view,   name='panel_course_create'),
+    path('panel/settings/',                   panel_views.settings_view,        name='panel_settings'),
+    path('panel/export/users/',               panel_views.export_users_csv,     name='panel_export_users'),
+    path('panel/blocked-ips/',                panel_views.blocked_ips_view,     name='panel_blocked_ips'),
 ]
