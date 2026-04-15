@@ -17,6 +17,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
+          timeout: 60s
+          command_timeout: 10m
           script: |
             source /home/host7905/virtualenv/yoshiqtidorlar/3.11/bin/activate
             cd /home/host7905/yoshiqtidorlar
