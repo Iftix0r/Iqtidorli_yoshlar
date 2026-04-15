@@ -35,8 +35,8 @@
           {% if j.salary %}<span><i data-lucide="banknote"></i> {{ j.salary }}</span>{% endif %}
           {% if j.skills_req %}
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
-              {% for s in j.skills_req.split:"," %}
-                <span class="tag">{{ s|trim }}</span>
+              {% for s in j.skills_req.split %}
+                <span class="tag">{{ s }}</span>
               {% endfor %}
             </div>
           {% endif %}
