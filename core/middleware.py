@@ -62,24 +62,43 @@ class SecurityHeadersMiddleware:
 
 
 class RateLimitMiddleware:
-    """IP bo'yicha so'rovlarni cheklash"""
+    """DDoS va Brute-force himoyasi: IP bo'yicha cheklash va bloklash"""
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # Faqat login va API endpointlarni cheklash
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() \
+             or request.META.get('REMOTE_ADDR', '')
+        
+        # 1. Avval bloklanganligini tekshirish
+        block_key = f'blocked_ip:{ip}'
+        if cache.get(block_key):
+            logger.warning(f"BLOCKED ACCESS ATTEMPT: {ip} - {request.path}")
+            return HttpResponseForbidden(
+                "Sizning IP manzilingiz shubhali harakatlar tufayli 10 daqiqaga bloklangan.",
+                content_type='text/plain; charset=utf-8'
+            )
+
+        # 2. So'rovlar sonini hisoblash
+        # Muhim yo'llar (login, panel) uchun qat'iyroq limit
         sensitive_paths = ['/login/', '/2fa/', '/panel/', '/tizim/']
-        if any(request.path.startswith(p) for p in sensitive_paths):
-            ip  = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() \
-                  or request.META.get('REMOTE_ADDR', '')
-            key = f'ratelimit:{ip}:{request.path.split("/")[1]}'
-            count = cache.get(key, 0)
-            if count >= 60:  # 1 daqiqada 60 ta so'rov
-                logger.warning(f"Rate limit: {ip} — {request.path}")
-                return HttpResponseForbidden(
-                    "Juda ko'p so'rov. Iltimos, bir daqiqa kuting.",
-                    content_type='text/plain; charset=utf-8'
-                )
-            cache.set(key, count + 1, 60)
+        is_sensitive = any(request.path.startswith(p) for p in sensitive_paths)
+        
+        limit = 30 if is_sensitive else 100 # 1 daqiqaga limitlar
+        rate_key = f'ratelimit:{ip}:{"sensitive" if is_sensitive else "global"}'
+        
+        count = cache.get(rate_key, 0)
+        
+        if count >= limit:
+            # Limitdan oshsa: 10 daqiqaga bloklash
+            cache.set(block_key, True, 600) 
+            logger.error(f"DDoS/BruteForce Detected! Blocked: {ip} - Path: {request.path}")
+            return HttpResponseForbidden(
+                "Juda ko'p so'rov! Xavfsizlik maqsadida bloklandingiz.",
+                content_type='text/plain; charset=utf-8'
+            )
+        
+        cache.set(rate_key, count + 1, 60)
+        
         return self.get_response(request)
