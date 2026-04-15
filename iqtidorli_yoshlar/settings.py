@@ -205,3 +205,6 @@ CACHES = {
 
 # ── ADMIN URL (xavfsizlik uchun o'zgartirilgan) ───────────────────────────────
 ADMIN_URL = os.getenv('ADMIN_URL', 'admin')
+
+# 2FA — Telegram ishlayotgan bo'lsa True qiling
+TFA_ENABLED = os.getenv('TFA_ENABLED', 'False') == 'True'

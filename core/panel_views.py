@@ -20,9 +20,12 @@ def panel_tfa_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_staff:
             return redirect('/login/?next=' + request.path)
-        if not request.session.get('tfa_verified'):
-            request.session['tfa_next'] = request.path
-            return redirect('tfa_send')
+        # 2FA faqat Telegram ishlayotgan bo'lsa
+        from django.conf import settings
+        if getattr(settings, 'TFA_ENABLED', False):
+            if not request.session.get('tfa_verified'):
+                request.session['tfa_next'] = request.path
+                return redirect('tfa_send')
         return view_func(request, *args, **kwargs)
     return wrapper
 
