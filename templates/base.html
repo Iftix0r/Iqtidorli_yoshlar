@@ -74,7 +74,9 @@
 {% if messages %}
   <div style="padding:80px 60px 0;max-width:700px;margin:0 auto;">
     {% for msg in messages %}
-      <div class="alert alert-{{ msg.tags }}">{{ msg }}</div>
+      <div class="alert alert-{{ msg.tags }}" style="white-space: pre-wrap; font-family: monospace; word-break: break-word; line-height: 1.5; text-align: left;">
+        {{ msg }}
+      </div>
     {% endfor %}
   </div>
 {% endif %}
