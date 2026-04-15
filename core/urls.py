@@ -45,6 +45,7 @@ urlpatterns = [
     path('panel/mentor-requests/',            panel_views.mentor_requests_view, name='panel_mentor_requests'),
     path('panel/broadcast/',                  panel_views.broadcast_view,          name='panel_broadcast'),
     path('panel/notifications/',              panel_views.notifications_panel_view, name='panel_notifications'),
+    path('panel/notif-list/',                 panel_views.notif_list_api,           name='panel_notif_list'),
     path('panel/stats-api/',                  panel_views.stats_api,            name='panel_stats_api'),
     path('panel/realtime/',                   panel_views.realtime_api,         name='panel_realtime'),
     path('panel/courses/create/',             panel_views.course_create_view,   name='panel_course_create'),

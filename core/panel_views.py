@@ -600,3 +600,25 @@ def notifications_panel_view(request):
         'unread_count': unread_count,
         'type_choices': Notification.TYPES,
     })
+
+
+# ── NOTIF LIST API (dropdown uchun) ──────────────────────────────────────────
+@panel_required
+def notif_list_api(request):
+    from django.http import JsonResponse
+    from .models import Notification
+    notifs = Notification.objects.select_related('user').order_by('-created_at')[:15]
+    return JsonResponse({
+        'notifications': [
+            {
+                'id':        n.pk,
+                'text':      n.text,
+                'notif_type':n.notif_type,
+                'is_read':   n.is_read,
+                'link':      n.link,
+                'user':      n.user.get_full_name() or n.user.phone,
+                'time':      n.created_at.strftime('%d.%m %H:%M'),
+            }
+            for n in notifs
+        ]
+    })
