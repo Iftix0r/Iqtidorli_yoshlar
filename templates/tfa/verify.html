@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kodni Tasdiqlash</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicon.svg' %}"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',sans-serif;background:#0F0E17;color:#FFFFFE;
+         min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .card{background:#16213E;border:1px solid rgba(108,99,255,.25);border-radius:20px;
+          padding:40px 36px;width:100%;max-width:420px;text-align:center;}
+    .icon{width:72px;height:72px;border-radius:50%;background:rgba(67,233,123,.12);
+          display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;}
+    h2{font-size:1.4rem;font-weight:800;margin-bottom:8px;}
+    h2 span{background:linear-gradient(135deg,#6C63FF,#43E97B);-webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;background-clip:text;}
+    p{color:#A7A9BE;font-size:.9rem;line-height:1.6;margin-bottom:24px;}
+    .code-input{
+      width:100%;text-align:center;font-size:2rem;font-weight:900;letter-spacing:12px;
+      padding:16px;background:rgba(255,255,255,.05);border:2px solid rgba(108,99,255,.3);
+      border-radius:14px;color:#FFFFFE;outline:none;margin-bottom:16px;
+      font-family:'Courier New',monospace;
+    }
+    .code-input:focus{border-color:#6C63FF;box-shadow:0 0 0 3px rgba(108,99,255,.15);}
+    .alert-err{background:rgba(255,101,132,.12);border:1px solid rgba(255,101,132,.3);
+               border-radius:10px;padding:12px 16px;color:#FF6584;font-size:.88rem;margin-bottom:16px;}
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;
+         padding:13px;border-radius:12px;font-size:.95rem;font-weight:700;
+         cursor:pointer;border:none;text-decoration:none;width:100%;margin-bottom:10px;}
+    .btn-primary{background:linear-gradient(135deg,#6C63FF,#43E97B);color:white;}
+    .btn-outline{background:transparent;border:1px solid rgba(108,99,255,.4);color:#FFFFFE;}
+    .btn:hover{opacity:.85;}
+    .timer{font-size:.8rem;color:#A7A9BE;margin-bottom:16px;}
+    .timer span{color:#43E97B;font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🔑</div>
+  <h2>Kodni <span>Kiriting</span></h2>
+  <p>Telegram ga yuborilgan 6 xonali kodni kiriting.</p>
+
+  {% if error %}
+    <div class="alert-err">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{% url 'tfa_verify' %}">
+    {% csrf_token %}
+    <input type="text" name="code" class="code-input"
+           placeholder="000000" maxlength="6" pattern="\d{6}"
+           inputmode="numeric" autofocus autocomplete="one-time-code"
+           required/>
+    <div class="timer">Kod amal qilish muddati: <span id="countdown">5:00</span></div>
+    <button type="submit" class="btn btn-primary">
+      ✅ Tasdiqlash
+    </button>
+  </form>
+
+  <a href="{% url 'tfa_send' %}?resend=1" class="btn btn-outline">
+    🔄 Yangi Kod So'rash
+  </a>
+
+  <div style="margin-top:16px;">
+    <a href="{% url 'logout' %}" style="color:#A7A9BE;font-size:.82rem;text-decoration:none;">
+      ← Chiqish
+    </a>
+  </div>
+</div>
+
+<script>
+// Countdown timer
+let secs = 300;
+const el = document.getElementById('countdown');
+const t  = setInterval(() => {
+  secs--;
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  if (secs <= 60) el.style.color = '#FF6584';
+  if (secs <= 0) {
+    clearInterval(t);
+    el.textContent = 'Muddati o\'tdi';
+    document.querySelector('button[type=submit]').disabled = true;
+  }
+}, 1000);
+
+// Faqat raqam kiritish
+document.querySelector('.code-input').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+  if (e.target.value.length === 6) e.target.closest('form').submit();
+});
+</script>
+</body>
+</html>

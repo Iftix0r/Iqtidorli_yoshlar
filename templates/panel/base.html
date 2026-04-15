@@ -260,6 +260,9 @@
       <button class="theme-btn" id="themeBtn">
         <i data-lucide="moon" id="themeIcon" style="width:16px;height:16px;"></i>
       </button>
+      <a href="{% url 'tfa_logout' %}" style="color:var(--muted);font-size:.75rem;text-decoration:none;" title="2FA sessiyasini tozalash">
+        <i data-lucide="shield-off" style="width:14px;"></i>
+      </a>
       <a href="{% url 'logout' %}"><i data-lucide="log-out"></i> Chiqish</a>
     </div>
   </header>

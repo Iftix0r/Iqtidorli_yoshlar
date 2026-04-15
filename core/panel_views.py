@@ -13,8 +13,22 @@ def panel_required(view_func):
     return staff_member_required(view_func, login_url='/login/')
 
 
+def panel_tfa_required(view_func):
+    """Panel uchun login + 2FA tekshirish"""
+    from functools import wraps
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return redirect('/login/?next=' + request.path)
+        if not request.session.get('tfa_verified'):
+            request.session['tfa_next'] = request.path
+            return redirect('tfa_send')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
 # ── DASHBOARD ─────────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def dashboard(request):
     today = timezone.now().date()
     week_ago = timezone.now() - timedelta(days=7)
@@ -42,7 +56,7 @@ def dashboard(request):
 
 
 # ── FOYDALANUVCHILAR ──────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def users_view(request):
     q      = request.GET.get('q', '').strip()
     role   = request.GET.get('role', '')
@@ -81,7 +95,7 @@ def users_view(request):
 
 
 # ── FAOLIYAT TARIXI ───────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def activities_view(request):
     action = request.GET.get('action', '')
     q      = request.GET.get('q', '').strip()
@@ -97,7 +111,7 @@ def activities_view(request):
 
 
 # ── KIRISH TARIXI ─────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def logins_view(request):
     q      = request.GET.get('q', '').strip()
     status = request.GET.get('status', '')
@@ -114,7 +128,7 @@ def logins_view(request):
 
 
 # ── TANLOVLAR ─────────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def contests_view(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -134,7 +148,7 @@ def contests_view(request):
 
 
 # ── KURSLAR ───────────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def courses_view(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -154,7 +168,7 @@ def courses_view(request):
 
 
 # ── ISH E'LONLARI ─────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def jobs_view(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -171,7 +185,7 @@ def jobs_view(request):
 
 
 # ── RESURSLAR ─────────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def resources_view(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -184,7 +198,7 @@ def resources_view(request):
 
 
 # ── XABARLAR MONITORING ───────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def messages_view(request):
     from .models import Message
     q  = request.GET.get('q', '').strip()
@@ -202,7 +216,7 @@ def messages_view(request):
 
 
 # ── MENTOR SO'ROVLARI ─────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def mentor_requests_view(request):
     from .models import MentorRequest
     status = request.GET.get('status', '')
@@ -221,7 +235,7 @@ def mentor_requests_view(request):
 
 
 # ── TANLOV ARIZALARI ──────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def applications_view(request):
     contest_id = request.GET.get('contest', '')
     status     = request.GET.get('status', '')
@@ -254,7 +268,7 @@ def applications_view(request):
 
 
 # ── KURS DARSLARI ─────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def course_lessons_view(request, pk):
     from .models import Lesson
     course  = get_object_or_404(Course, pk=pk)
@@ -280,7 +294,7 @@ def course_lessons_view(request, pk):
 
 
 # ── OMMAVIY XABAR ─────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def broadcast_view(request):
     from .models import Notification
     sent_count = 0
@@ -305,7 +319,7 @@ def broadcast_view(request):
 
 
 # ── FOYDALANUVCHI BATAFSIL ────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def user_detail_view(request, pk):
     from .models import LoginHistory, ActivityLog
     target   = get_object_or_404(User, pk=pk)
@@ -341,7 +355,7 @@ def user_detail_view(request, pk):
 
 
 # ── FOYDALANUVCHI YARATISH ────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def user_create_view(request):
     from .forms import RegisterForm
     import re
@@ -380,7 +394,7 @@ def user_create_view(request):
 
 
 # ── FOYDALANUVCHI TAHRIRLASH ──────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def user_edit_view(request, pk):
     target = get_object_or_404(User, pk=pk)
     error  = ''
@@ -415,7 +429,7 @@ def user_edit_view(request, pk):
 
 
 # ── FOYDALANUVCHI O'CHIRISH ───────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def user_delete_view(request, pk):
     target = get_object_or_404(User, pk=pk)
     if request.method == 'POST':
@@ -425,7 +439,7 @@ def user_delete_view(request, pk):
 
 
 # ── STATISTIKA (JSON API) ─────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def stats_api(request):
     from django.http import JsonResponse
     from django.db.models.functions import TruncDate
@@ -453,7 +467,7 @@ def stats_api(request):
 
 
 # ── KURS YARATISH ─────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def course_create_view(request):
     error = ''
     if request.method == 'POST':
@@ -482,7 +496,7 @@ def course_create_view(request):
 
 
 # ── SAYT SOZLAMALARI ──────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def settings_view(request):
     from .models import SiteSettings
     settings = SiteSettings.get()
@@ -501,7 +515,7 @@ def settings_view(request):
 
 
 # ── CSV EKSPORT ───────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def export_users_csv(request):
     import csv
     from django.http import HttpResponse
@@ -522,7 +536,7 @@ def export_users_csv(request):
 
 
 # ── BLOKLANGAN IPlar ──────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def blocked_ips_view(request):
     from .models import FailedLoginAttempt
     if request.method == 'POST':
@@ -538,7 +552,7 @@ def blocked_ips_view(request):
 
 
 # ── REAL-TIME API ─────────────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def realtime_api(request):
     from django.http import JsonResponse
     from .models import ActivityLog, LoginHistory, Message, MentorRequest, ContestApplication, Notification
@@ -566,7 +580,7 @@ def realtime_api(request):
 
 
 # ── ADMIN BILDIRISHNOMALAR ────────────────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def notifications_panel_view(request):
     from .models import Notification
     q      = request.GET.get('q', '').strip()
@@ -603,7 +617,7 @@ def notifications_panel_view(request):
 
 
 # ── NOTIF LIST API (dropdown uchun) ──────────────────────────────────────────
-@panel_required
+@panel_tfa_required
 def notif_list_api(request):
     from django.http import JsonResponse
     from .models import Notification

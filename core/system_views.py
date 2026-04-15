@@ -13,13 +13,15 @@ from django.conf import settings
 
 
 def superuser_required(view_func):
-    """Faqat superuser kirishi mumkin"""
+    """Faqat superuser kirishi mumkin + 2FA"""
     from functools import wraps
-    from django.contrib.auth import REDIRECT_FIELD_NAME
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_superuser:
             return redirect('/login/?next=' + request.path)
+        if not request.session.get('tfa_verified'):
+            request.session['tfa_next'] = request.path
+            return redirect('tfa_send')
         return view_func(request, *args, **kwargs)
     return wrapper
 

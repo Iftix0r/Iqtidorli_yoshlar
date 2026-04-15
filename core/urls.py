@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views, panel_views, system_views
+from . import tfa_views
 
 urlpatterns = [
     path('',                                  views.index,                 name='index'),
@@ -66,4 +67,8 @@ urlpatterns = [
     path('tizim/files/',                      system_views.sys_files,       name='sys_files'),
     path('tizim/health/',                     system_views.sys_health,      name='sys_health'),
     path('tizim/backup/',                     system_views.sys_backup,      name='sys_backup'),
+    # 2FA
+    path('2fa/send/',                         tfa_views.tfa_send_view,      name='tfa_send'),
+    path('2fa/verify/',                       tfa_views.tfa_verify_view,    name='tfa_verify'),
+    path('2fa/logout/',                       tfa_views.tfa_logout_view,    name='tfa_logout'),
 ]

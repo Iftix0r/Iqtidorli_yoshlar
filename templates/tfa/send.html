@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ikki bosqichli tasdiqlash</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicon.svg' %}"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',sans-serif;background:#0F0E17;color:#FFFFFE;
+         min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .card{background:#16213E;border:1px solid rgba(108,99,255,.25);border-radius:20px;
+          padding:40px 36px;width:100%;max-width:420px;text-align:center;}
+    .icon{width:72px;height:72px;border-radius:50%;background:rgba(108,99,255,.15);
+          display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;}
+    h2{font-size:1.4rem;font-weight:800;margin-bottom:8px;}
+    h2 span{background:linear-gradient(135deg,#6C63FF,#43E97B);-webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;background-clip:text;}
+    p{color:#A7A9BE;font-size:.9rem;line-height:1.6;margin-bottom:24px;}
+    .alert-ok{background:rgba(67,233,123,.12);border:1px solid rgba(67,233,123,.3);
+              border-radius:10px;padding:12px 16px;color:#43E97B;font-size:.88rem;margin-bottom:20px;}
+    .alert-err{background:rgba(255,101,132,.12);border:1px solid rgba(255,101,132,.3);
+               border-radius:10px;padding:12px 16px;color:#FF6584;font-size:.88rem;margin-bottom:20px;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+         padding:12px 28px;border-radius:12px;font-size:.95rem;font-weight:700;
+         cursor:pointer;border:none;text-decoration:none;width:100%;margin-bottom:10px;}
+    .btn-primary{background:linear-gradient(135deg,#6C63FF,#43E97B);color:white;}
+    .btn-outline{background:transparent;border:1px solid rgba(108,99,255,.4);color:#FFFFFE;}
+    .btn:hover{opacity:.85;}
+    .user-info{background:rgba(108,99,255,.08);border-radius:10px;padding:10px 14px;
+               margin-bottom:20px;font-size:.85rem;color:#A7A9BE;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🔐</div>
+  <h2>Ikki Bosqichli <span>Tasdiqlash</span></h2>
+  <p>Admin panelga kirish uchun Telegram orqali tasdiqlash kodi yuboriladi.</p>
+
+  <div class="user-info">
+    👤 {{ user.get_full_name|default:user.phone }}
+  </div>
+
+  {% if sent %}
+    <div class="alert-ok">
+      ✅ Telegram ga kod yuborildi. Iltimos tekshiring.
+    </div>
+    <a href="{% url 'tfa_verify' %}" class="btn btn-primary">
+      🔑 Kodni Kiritish →
+    </a>
+    <a href="{% url 'tfa_send' %}?resend=1" class="btn btn-outline">
+      🔄 Qayta Yuborish
+    </a>
+  {% elif error %}
+    <div class="alert-err">{{ error }}</div>
+    <a href="{% url 'tfa_send' %}?resend=1" class="btn btn-primary">
+      🔄 Qayta Urinish
+    </a>
+  {% else %}
+    <a href="{% url 'tfa_send' %}" class="btn btn-primary">
+      📨 Kod Yuborish
+    </a>
+  {% endif %}
+
+  <div style="margin-top:16px;">
+    <a href="{% url 'logout' %}" style="color:#A7A9BE;font-size:.82rem;text-decoration:none;">
+      ← Chiqish
+    </a>
+  </div>
+</div>
+
+<script>
+  // Sahifa ochilganda avtomatik kod yuborish
+  {% if not sent and not error %}
+  window.location.href = "{% url 'tfa_send' %}";
+  {% endif %}
+</script>
+</body>
+</html>
