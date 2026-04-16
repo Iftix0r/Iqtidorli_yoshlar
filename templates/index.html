@@ -15,36 +15,40 @@
 </div>
 
 <div class="feed-container">
-  <!-- SIDEBAR (Shortcuts) - Now on the left like YouTube -->
+  <!-- SIDEBAR -->
   <aside class="feed-sidebar">
     <div class="sidebar-section">
-      <h4 style="font-size: .65rem;">ASOSIY</h4>
-      <a href="{% url 'index' %}" class="active-link"><i data-lucide="home"></i> Bosh sahifa</a>
-      <a href="{% url 'talents' %}"><i data-lucide="users"></i> Iqtidorlar</a>
-      <a href="{% url 'contests' %}"><i data-lucide="trophy"></i> Tanlovlar</a>
-      <a href="{% url 'leaderboard' %}"><i data-lucide="bar-chart-2"></i> Reyting</a>
+      <h4 class="sb-label">ASOSIY</h4>
+      <a href="{% url 'index' %}" class="sb-link active-link"><i data-lucide="home"></i> Bosh sahifa</a>
+      <a href="{% url 'talents' %}" class="sb-link"><i data-lucide="users"></i> Iqtidorlar</a>
+      <a href="{% url 'contests' %}" class="sb-link"><i data-lucide="trophy"></i> Tanlovlar</a>
+      <a href="{% url 'leaderboard' %}" class="sb-link"><i data-lucide="bar-chart-2"></i> Reyting</a>
     </div>
     <div class="sidebar-section">
-      <h4 style="font-size: .65rem;">KASHFIYOT</h4>
-      <a href="{% url 'market' %}"><i data-lucide="shopping-bag"></i> Market</a>
-      <a href="{% url 'courses' %}"><i data-lucide="graduation-cap"></i> Kurslar</a>
-      <a href="{% url 'jobs' %}"><i data-lucide="briefcase"></i> Ish O'rinlari</a>
+      <h4 class="sb-label">KASHFIYOT</h4>
+      <a href="{% url 'market' %}" class="sb-link"><i data-lucide="shopping-bag"></i> Market</a>
+      <a href="{% url 'courses' %}" class="sb-link"><i data-lucide="graduation-cap"></i> Kurslar</a>
+      <a href="{% url 'jobs' %}" class="sb-link"><i data-lucide="briefcase"></i> Ish O'rinlari</a>
+    </div>
+    <div class="sidebar-section divider">
+      <h4 class="sb-label">SIZ</h4>
+      <a href="{% url 'portal' %}" class="sb-link"><i data-lucide="user"></i> Mening profilim</a>
+      <a href="{% url 'inbox' %}" class="sb-link"><i data-lucide="message-square"></i> Xabarlar</a>
     </div>
   </aside>
 
   <!-- PRIMARY FEED -->
   <main class="feed-main">
     <div class="feed-grid">
-      
-      <!-- HERO AD CARD (YouTube style large promo) -->
+      <!-- HERO AD (YouTube Style) -->
       <div class="feed-card hero-promo">
         <div class="promo-content">
-          <div class="hero-badge"><i data-lucide="sparkles"></i> Yangi Imkoniyatlar</div>
-          <h1>Iqtidoringizni <span>Olamga Taniting</span></h1>
-          <p>Portfolio yarating, tanlovlarda qatnashing va mentorlar bilan bog'laning.</p>
-          <div class="hero-btns">
-            <a href="{% url 'register' %}" class="btn-primary">Hoziroq Boshlash</a>
-            <a href="{% url 'contests' %}" class="btn-outline">Tanlovlar</a>
+          <div class="hero-badge">YANGI</div>
+          <h1>Iqtidoringizni <span>Dunyoga Ko'rsating</span></h1>
+          <p>Portfolio yarating va mentorlar bilan bog'laning.</p>
+          <div style="display:flex;gap:12px;margin-top:10px;">
+            <a href="{% url 'register' %}" class="btn-primary" style="padding:10px 24px;">Boshlash</a>
+            <a href="{% url 'talents' %}" class="btn-outline" style="padding:10px 24px;">Ko'rish</a>
           </div>
         </div>
       </div>
@@ -110,26 +114,33 @@
 </div>
 
 <style>
-/* FEED LAYOUT */
-.feed-container { display: flex; gap: 20px; max-width: 1600px; margin: 0 auto; padding: 0 24px; }
-.feed-main { flex: 1; min-width: 0; }
-.feed-sidebar { width: 220px; position: sticky; top: 140px; height: fit-content; display: none; }
-@media (min-width: 1024px) { .feed-sidebar { display: block; } }
+/* FEED LAYOUT - Denser like YouTube */
+.feed-container { display: flex; gap: 0; max-width: 100%; margin: 0; padding: 0; background: var(--bg); }
+.feed-main { flex: 1; min-width: 0; padding: 24px; padding-top: 0; }
+.feed-sidebar { width: 240px; position: sticky; top: 56px; height: calc(100vh - 56px); padding: 12px; overflow-y: auto; background: var(--bg); display: none; }
+@media (min-width: 1200px) { .feed-sidebar { display: block; } }
 
-.active-link { background: rgba(108,99,255,.08) !important; color: var(--primary) !important; font-weight: 700 !important; }
-.active-link i { color: var(--primary) !important; }
+/* SIDEBAR REFINEMENT */
+.sidebar-section { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 0px solid var(--border); }
+.sidebar-section.divider { border-top: 1px solid var(--border); padding-top: 12px; }
+.sb-label { font-size: .75rem; color: var(--text); padding-left: 12px; margin-bottom: 8px; font-weight: 700; opacity: .8; }
+.sb-link { display:flex; align-items:center; gap:20px; padding:10px 12px; border-radius:10px; text-decoration:none; color:var(--text); font-size:.88rem; transition:.1s; }
+.sb-link:hover { background: rgba(0,0,0,.05); }
+[data-theme="dark"] .sb-link:hover { background: rgba(255,255,255,.1); }
+.sb-link i { width: 22px; height: 22px; }
+.active-link { background: rgba(0,0,0,.05) !important; font-weight: 700; }
+[data-theme="dark"] .active-link { background: rgba(255,255,255,.1) !important; }
 
+/* CATEGORIES - Standard YouTube style */
+.category-wrapper { background: var(--bg); position: sticky; top: 56px; z-index: 100; padding: 12px 24px; }
+.category-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
+.cat-pill { padding: 6px 14px; border-radius: 8px; border: none; background: rgba(0,0,0,0.05); color: var(--text); font-size: .88rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: .2s; }
+[data-theme="dark"] .cat-pill { background: rgba(255,255,255,0.1); }
+.cat-pill.active { background: var(--text); color: var(--bg); }
 
-/* CATEGORIES */
-.category-wrapper { background: var(--bg); position: sticky; top: 60px; z-index: 100; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-.category-scroll { max-width: 1400px; margin:0 auto; padding: 0 20px; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
-.category-scroll::-webkit-scrollbar { display: none; }
-.cat-pill { padding: 6px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: .85rem; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px; transition: .2s; }
-.cat-pill:hover { background: var(--border); }
-.cat-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-
-/* GRID */
-.feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-bottom: 60px; }
+/* GRID - 5 columns on big screens */
+.feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px 20px; }
+@media (min-width: 1600px) { .feed-grid { grid-template-columns: repeat(5, 1fr); } }
 
 /* CARDS */
 .feed-card { display: flex; flex-direction: column; background: transparent; transition: .2s; }
