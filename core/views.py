@@ -56,10 +56,18 @@ def index(request):
         .order_by('-created_at')[:8]
     )
 
+    # Startaplar (Darslik uchun: barcha loyihalardan bir nechtasini startap deb ko'rsatamiz 
+    # agar filtr ishlamasa fallback qilamiz)
+    try:
+        startups = Project.objects.filter(is_startup=True).order_by('-created_at')[:6]
+    except:
+        startups = Project.objects.all().order_by('-created_at')[:6]
+
     return render(request, 'index.html', {
         'top_talents': top_talents,
         'recent_projects': recent_projects,
         'recent_resources': recent_resources,
+        'startups': startups,
         'stats': stats,
         'categories': categories,
     })
