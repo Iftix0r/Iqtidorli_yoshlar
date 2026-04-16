@@ -150,6 +150,17 @@
     <button class="sb-toggle" onclick="toggleSb()"><i data-lucide="panel-left"></i></button>
   </div>
 
+  <!-- Qidiruv -->
+  <div style="padding:8px 10px;border-bottom:1px solid var(--border);" id="sb-search-wrap">
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;transition:.2s;" onfocusin="this.style.borderColor='rgba(108,99,255,.5)'" onfocusout="this.style.borderColor='var(--border)'">
+      <i data-lucide="search" style="width:14px;height:14px;color:var(--muted);flex-shrink:0;"></i>
+      <input id="sb-search" type="text" placeholder="Suhbatlarni qidirish..."
+        style="background:none;border:none;outline:none;color:var(--text);font-size:.82rem;font-family:inherit;width:100%;"
+        oninput="filterSessions(this.value)">
+      <button id="sb-search-clear" onclick="clearSearch()" style="display:none;background:none;border:none;color:var(--muted);cursor:pointer;padding:0;line-height:1;">✕</button>
+    </div>
+  </div>
+
   <nav class="sb-nav">
     <div class="sb-section">Asosiy</div>
     <button class="sb-item {% if section == 'home' %}active{% endif %}" onclick="go('home')">
@@ -194,9 +205,9 @@
     </button>
 
     {% if ai_sessions %}
-    <div class="sb-section">Suhbatlar</div>
+    <div class="sb-section" id="sb-sess-label">Suhbatlar</div>
     {% for s in ai_sessions %}
-    <div style="position:relative;display:flex;align-items:center;" class="sess-row" data-id="{{ s.pk }}">
+    <div style="position:relative;display:flex;align-items:center;" class="sess-row" data-id="{{ s.pk }}" data-title="{{ s.title|default:'Yangi suhbat'|lower }}">
       <button class="sb-item {% if ai_session_id == s.pk %}active{% endif %}" onclick="goAI({{ s.pk }})" style="flex:1;min-width:0;">
         <i data-lucide="message-square" style="flex-shrink:0;"></i>
         <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ s.title|default:"Yangi suhbat"|truncatechars:18 }}</span>
@@ -207,6 +218,7 @@
       </button>
     </div>
     {% endfor %}
+    <div id="sb-no-results" style="display:none;font-size:.78rem;color:var(--muted);padding:8px 10px;">Natija topilmadi</div>
     {% endif %}
 
     <div class="sb-section">Boshqa</div>
@@ -735,8 +747,32 @@ function md(s) {
 }
 
 function toggleSb() {
-  document.getElementById('sb').classList.toggle('collapsed');
-  localStorage.setItem('sb_collapsed', document.getElementById('sb').classList.contains('collapsed'));
+  const sb = document.getElementById('sb');
+  sb.classList.toggle('collapsed');
+  const collapsed = sb.classList.contains('collapsed');
+  localStorage.setItem('sb_collapsed', collapsed);
+  document.getElementById('sb-search-wrap').style.display = collapsed ? 'none' : 'block';
+}
+
+// ── QIDIRUV ───────────────────────────────────────────────────────────────────
+function filterSessions(q) {
+  const rows  = document.querySelectorAll('.sess-row');
+  const clear = document.getElementById('sb-search-clear');
+  const noRes = document.getElementById('sb-no-results');
+  q = q.toLowerCase().trim();
+  clear.style.display = q ? 'block' : 'none';
+  let found = 0;
+  rows.forEach(row => {
+    const title = row.dataset.title || '';
+    const show  = !q || title.includes(q);
+    row.style.display = show ? 'flex' : 'none';
+    if (show) found++;
+  });
+  if (noRes) noRes.style.display = (q && found === 0) ? 'block' : 'none';
+}
+function clearSearch() {
+  document.getElementById('sb-search').value = '';
+  filterSessions('');
 }
 
 // ── SESSIYA MENU ──────────────────────────────────────────────────────────────
@@ -806,8 +842,10 @@ function toggleTheme() {
 }
 
 // Sidebar holati
-if (localStorage.getItem('sb_collapsed') === 'true') {
+const sbCollapsed = localStorage.getItem('sb_collapsed') === 'true';
+if (sbCollapsed) {
   document.getElementById('sb').classList.add('collapsed');
+  document.getElementById('sb-search-wrap').style.display = 'none';
 }
 
 // Theme icon
