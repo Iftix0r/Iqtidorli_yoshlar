@@ -467,23 +467,56 @@
   {% elif section == 'projects' %}
   <div class="section-content">
     <div class="p-card">
-      <div class="p-card-title"><i data-lucide="folder-open"></i> Loyihalar</div>
+      <div class="p-card-title"><i data-lucide="folder-open"></i> Loyihalarim</div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
       {% for p in projects %}
-      <div class="list-item">
-        <div class="list-icon"><i data-lucide="code-2"></i></div>
-        <div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">{{ p.title }}</div><div style="font-size:.75rem;color:var(--muted);">{{ p.description|truncatechars:60 }}</div></div>
-        {% if p.link %}<a href="{{ p.link }}" target="_blank" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.75rem;"><i data-lucide="external-link"></i></a>{% endif %}
+      <div class="stat-box" style="text-align:left; padding:16px; position:relative; overflow:hidden;">
+        {% if p.is_startup %}<div class="tag-pill tag-green" style="position:absolute; top:8px; right:8px; font-size:.65rem;">STARTUP</div>{% endif %}
+        <div style="font-size:.9rem; font-weight:700; margin-bottom:4px;">{{ p.title }}</div>
+        <div style="font-size:.78rem; color:var(--muted); line-height:1.4; margin-bottom:12px;">{{ p.description|truncatechars:80 }}</div>
+        
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+          {% if p.needs_team %}<span style="font-size:.68rem; background:rgba(108,99,255,.1); color:var(--primary); padding:2px 8px; border-radius:10px;"><i data-lucide="users" style="width:10px; height:10px; margin-right:3px;"></i> Jamoa</span>{% endif %}
+          {% if p.funding_amount %}<span style="font-size:.68rem; background:rgba(67,233,123,.1); color:var(--accent); padding:2px 8px; border-radius:10px;"><i data-lucide="dollar-sign" style="width:10px; height:10px; margin-right:3px;"></i> {{ p.funding_amount }}</span>{% endif %}
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          {% if p.link %}<a href="{{ p.link }}" target="_blank" class="btn-p btn-ghost" style="padding:4px 10px; font-size:.72rem;"><i data-lucide="external-link"></i> Havola</a>{% endif %}
+          <div style="font-size:.65rem; color:var(--muted);">{{ p.created_at|date:"d.m.Y" }}</div>
+        </div>
       </div>
-      {% empty %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;">Hali loyiha yo'q</p>
+      {% empty %}<p style="color:var(--muted); font-size:.85rem; grid-column: 1/-1;">Hali loyiha yo'q</p>
       {% endfor %}
+      </div>
     </div>
-    <div class="p-card">
-      <div class="p-card-title"><i data-lucide="plus-circle"></i> Yangi Loyiha</div>
-      <form method="post" class="p-form">
+
+    <div class="p-card" style="border: 2px solid rgba(108,99,255,.2); background: linear-gradient(to bottom, var(--card), rgba(108,99,255,0.02));">
+      <div class="p-card-title"><i data-lucide="rocket"></i> Yangi Loyiha yoki Startap</div>
+      <p style="font-size:.8rem; color:var(--muted); margin-bottom:20px;">G'oyangizni startap darajasiga ko'taring va jamoa/investor toping.</p>
+      
+      <form method="post" enctype="multipart/form-data" class="p-form">
         {% csrf_token %}<input type="hidden" name="action" value="project">
-        <div class="row"><div><label>Nomi</label><input type="text" name="title" required></div><div><label>Havola</label><input type="url" name="link" placeholder="https://..."></div></div>
-        <div style="margin-bottom:12px;"><label>Tavsif</label><textarea name="description" rows="2"></textarea></div>
-        <button type="submit" class="btn-p btn-grad"><i data-lucide="save"></i> Saqlash</button>
+        
+        <div class="row">
+          <div><label>Loyiha nomi</label><input type="text" name="title" required placeholder="Masalan: EduAI Platform"></div>
+          <div><label>Demo havola (URL)</label><input type="url" name="link" placeholder="https://..."></div>
+        </div>
+        
+        <div style="margin-bottom:15px;"><label>Tavsif</label><textarea name="description" rows="3" placeholder="Loyiha haqida batafsil..."></textarea></div>
+        
+        <div class="row" style="background:rgba(255,255,255,.03); padding:15px; border-radius:12px; margin-bottom:15px; grid-template-columns: 1fr 1fr;">
+          <div style="display:flex; align-items:center; gap:10px;"><input type="checkbox" name="is_startup" id="is_startup" style="width:18px; height:18px;"><label for="is_startup" style="margin:0; cursor:pointer;">Bu startap loyiha</label></div>
+          <div style="display:flex; align-items:center; gap:10px;"><input type="checkbox" name="needs_team" id="needs_team" style="width:18px; height:18px;"><label for="needs_team" style="margin:0; cursor:pointer;">Jamoa qidiryapman</label></div>
+        </div>
+
+        <div class="row">
+          <div><label>Kerakli mablag' (masalan: $2000)</label><input type="text" name="funding_amount"></div>
+          <div><label>Muqova rasmi</label><input type="file" name="image" accept="image/*"></div>
+        </div>
+
+        <div style="margin-bottom:20px;"><label>Qo'shimcha nimalar kerak? (Resurslar)</label><textarea name="required_resources" rows="2" placeholder="Ofis, hamkorlar, serverlar..."></textarea></div>
+
+        <button type="submit" class="btn-p btn-grad" style="padding:12px 30px; border-radius:12px; width:100%; justify-content:center; font-size:.9rem;"><i data-lucide="zap"></i> Loyihani yaratish</button>
       </form>
     </div>
   </div>
