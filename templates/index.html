@@ -54,7 +54,7 @@
       </div>
 
       <!-- PROJECT CARDS -->
-      {% for p in recent_projects %}
+      {% for p in recent_projects|slice:":4" %}
       <div class="feed-card project-card">
         <a href="{% url 'portal' %}" class="card-thumb">
           {% if p.image %}
@@ -86,6 +86,27 @@
               <div class="s-box"><h4>{{ stats.projects }}+</h4><p>Loyihalar</p></div>
               <div class="s-box"><h4>{{ stats.mentors }}+</h4><p>Mentorlar</p></div>
           </div>
+      </div>
+
+      <!-- IQTIDORINGIZNI OSHIRING (YouTube style horizontal strip) -->
+      <div class="feed-full-row">
+        <div class="row-header">
+          <h2><i data-lucide="graduation-cap" style="color:var(--primary);"></i> Iqtidoringizni Oshiring</h2>
+          <p>Bilimingizni boyitish uchun sara kurslar va materiallar</p>
+        </div>
+        <div class="horizontal-feed">
+          {% for r in recent_resources %}
+          <div class="mini-card resource-card">
+            <a href="{% url 'portal' %}" class="mini-thumb">
+              {% if r.image %}<img src="{{ r.image.url }}" alt="{{ r.title }}">{% else %}<div class="mini-placeholder"><i data-lucide="book-open"></i></div>{% endif %}
+            </a>
+            <div class="mini-body">
+              <h4 class="mini-title">{{ r.title }}</h4>
+              <p class="mini-meta">{{ r.price|default:"Bepul" }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
       </div>
 
       <!-- TALENT CARDS (Interspersed in feed) -->
@@ -184,6 +205,22 @@
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .s-box h4 { font-size: 1.4rem; color: var(--primary); margin-bottom: 2px; }
 .s-box p { font-size: .75rem; color: var(--muted); text-transform: uppercase; }
+/* FULL ROW (Horizontal Strip) */
+.feed-full-row { grid-column: 1 / -1; margin: 24px 0; padding: 24px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.row-header { margin-bottom: 20px; }
+.row-header h2 { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.row-header p { color: var(--muted); font-size: .9rem; }
+
+.horizontal-feed { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
+.horizontal-feed::-webkit-scrollbar { display: none; }
+
+.mini-card { width: 210px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+.mini-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; background: var(--border); display: block; }
+.mini-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mini-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.mini-placeholder i { width: 24px; height: 24px; color: var(--muted); }
+.mini-title { font-size: .88rem; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mini-meta { font-size: .8rem; color: var(--primary); font-weight: 600; }
 </style>
 
 {% endblock %}

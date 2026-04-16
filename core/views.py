@@ -51,9 +51,15 @@ def index(request):
         {'id': 'design', 'name': 'Dizayn', 'icon': 'figma'},
     ]
 
+    recent_resources = (
+        Resource.objects.all()
+        .order_by('-created_at')[:8]
+    )
+
     return render(request, 'index.html', {
         'top_talents': top_talents,
         'recent_projects': recent_projects,
+        'recent_resources': recent_resources,
         'stats': stats,
         'categories': categories,
     })
