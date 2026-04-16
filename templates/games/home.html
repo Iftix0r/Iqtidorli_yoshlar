@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Games — Iqtidorli Yoshlar{% endblock %}
+{% block content %}
+<section style="padding-top:100px;padding-bottom:60px;">
+<div style="max-width:1100px;margin:0 auto;padding:0 20px;">
+
+  <div class="section-title">
+    <div class="section-badge">🎮 Games</div>
+    <h2>Mini <span>O'yinlar</span></h2>
+    <p>O'ynang, ball yig'ing va XP oling!</p>
+  </div>
+
+  <div class="features-grid" style="max-width:900px;margin:0 auto;">
+
+    <a href="{% url 'game_snake' %}" style="text-decoration:none;">
+      <div class="feature-card" style="text-align:center;cursor:pointer;">
+        <div style="font-size:3.5rem;margin-bottom:12px;">🐍</div>
+        <h3>Snake</h3>
+        <p>Klassik ilon o'yini. Qancha uzoq yashasa shuncha ko'p ball!</p>
+        <div style="margin-top:12px;font-size:.8rem;color:var(--primary);">+10 XP</div>
+      </div>
+    </a>
+
+    <a href="{% url 'game_2048' %}" style="text-decoration:none;">
+      <div class="feature-card" style="text-align:center;cursor:pointer;">
+        <div style="font-size:3.5rem;margin-bottom:12px;">🧩</div>
+        <h3>2048</h3>
+        <p>Raqamlarni birlashtiring va 2048 ga yeting!</p>
+        <div style="margin-top:12px;font-size:.8rem;color:var(--primary);">+15 XP</div>
+      </div>
+    </a>
+
+    <a href="{% url 'game_typing' %}" style="text-decoration:none;">
+      <div class="feature-card" style="text-align:center;cursor:pointer;">
+        <div style="font-size:3.5rem;margin-bottom:12px;">⌨️</div>
+        <h3>Typing Speed</h3>
+        <p>Tez yozish testi. WPM ni oshiring!</p>
+        <div style="margin-top:12px;font-size:.8rem;color:var(--primary);">+10 XP</div>
+      </div>
+    </a>
+
+    <a href="{% url 'game_memory' %}" style="text-decoration:none;">
+      <div class="feature-card" style="text-align:center;cursor:pointer;">
+        <div style="font-size:3.5rem;margin-bottom:12px;">🧠</div>
+        <h3>Memory Cards</h3>
+        <p>Juft kartalarni toping. Xotirangizni sinang!</p>
+        <div style="margin-top:12px;font-size:.8rem;color:var(--primary);">+10 XP</div>
+      </div>
+    </a>
+
+    <a href="{% url 'game_ttt' %}" style="text-decoration:none;">
+      <div class="feature-card" style="text-align:center;cursor:pointer;">
+        <div style="font-size:3.5rem;margin-bottom:12px;">❌⭕</div>
+        <h3>Tic-Tac-Toe</h3>
+        <p>AI ga qarshi o'ynang. Yutolasizmi?</p>
+        <div style="margin-top:12px;font-size:.8rem;color:var(--primary);">+5 XP</div>
+      </div>
+    </a>
+
+  </div>
+</div>
+</section>
+{% endblock %}

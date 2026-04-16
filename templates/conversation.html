@@ -319,15 +319,18 @@ async function startCall(type) {
         }
       }
     } else {
-      alert('Ruxsat berilmadi yoki qurilma band: ' + e.message + '\n\nBrauzer sozlamalarida kamera/mikrofon ruxsatini tekshiring.');
+      const msg = e.name === 'NotAllowedError'
+        ? 'Kamera/mikrofon bloklangan.\n\n1. URL bar da 🔒 belgisini bosing\n2. Camera va Microphone ni "Allow" qiling\n3. Sahifani yangilang (F5)\n4. Qayta urinib ko\'ring'
+        : e.name === 'NotReadableError'
+        ? 'Kamera/mikrofon boshqa dastur tomonidan band.\nBoshqa dasturlarni yoping va qayta urinib ko\'ring.'
+        : 'Xato: ' + e.name + ' — ' + e.message;
+      alert(msg);
       return;
     }
   }
 
   document.getElementById('local-video').srcObject = localStream;
-  if (type === 'audio') {
-    document.getElementById('local-video').style.display = 'none';
-  }
+  document.getElementById('local-video').style.display = currentCallType === 'video' ? 'block' : 'none';
   showCallOverlay('Qongiroq qilinmoqda...');
 
   pc = new RTCPeerConnection(ICE_SERVERS);
@@ -356,13 +359,19 @@ async function startCall(type) {
 async function acceptCall() {
   document.getElementById('incoming-call').style.display = 'none';
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: currentCallType === 'video',
-      audio: true,
-    });
+    const constraints = currentCallType === 'video'
+      ? { video: true, audio: true }
+      : { video: false, audio: true };
+    localStream = await navigator.mediaDevices.getUserMedia(constraints);
   } catch(e) {
-    alert('Kamera/mikrofonga ruxsat bering: ' + e.message);
-    return;
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+      currentCallType = 'audio';
+    } catch(e2) {
+      alert('Qurilmaga ulanib bo\'lmadi: ' + e2.message);
+      sendSignal('reject', '');
+      return;
+    }
   }
 
   document.getElementById('local-video').srcObject = localStream;

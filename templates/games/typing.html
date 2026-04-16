@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Typing Speed{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:700px;margin:0 auto;padding:0 20px;text-align:center;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i></a>
+    <h2 style="font-size:1.3rem;font-weight:800;">⌨️ Typing Speed</h2>
+    <div style="font-size:.9rem;font-weight:700;color:var(--primary);"><span id="wpm">0</span> WPM</div>
+  </div>
+
+  <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 20px;">
+      ⏱ <span id="timer">60</span>s
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 20px;">
+      ✅ <span id="correct">0</span> to'g'ri
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 20px;">
+      ❌ <span id="errors">0</span> xato
+    </div>
+  </div>
+
+  <div id="text-display" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;font-size:1.1rem;line-height:1.8;text-align:left;margin-bottom:16px;min-height:80px;letter-spacing:.5px;"></div>
+
+  <textarea id="input" placeholder="Yozishni boshlang..." disabled
+    style="width:100%;background:var(--bg);border:2px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:1rem;font-family:inherit;resize:none;outline:none;height:80px;"
+    oninput="check()"></textarea>
+
+  <button onclick="startGame()" id="startBtn" class="btn-primary" style="margin-top:12px;padding:10px 28px;">▶ Boshlash</button>
+  <div id="result" style="margin-top:16px;font-size:1.1rem;font-weight:700;color:var(--primary);"></div>
+</div>
+</section>
+<script>
+const WORDS = ['dasturlash','kompyuter','internet','texnologiya','algoritm','funksiya','o\'zgaruvchi','massiv','sikl','shart','obyekt','sinf','metod','kutubxona','freymvork','ma\'lumot','bazasi','server','mijoz','tarmoq','xavfsizlik','shifrlash','parol','foydalanuvchi','interfeys','dizayn','loyiha','jamoa','hamkor','mentor','investor','iqtidor','yoshlar','platforma','reyting','sertifikat','kurs','dars','topshiriq','natija'];
+let words,idx,timer,running=false,correct=0,errors=0,startTime;
+
+function startGame(){
+  words=shuffle([...WORDS]).slice(0,30);
+  idx=0;correct=0;errors=0;
+  document.getElementById('correct').textContent=0;
+  document.getElementById('errors').textContent=0;
+  document.getElementById('wpm').textContent=0;
+  document.getElementById('result').textContent='';
+  document.getElementById('input').value='';
+  document.getElementById('input').disabled=false;
+  document.getElementById('input').focus();
+  renderText();
+  let t=60;
+  document.getElementById('timer').textContent=t;
+  if(timer)clearInterval(timer);
+  running=true;
+  startTime=Date.now();
+  timer=setInterval(()=>{
+    t--;
+    document.getElementById('timer').textContent=t;
+    const elapsed=(Date.now()-startTime)/60000;
+    document.getElementById('wpm').textContent=Math.round(correct/elapsed)||0;
+    if(t<=0){clearInterval(timer);endGame();}
+  },1000);
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function renderText(){
+  const d=document.getElementById('text-display');
+  d.innerHTML=words.map((w,i)=>`<span id="w${i}" style="padding:2px 4px;border-radius:4px;${i===idx?'background:rgba(108,99,255,.3);':''}${i<idx?'color:var(--muted);':''}">${w}</span> `).join('');
+}
+
+function check(){
+  if(!running)return;
+  const inp=document.getElementById('input');
+  const val=inp.value;
+  if(val.endsWith(' ')){
+    const typed=val.trim();
+    if(typed===words[idx]){correct++;document.getElementById('correct').textContent=correct;}
+    else{errors++;document.getElementById('errors').textContent=errors;}
+    idx++;
+    inp.value='';
+    if(idx>=words.length)endGame();
+    else renderText();
+  }
+  // Real-time highlight
+  const cur=document.getElementById('w'+idx);
+  if(cur){
+    const typed=val.trim();
+    const word=words[idx];
+    cur.style.background=typed&&!word.startsWith(typed)?'rgba(255,101,132,.3)':'rgba(108,99,255,.3)';
+  }
+}
+
+function endGame(){
+  running=false;
+  document.getElementById('input').disabled=true;
+  if(timer)clearInterval(timer);
+  const elapsed=(Date.now()-startTime)/60000;
+  const wpm=Math.round(correct/elapsed)||0;
+  document.getElementById('wpm').textContent=wpm;
+  document.getElementById('result').textContent=`Natija: ${wpm} WPM | ${correct} to'g'ri | ${errors} xato`;
+  {% if user.is_authenticated %}saveScore('typing',wpm);{% endif %}
+}
+
+{% if user.is_authenticated %}
+async function saveScore(game,score){
+  await fetch('/games/score/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({game,score})});
+}
+{% endif %}
+</script>
+{% endblock %}

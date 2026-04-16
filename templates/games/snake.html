@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Snake{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:520px;margin:0 auto;padding:0 20px;text-align:center;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i> Orqaga</a>
+    <h2 style="font-size:1.3rem;font-weight:800;">🐍 Snake</h2>
+    <div style="font-size:.9rem;font-weight:700;color:var(--primary);">Ball: <span id="score">0</span></div>
+  </div>
+
+  <canvas id="c" width="400" height="400" style="background:#0a0a0f;border-radius:16px;border:2px solid var(--border);display:block;margin:0 auto;touch-action:none;"></canvas>
+
+  <div id="msg" style="margin-top:16px;font-size:1rem;color:var(--muted);">WASD yoki o'q tugmalar bilan boshqaring</div>
+  <button id="startBtn" onclick="startGame()" class="btn-primary" style="margin-top:12px;padding:10px 28px;">▶ Boshlash</button>
+</div>
+</section>
+
+<script>
+const C = document.getElementById('c');
+const ctx = C.getContext('2d');
+const SZ = 20, COLS = 20, ROWS = 20;
+let snake, dir, food, score, loop, running = false;
+
+function startGame() {
+  snake = [{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+  dir = {x:1,y:0};
+  score = 0;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('msg').textContent = '';
+  document.getElementById('startBtn').textContent = '↺ Qayta';
+  placeFood();
+  if (loop) clearInterval(loop);
+  running = true;
+  loop = setInterval(tick, 120);
+}
+
+function placeFood() {
+  do { food = {x:Math.floor(Math.random()*COLS), y:Math.floor(Math.random()*ROWS)}; }
+  while (snake.some(s=>s.x===food.x&&s.y===food.y));
+}
+
+function tick() {
+  const head = {x:snake[0].x+dir.x, y:snake[0].y+dir.y};
+  if (head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS||snake.some(s=>s.x===head.x&&s.y===head.y)) {
+    clearInterval(loop); running=false;
+    document.getElementById('msg').textContent = `O'yin tugadi! Ball: ${score}`;
+    {% if user.is_authenticated %}saveScore('snake', score);{% endif %}
+    return;
+  }
+  snake.unshift(head);
+  if (head.x===food.x&&head.y===food.y) { score+=10; document.getElementById('score').textContent=score; placeFood(); }
+  else snake.pop();
+  draw();
+}
+
+function draw() {
+  ctx.fillStyle='#0a0a0f'; ctx.fillRect(0,0,400,400);
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,.03)';
+  for(let i=0;i<COLS;i++){ctx.beginPath();ctx.moveTo(i*SZ,0);ctx.lineTo(i*SZ,400);ctx.stroke();}
+  for(let i=0;i<ROWS;i++){ctx.beginPath();ctx.moveTo(0,i*SZ);ctx.lineTo(400,i*SZ);ctx.stroke();}
+  // Food
+  ctx.fillStyle='#FF6584'; ctx.beginPath();
+  ctx.arc(food.x*SZ+SZ/2,food.y*SZ+SZ/2,SZ/2-2,0,Math.PI*2); ctx.fill();
+  // Snake
+  snake.forEach((s,i)=>{
+    const g=ctx.createLinearGradient(s.x*SZ,s.y*SZ,(s.x+1)*SZ,(s.y+1)*SZ);
+    g.addColorStop(0,i===0?'#43E97B':'#6C63FF');
+    g.addColorStop(1,i===0?'#38F9D7':'#4facfe');
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.roundRect(s.x*SZ+1,s.y*SZ+1,SZ-2,SZ-2,4);
+    ctx.fill();
+  });
+}
+
+document.addEventListener('keydown',e=>{
+  if(!running)return;
+  const k={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},
+           w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0}};
+  const nd=k[e.key];
+  if(nd&&!(nd.x===-dir.x&&nd.y===-dir.y)){dir=nd;e.preventDefault();}
+});
+
+// Touch
+let tx,ty;
+C.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+C.addEventListener('touchend',e=>{
+  if(!running)return;
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)){dir=dx>0?{x:1,y:0}:{x:-1,y:0};}
+  else{dir=dy>0?{x:0,y:1}:{x:0,y:-1};}
+},{passive:true});
+
+{% if user.is_authenticated %}
+async function saveScore(game, score) {
+  await fetch('/games/score/', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body:JSON.stringify({game,score})
+  });
+}
+{% endif %}
+
+draw();
+</script>
+{% endblock %}

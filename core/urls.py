@@ -45,3 +45,15 @@ urlpatterns = [
     path('portal/',                      views.portal_view,         name='portal'),
     path('portal/<str:section>/',        views.portal_view,         name='portal_section'),
 ]
+
+# Games
+from . import game_views
+urlpatterns += [
+    path('games/',                  game_views.games_home,   name='games'),
+    path('games/snake/',            game_views.game_snake,   name='game_snake'),
+    path('games/2048/',             game_views.game_2048,    name='game_2048'),
+    path('games/typing/',           game_views.game_typing,  name='game_typing'),
+    path('games/memory/',           game_views.game_memory,  name='game_memory'),
+    path('games/tictactoe/',        game_views.game_ttt,     name='game_ttt'),
+    path('games/score/',            game_views.game_score,   name='game_score'),
+]

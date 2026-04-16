@@ -156,6 +156,10 @@
     <a href="{% url 'market' %}" onclick="closeDrawer()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:.88rem;transition:.15s;margin-bottom:2px;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">
       <i data-lucide="shopping-bag" style="width:17px;height:17px;color:#43E97B;flex-shrink:0;"></i> Iqtidor Market
     </a>
+    <a href="{% url 'games' %}" onclick="closeDrawer()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:.88rem;transition:.15s;margin-bottom:2px;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">
+      <i data-lucide="gamepad-2" style="width:17px;height:17px;color:#FF9A44;flex-shrink:0;"></i> Games
+      <span style="margin-left:auto;font-size:.7rem;background:linear-gradient(135deg,#FF9A44,#FF6584);color:#fff;padding:2px 8px;border-radius:10px;">NEW</span>
+    </a>
 
     {% if user.is_staff %}
     <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;">Admin</div>

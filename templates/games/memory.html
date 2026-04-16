@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Memory Cards{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:520px;margin:0 auto;padding:0 20px;text-align:center;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i></a>
+    <h2 style="font-size:1.3rem;font-weight:800;">🧠 Memory Cards</h2>
+    <div style="font-size:.9rem;font-weight:700;color:var(--primary);">Urinish: <span id="moves">0</span></div>
+  </div>
+  <div id="board" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"></div>
+  <div id="msg" style="margin-top:14px;font-size:1rem;color:var(--muted);min-height:24px;"></div>
+  <button onclick="init()" class="btn-primary" style="margin-top:10px;padding:9px 24px;">↺ Yangi o'yin</button>
+</div>
+</section>
+<style>
+.card{aspect-ratio:1;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:var(--card);border:2px solid var(--border);transition:transform .2s,background .2s;user-select:none;}
+.card.flipped{background:rgba(108,99,255,.15);border-color:rgba(108,99,255,.4);transform:scale(1.05);}
+.card.matched{background:rgba(67,233,123,.15);border-color:rgba(67,233,123,.4);cursor:default;}
+</style>
+<script>
+const EMOJIS=['🚀','💡','🎯','⚡','🔥','🌟','💎','🎮'];
+let cards,flipped=[],matched=0,moves=0,lock=false;
+
+function init(){
+  const pairs=[...EMOJIS,...EMOJIS].sort(()=>Math.random()-.5);
+  cards=pairs.map((e,i)=>({id:i,emoji:e,isFlipped:false,isMatched:false}));
+  flipped=[];matched=0;moves=0;lock=false;
+  document.getElementById('moves').textContent=0;
+  document.getElementById('msg').textContent='';
+  render();
+}
+
+function render(){
+  const b=document.getElementById('board');
+  b.innerHTML='';
+  cards.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='card'+(c.isFlipped||c.isMatched?' flipped':'')+(c.isMatched?' matched':'');
+    d.textContent=c.isFlipped||c.isMatched?c.emoji:'';
+    d.onclick=()=>flip(c.id);
+    b.appendChild(d);
+  });
+}
+
+function flip(id){
+  if(lock)return;
+  const c=cards[id];
+  if(c.isFlipped||c.isMatched)return;
+  c.isFlipped=true;
+  flipped.push(id);
+  render();
+  if(flipped.length===2){
+    moves++;
+    document.getElementById('moves').textContent=moves;
+    lock=true;
+    const [a,b]=flipped.map(i=>cards[i]);
+    if(a.emoji===b.emoji){
+      a.isMatched=b.isMatched=true;
+      matched+=2;flipped=[];lock=false;
+      if(matched===cards.length){
+        document.getElementById('msg').textContent=`🎉 ${moves} urinishda tugatdingiz!`;
+        {% if user.is_authenticated %}saveScore('memory',Math.max(0,100-moves*2));{% endif %}
+      }
+    } else {
+      setTimeout(()=>{a.isFlipped=b.isFlipped=false;flipped=[];lock=false;render();},900);
+    }
+    render();
+  }
+}
+
+{% if user.is_authenticated %}
+async function saveScore(game,score){
+  await fetch('/games/score/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({game,score})});
+}
+{% endif %}
+init();
+</script>
+{% endblock %}

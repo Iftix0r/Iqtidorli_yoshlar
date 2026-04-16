@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Tic-Tac-Toe{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:400px;margin:0 auto;padding:0 20px;text-align:center;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i></a>
+    <h2 style="font-size:1.3rem;font-weight:800;">❌⭕ Tic-Tac-Toe</h2>
+    <div style="font-size:.85rem;color:var(--muted);">Siz: ❌</div>
+  </div>
+
+  <div style="display:flex;gap:16px;justify-content:center;margin-bottom:16px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 16px;font-size:.85rem;">Siz: <b id="wscore">0</b></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 16px;font-size:.85rem;">AI: <b id="lscore">0</b></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 16px;font-size:.85rem;">Durrang: <b id="dscore">0</b></div>
+  </div>
+
+  <div id="board" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;"></div>
+  <div id="msg" style="font-size:1rem;font-weight:700;color:var(--primary);min-height:28px;margin-bottom:12px;"></div>
+  <button onclick="init()" class="btn-primary" style="padding:9px 24px;">↺ Yangi o'yin</button>
+</div>
+</section>
+<style>
+.cell{aspect-ratio:1;background:var(--card);border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;cursor:pointer;transition:.15s;}
+.cell:hover:not(.taken){background:rgba(108,99,255,.1);border-color:rgba(108,99,255,.3);}
+.cell.taken{cursor:default;}
+.cell.win{background:rgba(67,233,123,.15);border-color:#43E97B;}
+</style>
+<script>
+let board,gameOver,ws=0,ls=0,ds=0;
+const WIN=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+function init(){
+  board=Array(9).fill('');gameOver=false;
+  document.getElementById('msg').textContent='Sizning navbatingiz ❌';
+  render();
+}
+
+function render(){
+  const b=document.getElementById('board');
+  b.innerHTML='';
+  board.forEach((v,i)=>{
+    const d=document.createElement('div');
+    d.className='cell'+(v?' taken':'');
+    d.textContent=v==='X'?'❌':v==='O'?'⭕':'';
+    d.onclick=()=>play(i);
+    b.appendChild(d);
+  });
+}
+
+function play(i){
+  if(gameOver||board[i])return;
+  board[i]='X';
+  const w=checkWin('X');
+  if(w){highlight(w);ws++;document.getElementById('wscore').textContent=ws;document.getElementById('msg').textContent='🎉 Siz yutdingiz!';gameOver=true;{% if user.is_authenticated %}saveScore('ttt',10);{% endif %}render();return;}
+  if(board.every(v=>v)){ds++;document.getElementById('dscore').textContent=ds;document.getElementById('msg').textContent='🤝 Durrang!';gameOver=true;render();return;}
+  render();
+  document.getElementById('msg').textContent='AI o\'ylayapti...';
+  setTimeout(aiMove,400);
+}
+
+function aiMove(){
+  // Minimax
+  const best=minimax(board,'O');
+  board[best.idx]='O';
+  const w=checkWin('O');
+  if(w){highlight(w);ls++;document.getElementById('lscore').textContent=ls;document.getElementById('msg').textContent='🤖 AI yutdi!';gameOver=true;render();return;}
+  if(board.every(v=>v)){ds++;document.getElementById('dscore').textContent=ds;document.getElementById('msg').textContent='🤝 Durrang!';gameOver=true;render();return;}
+  render();
+  document.getElementById('msg').textContent='Sizning navbatingiz ❌';
+}
+
+function minimax(b,player){
+  const w=checkWin('O',b);if(w)return{score:10};
+  const l=checkWin('X',b);if(l)return{score:-10};
+  const empty=b.map((v,i)=>v?null:i).filter(v=>v!==null);
+  if(!empty.length)return{score:0};
+  const moves=empty.map(i=>{
+    const nb=[...b];nb[i]=player;
+    const s=minimax(nb,player==='O'?'X':'O').score;
+    return{idx:i,score:s};
+  });
+  return player==='O'?moves.reduce((a,b)=>b.score>a.score?b:a):moves.reduce((a,b)=>b.score<a.score?b:a);
+}
+
+function checkWin(p,b=board){
+  return WIN.find(([a,c,d])=>b[a]===p&&b[c]===p&&b[d]===p)||null;
+}
+
+function highlight(combo){
+  render();
+  combo.forEach(i=>{
+    document.querySelectorAll('.cell')[i].classList.add('win');
+  });
+}
+
+{% if user.is_authenticated %}
+async function saveScore(game,score){
+  await fetch('/games/score/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({game,score})});
+}
+{% endif %}
+init();
+</script>
+{% endblock %}
