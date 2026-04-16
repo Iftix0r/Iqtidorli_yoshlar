@@ -42,59 +42,138 @@
 </head>
 <body>
 
+<!-- ── HEADER ── -->
 <nav>
   <a class="logo" href="{% url 'index' %}">
     <i data-lucide="zap"></i> Iqtidorli Yoshlar
   </a>
+
+  {% if user.is_authenticated %}
+  <!-- Login qilingan: faqat ikonlar + hamburger -->
+  <div class="nav-right">
+    <a href="{% url 'inbox' %}" class="nav-icon-btn" title="Xabarlar">
+      <i data-lucide="message-circle"></i>
+      {% if user.unread_messages %}<span class="nav-dot">{{ user.unread_messages }}</span>{% endif %}
+    </a>
+    <a href="{% url 'notifications' %}" class="nav-icon-btn" title="Bildirishnomalar">
+      <i data-lucide="bell"></i>
+      {% if user.unread_notifications %}<span class="nav-dot">{{ user.unread_notifications }}</span>{% endif %}
+    </a>
+    <button class="theme-toggle" id="themeToggle" title="Tema">
+      <i data-lucide="moon" class="icon-moon"></i>
+      <i data-lucide="sun" class="icon-sun" style="display:none"></i>
+    </button>
+    <button class="nav-hamburger" id="drawerToggle" onclick="openDrawer()">
+      {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="{{ user.initial }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"/>
+      {% else %}
+        <div class="nav-avatar-placeholder">{{ user.initial }}</div>
+      {% endif %}
+    </button>
+  </div>
+
+  {% else %}
+  <!-- Login qilinmagan: oddiy nav -->
   <ul class="nav-links">
     <li><a href="{% url 'talents' %}"><i data-lucide="users"></i> Iqtidorlar</a></li>
     <li><a href="{% url 'leaderboard' %}"><i data-lucide="bar-chart-2"></i> Reyting</a></li>
     <li><a href="{% url 'courses' %}"><i data-lucide="graduation-cap"></i> Kurslar</a></li>
     <li><a href="{% url 'contests' %}"><i data-lucide="trophy"></i> Tanlovlar</a></li>
     <li><a href="{% url 'jobs' %}"><i data-lucide="briefcase"></i> Ish</a></li>
-    <li><a href="{% url 'resources' %}"><i data-lucide="book-open"></i> Resurslar</a></li>
     <li><a href="{% url 'market' %}"><i data-lucide="shopping-bag"></i> Market</a></li>
-    {% if user.is_authenticated %}
-      <li><a href="{% url 'ai_chat' %}"><i data-lucide="sparkles"></i> Iqtidor AI</a></li>
-      <li><a href="{% url 'my_badges' %}"><i data-lucide="award"></i> Nishonlar</a></li>
-    {% endif %}
-    {% if user.is_authenticated %}
-      <li>
-        <a href="{% url 'inbox' %}">
-          <i data-lucide="message-circle"></i>
-          {% if user.unread_messages %}<span class="badge-dot">{{ user.unread_messages }}</span>{% endif %}
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'notifications' %}">
-          <i data-lucide="bell"></i>
-          {% if user.unread_notifications %}<span class="badge-dot">{{ user.unread_notifications }}</span>{% endif %}
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'profile' %}" class="nav-avatar-link">
-          {% if user.avatar %}
-            <img src="{{ user.avatar.url }}" alt="{{ user.initial }}" class="nav-avatar-img"/>
-          {% else %}
-            <div class="nav-avatar-placeholder">{{ user.initial }}</div>
-          {% endif %}
-        </a>
-      </li>
-      <li><a href="{% url 'logout' %}"><i data-lucide="log-out"></i></a></li>
-    {% else %}
-      <li><a href="{% url 'login' %}"><i data-lucide="log-in"></i> Kirish</a></li>
-    {% endif %}
   </ul>
   <div class="nav-right">
-    <button class="theme-toggle" id="themeToggle" title="Rejimni o'zgartirish">
+    <button class="theme-toggle" id="themeToggle" title="Tema">
       <i data-lucide="moon" class="icon-moon"></i>
       <i data-lucide="sun" class="icon-sun" style="display:none"></i>
     </button>
-    {% if not user.is_authenticated %}
-      <a href="{% url 'register' %}" class="nav-btn">Ro'yxatdan o'tish</a>
-    {% endif %}
+    <a href="{% url 'login' %}" class="nav-btn-outline">Kirish</a>
+    <a href="{% url 'register' %}" class="nav-btn">Ro'yxatdan o'tish</a>
   </div>
+  {% endif %}
 </nav>
+
+{% if user.is_authenticated %}
+<!-- ── DRAWER OVERLAY ── -->
+<div id="drawer-overlay" onclick="closeDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;backdrop-filter:blur(2px);"></div>
+
+<!-- ── DRAWER ── -->
+<aside id="drawer" style="position:fixed;top:0;left:-280px;width:272px;height:100vh;
+  background:var(--card);border-right:1px solid var(--border);z-index:999;
+  display:flex;flex-direction:column;transition:left .28s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;">
+
+  <!-- Profil -->
+  <div style="padding:20px 16px 16px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <a href="{% url 'profile' %}" onclick="closeDrawer()">
+        {% if user.avatar %}
+          <img src="{{ user.avatar.url }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">
+        {% else %}
+          <div style="width:48px;height:48px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;">{{ user.initial }}</div>
+        {% endif %}
+      </a>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ user.get_full_name|default:user.phone }}</div>
+        <div style="font-size:.75rem;color:var(--muted);">{{ user.get_role_display }} · ⚡ {{ user.score }} ball</div>
+      </div>
+      <button onclick="closeDrawer()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;">
+        <i data-lucide="x" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+    <!-- Tezkor havolalar -->
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'profile' %}" onclick="closeDrawer()" style="flex:1;text-align:center;padding:7px;background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.2);border-radius:10px;font-size:.78rem;color:var(--primary);text-decoration:none;font-weight:600;">
+        <i data-lucide="user" style="width:13px;height:13px;"></i> Profil
+      </a>
+      <a href="{% url 'my_badges' %}" onclick="closeDrawer()" style="flex:1;text-align:center;padding:7px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.15);border-radius:10px;font-size:.78rem;color:#FFD700;text-decoration:none;font-weight:600;">
+        🎖️ Nishonlar
+      </a>
+      <a href="{% url 'my_orders' %}" onclick="closeDrawer()" style="flex:1;text-align:center;padding:7px;background:rgba(67,233,123,.08);border:1px solid rgba(67,233,123,.15);border-radius:10px;font-size:.78rem;color:#43E97B;text-decoration:none;font-weight:600;">
+        📦 Buyurtma
+      </a>
+    </div>
+  </div>
+
+  <!-- Navigatsiya -->
+  <nav style="flex:1;padding:10px 8px;">
+    <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 10px 4px;">Asosiy</div>
+    {% for url, icon, label in drawer_links %}
+    <a href="{{ url }}" onclick="closeDrawer()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:.88rem;transition:.15s;margin-bottom:2px;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">
+      <i data-lucide="{{ icon }}" style="width:17px;height:17px;color:var(--muted);flex-shrink:0;"></i>
+      {{ label }}
+    </a>
+    {% endfor %}
+
+    <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;">AI & Gamification</div>
+    <a href="{% url 'ai_chat' %}" onclick="closeDrawer()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:.88rem;transition:.15s;margin-bottom:2px;background:rgba(108,99,255,.06);" onmouseover="this.style.background='rgba(108,99,255,.15)'" onmouseout="this.style.background='rgba(108,99,255,.06)'">
+      <i data-lucide="sparkles" style="width:17px;height:17px;color:var(--primary);flex-shrink:0;"></i>
+      <span>Iqtidor AI</span>
+      <span style="margin-left:auto;font-size:.7rem;background:var(--gradient);color:#fff;padding:2px 8px;border-radius:10px;">NEW</span>
+    </a>
+    <a href="{% url 'my_badges' %}" onclick="closeDrawer()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:.88rem;transition:.15s;margin-bottom:2px;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">
+      <i data-lucide="award" style="width:17px;height:17px;color:#FFD700;flex-shrink:0;"></i> Nishonlar & XP
+    </a>
+    <a href="{% url 'market' %}" onclick="closeDrawer()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:.88rem;transition:.15s;margin-bottom:2px;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">
+      <i data-lucide="shopping-bag" style="width:17px;height:17px;color:#43E97B;flex-shrink:0;"></i> Iqtidor Market
+    </a>
+
+    {% if user.is_staff %}
+    <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;">Admin</div>
+    <a href="{% url 'panel_dashboard' %}" onclick="closeDrawer()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:.88rem;transition:.15s;margin-bottom:2px;" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='transparent'">
+      <i data-lucide="layout-dashboard" style="width:17px;height:17px;color:var(--muted);flex-shrink:0;"></i> Admin Panel
+    </a>
+    {% endif %}
+  </nav>
+
+  <!-- Pastki qism -->
+  <div style="padding:12px 8px;border-top:1px solid var(--border);">
+    <a href="{% url 'logout' %}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#FF6584;font-size:.88rem;transition:.15s;" onmouseover="this.style.background='rgba(255,101,132,.08)'" onmouseout="this.style.background='transparent'">
+      <i data-lucide="log-out" style="width:17px;height:17px;flex-shrink:0;"></i> Chiqish
+    </a>
+  </div>
+</aside>
+{% endif %}
 
 {% if messages %}
   <div style="padding:80px 60px 0;max-width:700px;margin:0 auto;">
@@ -162,6 +241,22 @@
 
 <script>
   lucide.createIcons();
+
+  // ── DRAWER ────────────────────────────────────────────────────────────────
+  function openDrawer() {
+    document.getElementById('drawer').style.left = '0';
+    document.getElementById('drawer-overlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer() {
+    const d = document.getElementById('drawer');
+    const o = document.getElementById('drawer-overlay');
+    if (d) d.style.left = '-280px';
+    if (o) o.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  // ESC bilan yopish
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
   
   // ── LOADING BAR LOGIC ──
   window.addEventListener('beforeunload', () => {
