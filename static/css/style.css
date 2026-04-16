@@ -9,6 +9,8 @@
   --card: #16213E;
   --text: #FFFFFE;
   --muted: #A7A9BE;
+  --border: rgba(108,99,255,.18);
+  --bg: #0F0E17;
   --gradient: linear-gradient(135deg, #6C63FF, #43E97B);
 }
 
@@ -19,6 +21,8 @@
   --card:  #FFFFFF;
   --text:  #0F0E17;
   --muted: #6B6B80;
+  --border: rgba(108,99,255,.15);
+  --bg: #F4F4F8;
 }
 
 [data-theme="light"] body {
