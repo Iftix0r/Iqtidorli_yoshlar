@@ -71,11 +71,29 @@ class Project(models.Model):
     needs_team  = models.BooleanField(default=False, verbose_name="Jamoa kerakmi?")
     funding_amount = models.CharField(max_length=100, blank=True, verbose_name="Kerakli mablag' (masalan: $5000)")
     required_resources = models.TextField(blank=True, verbose_name="Nimalar kerak? (uskunalar, ofis, va h.k.)")
+    video_url   = models.URLField(blank=True, verbose_name="Video havola (YouTube/Vimeo)")
     is_public   = models.BooleanField(default=True, verbose_name="Ommaviy ko'rinsinmi?")
     created_at  = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+
+
+class ProjectMaterial(models.Model):
+    TYPES = [
+        ('image', 'Rasm'),
+        ('video', 'Video'),
+        ('file',  'Hujjat/Fayl'),
+    ]
+    project    = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='materials')
+    title      = models.CharField(max_length=100, blank=True)
+    file       = models.FileField(upload_to='project_materials/', blank=True, null=True)
+    link       = models.URLField(blank=True, verbose_name="Tashqi havola")
+    mat_type   = models.CharField(max_length=10, choices=TYPES, default='image')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.project.title} — {self.mat_type}"
 
 
 class Contest(models.Model):
