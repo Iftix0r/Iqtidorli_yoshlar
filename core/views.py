@@ -568,8 +568,9 @@ def error_403(request, exception):
 
 # ── PORTAL ────────────────────────────────────────────────────────────────────
 @login_required
-def portal_view(request, section='home'):
+def portal_view(request, section='home', msg_uid=None):
     user = request.user
+    if msg_uid: section = 'chat_user'
 
     # POST — profil tahrirlash
     if request.method == 'POST':
@@ -626,8 +627,23 @@ def portal_view(request, section='home'):
             except AIChatSession.DoesNotExist:
                 pass
 
+    # Shaxsiy xabarlar (Dostlar bilan)
+    msg_partner = None
+    private_msgs = []
+    if section == 'chat_user' and msg_uid:
+        msg_partner = get_object_or_404(User, pk=msg_uid)
+        private_msgs = Message.objects.filter(
+            Q(sender=user, receiver=msg_partner) |
+            Q(sender=msg_partner, receiver=user)
+        ).order_by('created_at')
+        # O'qilmagan xabarlarni o'qilgan deb belgilash
+        private_msgs.filter(receiver=user, is_read=False).update(is_read=True)
+
     ctx = {
         'section':        section,
+        'msg_uid':        msg_uid,
+        'msg_partner':    msg_partner,
+        'private_msgs':   private_msgs,
         'profile_form':   ProfileForm(instance=user),
         'skill_form':     SkillForm(),
         'project_form':   ProjectForm(),
