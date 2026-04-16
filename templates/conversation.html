@@ -300,13 +300,28 @@ const ICE_SERVERS = {
 async function startCall(type) {
   currentCallType = type;
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: type === 'video',
-      audio: true,
-    });
+    const constraints = type === 'video'
+      ? { video: { width: 1280, height: 720 }, audio: true }
+      : { video: false, audio: true };
+    localStream = await navigator.mediaDevices.getUserMedia(constraints);
   } catch(e) {
-    alert('Kamera/mikrofonga ruxsat bering: ' + e.message);
-    return;
+    // Kamera ishlamasa faqat audio bilan urinib ko'r
+    if (type === 'video' && e.name !== 'NotAllowedError') {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch(e2) {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          currentCallType = 'audio';
+        } catch(e3) {
+          alert('Qurilmaga ulanib bo\'lmadi: ' + e3.message);
+          return;
+        }
+      }
+    } else {
+      alert('Ruxsat berilmadi yoki qurilma band: ' + e.message + '\n\nBrauzer sozlamalarida kamera/mikrofon ruxsatini tekshiring.');
+      return;
+    }
   }
 
   document.getElementById('local-video').srcObject = localStream;
