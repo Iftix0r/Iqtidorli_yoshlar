@@ -13,3 +13,16 @@ def drawer_links(request):
         ('/messages/',    'message-circle', 'Xabarlar'),
     ]
     return {'drawer_links': links}
+
+
+def global_chats(request):
+    if not request.user.is_authenticated:
+        return {'last_chats': []}
+    from django.db.models import Q
+    from .models import User
+    user = request.user
+    contacts = User.objects.filter(
+        Q(sent_messages__receiver=user) |
+        Q(received_messages__sender=user)
+    ).distinct().exclude(pk=user.pk)[:5]
+    return {'last_chats': contacts}

@@ -357,5 +357,91 @@
     if (url) n.onclick = () => { window.focus(); window.location.href = url; };
   }
 </script>
+<!-- ── MINI CHAT WIDGET (Telegram kabi) ── -->
+<div id="chat-widget" style="position:fixed;bottom:24px;right:24px;z-index:9000;display:flex;flex-direction:column;align-items:flex-end;">
+  <!-- Chat Window -->
+  <div id="chat-window" style="display:none;width:340px;height:500px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.4);margin-bottom:16px;overflow:hidden;flex-direction:column;animation:popIn .3s ease;">
+    <!-- Header -->
+    <div style="background:var(--gradient);padding:16px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <i data-lucide="send" style="width:18px;height:18px;"></i>
+        <span style="font-weight:700;font-size:.95rem;">Iqtidor Messenger</span>
+      </div>
+      <button onclick="toggleChat()" style="background:none;border:none;color:#fff;cursor:pointer;padding:4px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+    </div>
+    <!-- List -->
+    <div style="flex:1;overflow-y:auto;padding:10px;">
+      <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 10px 4px;">Suhbatlar</div>
+      
+      <!-- AI -->
+      <a href="{% url 'ai_chat' %}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;text-decoration:none;color:var(--text);transition:.2s;margin-bottom:4px;" class="chat-item">
+        <div style="width:42px;height:42px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;">
+          <i data-lucide="sparkles" style="width:20px;height:20px;"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:.9rem;">Iqtidor AI</div>
+          <div style="font-size:.75rem;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Platforma yordamchisi...</div>
+        </div>
+      </a>
+      
+      {% if user.is_authenticated %}
+        {% for c in last_chats %}
+        <a href="{% url 'conversation' c.pk %}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;text-decoration:none;color:var(--text);transition:.2s;margin-bottom:4px;" class="chat-item">
+          <div style="width:42px;height:42px;border-radius:14px;background:rgba(108,99,255,.12);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;font-weight:700;">
+            {{ c.initial }}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:.9rem;">{{ c.get_full_name|default:c.phone }}</div>
+            <div style="font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Xabar yuborish uchun bosing</div>
+          </div>
+        </a>
+        {% endfor %}
+      {% else %}
+        <div style="padding:30px 20px;text-align:center;">
+          <i data-lucide="lock" style="width:30px;height:30px;color:var(--muted);margin-bottom:12px;"></i>
+          <p style="font-size:.85rem;color:var(--muted);line-height:1.5;">Do'stlaringiz bilan yozishish uchun tizimga kiring</p>
+          <a href="{% url 'login' %}" class="btn-primary" style="display:block;margin-top:15px;text-decoration:none;font-size:.8rem;">Kirish</a>
+        </div>
+      {% endif %}
+    </div>
+    <!-- Footer -->
+    <div style="padding:12px;border-top:1px solid var(--border);text-align:center;">
+      <a href="{% if user.is_authenticated %}{% url 'inbox' %}{% else %}{% url 'login' %}{% endif %}" style="font-size:.82rem;color:var(--primary);text-decoration:none;font-weight:600;">Barcha xabarlar</a>
+    </div>
+  </div>
+
+  <!-- Trigger Button -->
+  <button id="chat-trigger" onclick="toggleChat()" style="width:56px;height:56px;border-radius:50%;background:var(--grad);border:none;color:#fff;cursor:pointer;box-shadow:0 8px 24px rgba(108,99,255,.4);display:flex;align-items:center;justify-content:center;transition:.3s cubic-bezier(.175, .885, .32, 1.275);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+    <i data-lucide="message-circle" id="chat-icon-msg" style="width:24px;height:24px;"></i>
+    <i data-lucide="x" id="chat-icon-close" style="width:24px;height:24px;display:none;"></i>
+  </button>
+</div>
+
+<style>
+@keyframes popIn {
+  from { opacity:0; transform:translateY(20px) scale(0.95); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+.chat-item:hover { background:rgba(108,99,255,.08); }
+</style>
+
+<script>
+function toggleChat() {
+  const win = document.getElementById('chat-window');
+  const msgIcon = document.getElementById('chat-icon-msg');
+  const closeIcon = document.getElementById('chat-icon-close');
+  const isOpen = win.style.display === 'flex';
+  
+  win.style.display = isOpen ? 'none' : 'flex';
+  msgIcon.style.display = isOpen ? 'block' : 'none';
+  closeIcon.style.display = isOpen ? 'none' : 'block';
+  
+  if(!isOpen && !win.dataset.loaded) {
+    if(window.lucide) lucide.createIcons();
+    win.dataset.loaded = 'true';
+  }
+}
+</script>
+
 </body>
 </html>
