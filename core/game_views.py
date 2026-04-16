@@ -41,7 +41,8 @@ def game_score(request):
     xp_earned = 0
 
     if not cache.get(cache_key):
-        xp_map = {'snake': 10, '2048': 15, 'typing': 10, 'memory': 10, 'ttt': 5}
+        xp_map = {'snake': 10, '2048': 15, 'typing': 10, 'memory': 10, 'ttt': 5,
+              'math': 10, 'code': 15, 'geo': 15, 'word': 15, 'color': 10}
         xp = xp_map.get(game, 5)
         from .utils import award_xp
         award_xp(request.user, xp, f"O'yin: {game}")
