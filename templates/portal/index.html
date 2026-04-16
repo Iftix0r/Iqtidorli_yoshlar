@@ -463,38 +463,6 @@
   {% elif section == 'ai' %}
   <div class="section-content" style="height:calc(100vh - 80px);display:flex;flex-direction:column;padding:0;margin:-24px;margin-top:-56px;">
 
-    <!-- AI Sessiyalar mini-sidebar -->
-    <div style="display:flex;height:100%;overflow:hidden;">
-    <div style="width:200px;min-width:200px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--sb);">
-      <div style="padding:10px 8px;border-bottom:1px solid var(--border);">
-        <form method="post" action="{% url 'ai_new_session' %}">
-          {% csrf_token %}<input type="hidden" name="mode" value="general">
-          <button type="submit" style="width:100%;background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.2);color:var(--primary);border-radius:8px;padding:7px 10px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
-            <i data-lucide="plus" style="width:13px;height:13px;"></i> Yangi suhbat
-          </button>
-        </form>
-      </div>
-      <div style="flex:1;overflow-y:auto;padding:6px;">
-        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:5px 6px 3px;">Rejimlar</div>
-        {% for val, label in ai_modes %}
-        <form method="post" action="{% url 'ai_new_session' %}">
-          {% csrf_token %}<input type="hidden" name="mode" value="{{ val }}">
-          <button type="submit" style="width:100%;text-align:left;background:none;border:none;color:var(--muted);cursor:pointer;padding:5px 8px;border-radius:6px;font-size:.78rem;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.background='rgba(108,99,255,.08)';this.style.color='var(--text)'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">{{ label }}</button>
-        </form>
-        {% endfor %}
-        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 6px 3px;">Tarix</div>
-        {% for s in ai_sessions %}
-        <a href="/portal/ai/?sid={{ s.pk }}" style="display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:{% if ai_session_id == s.pk %}var(--primary){% else %}var(--muted){% endif %};font-size:.78rem;background:{% if ai_session_id == s.pk %}rgba(108,99,255,.1){% else %}transparent{% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.15s;" onmouseover="this.style.background='rgba(108,99,255,.08)'" onmouseout="this.style.background='{% if ai_session_id == s.pk %}rgba(108,99,255,.1){% else %}transparent{% endif %}'">
-          {{ s.title|default:"Yangi suhbat"|truncatechars:22 }}
-        </a>
-        {% empty %}
-        <p style="font-size:.75rem;color:var(--muted);padding:5px 8px;">Hali suhbat yo'q</p>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Chat asosiy qism -->
-    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
     <div id="ai-msgs" style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:0;">
       {% if not ai_messages %}
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;">
@@ -549,8 +517,6 @@
         </button>
       </div>
     </div>
-    </div><!-- /chat-main -->
-    </div><!-- /flex-wrapper -->
   </div><!-- /section-content -->
 
   <style>
