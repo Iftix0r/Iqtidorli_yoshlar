@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db.models import Q, Max
 from django.http import JsonResponse
 
-from .models import User, Contest, MentorRequest, Message, Notification, Resource, Certificate, ContestApplication, Job, ProfileView, ActivityLog
+from .models import User, Project, Contest, MentorRequest, Message, Notification, Resource, Certificate, ContestApplication, Job, ProfileView, ActivityLog
 from .forms  import (RegisterForm, ProfileForm, SkillForm, ProjectForm,
                      ContestForm, MessageForm, ResourceForm,
                      CertificateForm, ContestApplicationForm, JobForm)
@@ -23,28 +23,39 @@ def privacy_view(request):
 
 # ── HOME ──────────────────────────────────────────────────────────────────────
 def index(request):
+    # Eng so'nggi va top loyihalar
     top_talents = (
         User.objects.filter(role='yosh')
         .prefetch_related('skills')
-        .order_by('-score')[:4]
+        .order_by('-score')[:8]
     )
+    
+    recent_projects = (
+        Project.objects.all()
+        .select_related('user')
+        .order_by('-created_at')[:12]
+    )
+
     stats = {
         'yoshlar':   User.objects.filter(role='yosh').count() or 10000,
         'mentors':   User.objects.filter(role='mentor').count() or 500,
-        'investors': User.objects.filter(role='investor').count() or 150,
+        'projects':  Project.objects.count() or 2400,
     }
-    features = [
-        ('target',         'Shaxsiy Portfolio',      "Yutuqlar, sertifikatlar va loyihalarni professional namoyish eting."),
-        ('trophy',         'Reyting Tizimi',          "Top Iqtidorlar ro'yxatiga kiring va e'tirof qozonin."),
-        ('graduation-cap', 'Tanlovlar va Grantlar',   "Barcha tanlov va grantlarni bir joyda kuzating."),
-        ('message-circle', 'Xabar Yuborish',          "Mentor va investorlar bilan to'g'ridan-to'g'ri muloqot."),
-        ('book-open',      'Bilim Xazinasi',          "Kurslar va kitoblar bazasidan bepul foydalaning."),
-        ('handshake',      "Mentor So'rovi",          "Tajribali mentorlardan yordam so'rang."),
+
+    categories = [
+        {'id': 'all', 'name': 'Barchasi', 'icon': 'layout'},
+        {'id': 'coding', 'name': 'Dasturlash', 'icon': 'code'},
+        {'id': 'art', 'name': 'San\'at', 'icon': 'palette'},
+        {'id': 'science', 'name': 'Fan', 'icon': 'microscope'},
+        {'id': 'sport', 'name': 'Sport', 'icon': 'trophy'},
+        {'id': 'design', 'name': 'Dizayn', 'icon': 'figma'},
     ]
+
     return render(request, 'index.html', {
         'top_talents': top_talents,
+        'recent_projects': recent_projects,
         'stats': stats,
-        'features': features,
+        'categories': categories,
     })
 
 
