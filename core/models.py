@@ -537,6 +537,8 @@ class AIChatSession(models.Model):
     user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_sessions')
     mode       = models.CharField(max_length=20, choices=AI_MODES, default='general')
     title      = models.CharField(max_length=200, blank=True)
+    is_shared  = models.BooleanField(default=False)
+    share_token = models.CharField(max_length=32, blank=True, unique=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -612,3 +614,7 @@ class MarketOrder(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.item} ({self.status})"
+
+# AIChatSession ga share imkoniyati (migration kerak)
+# AIChatSession.is_shared va share_token maydonlari
+# core/migrations da yangi migration yaratiladi

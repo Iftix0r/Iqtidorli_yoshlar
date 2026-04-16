@@ -116,6 +116,10 @@ urlpatterns = [
     path('ai/<int:session_id>/send/',ai_views.ai_send_message,    name='ai_send_message'),
     path('ai/<int:session_id>/del/', ai_views.ai_delete_session,  name='ai_delete_session'),
     path('ai/<int:session_id>/history/', ai_views.ai_session_history, name='ai_session_history'),
+    path('ai/<int:session_id>/rename/', ai_views.ai_rename_session, name='ai_rename_session'),
+    path('ai/<int:session_id>/share/',  ai_views.ai_share_session,  name='ai_share_session'),
+    path('ai/<int:session_id>/unshare/',ai_views.ai_unshare_session,name='ai_unshare_session'),
+    path('ai/shared/<str:token>/',      ai_views.ai_shared_view,    name='ai_shared_view'),
 
     # SEO URLs
     path('robots.txt', TemplateView.as_view(template_name='seo/robots.txt', content_type='text/plain')),

@@ -171,3 +171,51 @@ def ai_session_history(request, session_id):
     msgs = [{'role': m.role, 'content': m.content, 'time': m.created_at.strftime('%H:%M')}
             for m in session.messages.all()]
     return JsonResponse({'messages': msgs, 'mode': session.mode, 'title': session.title})
+
+
+# ── SESSIYA BOSHQARUVI ────────────────────────────────────────────────────────
+@login_required
+@require_POST
+def ai_rename_session(request, session_id):
+    session = get_object_or_404(AIChatSession, pk=session_id, user=request.user)
+    try:
+        data  = json.loads(request.body)
+        title = data.get('title', '').strip()[:100]
+    except Exception:
+        return JsonResponse({'error': 'Xato'}, status=400)
+    if title:
+        session.title = title
+        session.save(update_fields=['title'])
+    return JsonResponse({'ok': True, 'title': session.title})
+
+
+@login_required
+@require_POST
+def ai_share_session(request, session_id):
+    import secrets
+    session = get_object_or_404(AIChatSession, pk=session_id, user=request.user)
+    if not session.share_token:
+        session.share_token = secrets.token_hex(16)
+    session.is_shared = True
+    session.save(update_fields=['is_shared', 'share_token'])
+    share_url = request.build_absolute_uri(f'/ai/shared/{session.share_token}/')
+    return JsonResponse({'ok': True, 'url': share_url})
+
+
+@login_required
+@require_POST
+def ai_unshare_session(request, session_id):
+    session = get_object_or_404(AIChatSession, pk=session_id, user=request.user)
+    session.is_shared = False
+    session.save(update_fields=['is_shared'])
+    return JsonResponse({'ok': True})
+
+
+def ai_shared_view(request, token):
+    """Ulashilgan chat — login talab qilinmaydi"""
+    session = get_object_or_404(AIChatSession, share_token=token, is_shared=True)
+    messages = session.messages.all()
+    return render(request, 'ai/shared.html', {
+        'session': session,
+        'messages': messages,
+    })

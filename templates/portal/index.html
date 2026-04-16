@@ -120,6 +120,24 @@
     /* THEME */
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .section-content{animation:fadeIn .2s ease;}
+
+    /* Sessiya hover menu */
+    .sess-row:hover .sess-menu-btn{opacity:1!important;}
+    .sess-dropdown{
+      position:fixed;z-index:200;
+      background:var(--card);border:1px solid var(--border);
+      border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+      min-width:180px;overflow:hidden;
+    }
+    .sess-dropdown button{
+      width:100%;text-align:left;background:none;border:none;
+      color:var(--text);cursor:pointer;padding:9px 14px;
+      font-size:.85rem;font-family:inherit;
+      display:flex;align-items:center;gap:10px;transition:.15s;
+    }
+    .sess-dropdown button:hover{background:rgba(255,255,255,.06);}
+    .sess-dropdown button.danger{color:var(--danger);}
+    .sess-dropdown .divider{height:1px;background:var(--border);margin:4px 0;}
   </style>
   <script>(function(){const t=localStorage.getItem('portal_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
@@ -178,10 +196,16 @@
     {% if ai_sessions %}
     <div class="sb-section">Suhbatlar</div>
     {% for s in ai_sessions %}
-    <button class="sb-item {% if ai_session_id == s.pk %}active{% endif %}" onclick="goAI({{ s.pk }})" style="width:100%;">
-      <i data-lucide="message-square" style="flex-shrink:0;"></i>
-      <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ s.title|default:"Yangi suhbat"|truncatechars:18 }}</span>
-    </button>
+    <div style="position:relative;display:flex;align-items:center;" class="sess-row" data-id="{{ s.pk }}">
+      <button class="sb-item {% if ai_session_id == s.pk %}active{% endif %}" onclick="goAI({{ s.pk }})" style="flex:1;min-width:0;">
+        <i data-lucide="message-square" style="flex-shrink:0;"></i>
+        <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ s.title|default:"Yangi suhbat"|truncatechars:18 }}</span>
+      </button>
+      <button class="sess-menu-btn" onclick="toggleSessMenu(event,{{ s.pk }})"
+        style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px;opacity:0;transition:.15s;flex-shrink:0;">
+        <i data-lucide="more-horizontal" style="width:14px;height:14px;"></i>
+      </button>
+    </div>
     {% endfor %}
     {% endif %}
 
@@ -196,6 +220,14 @@
     </a>
   </div>
 </aside>
+
+<!-- Sessiya dropdown -->
+<div id="sess-dropdown" class="sess-dropdown" style="display:none;">
+  <button onclick="sessRename()"><i data-lucide="pencil" style="width:14px;height:14px;color:var(--muted);"></i> Nomini o'zgartirish</button>
+  <button onclick="sessShare()"><i data-lucide="share-2" style="width:14px;height:14px;color:var(--muted);"></i> Ulashish</button>
+  <div class="divider"></div>
+  <button onclick="sessDelete()" class="danger"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> O'chirish</button>
+</div>
 
 <!-- MAIN -->
 <div id="main">
@@ -705,6 +737,63 @@ function md(s) {
 function toggleSb() {
   document.getElementById('sb').classList.toggle('collapsed');
   localStorage.setItem('sb_collapsed', document.getElementById('sb').classList.contains('collapsed'));
+}
+
+// ── SESSIYA MENU ──────────────────────────────────────────────────────────────
+let activeSessId = null;
+
+function toggleSessMenu(e, id) {
+  e.stopPropagation();
+  activeSessId = id;
+  const dd = document.getElementById('sess-dropdown');
+  const rect = e.currentTarget.getBoundingClientRect();
+  dd.style.display = 'block';
+  dd.style.top  = rect.bottom + 4 + 'px';
+  dd.style.left = rect.left - 140 + 'px';
+  lucide.createIcons();
+}
+document.addEventListener('click', () => {
+  document.getElementById('sess-dropdown').style.display = 'none';
+});
+
+async function sessRename() {
+  document.getElementById('sess-dropdown').style.display = 'none';
+  const newTitle = prompt('Yangi nom:');
+  if (!newTitle) return;
+  await fetch('/ai/' + activeSessId + '/rename/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({title: newTitle})
+  });
+  location.reload();
+}
+
+async function sessShare() {
+  document.getElementById('sess-dropdown').style.display = 'none';
+  const r = await fetch('/ai/' + activeSessId + '/share/', {
+    method: 'POST', headers: {'X-CSRFToken': CSRF}
+  });
+  const d = await r.json();
+  if (d.url) {
+    navigator.clipboard.writeText(d.url).then(() => {
+      alert('Havola nusxalandi:\n' + d.url);
+    }).catch(() => {
+      prompt('Havolani nusxalang:', d.url);
+    });
+  }
+}
+
+async function sessDelete() {
+  document.getElementById('sess-dropdown').style.display = 'none';
+  if (!confirm("Bu suhbatni o'chirasizmi?")) return;
+  await fetch('/ai/' + activeSessId + '/del/', {
+    method: 'POST', headers: {'X-CSRFToken': CSRF}
+  });
+  if (activeSessId === currentSID) {
+    window.location.href = '/portal/ai/';
+  } else {
+    location.reload();
+  }
 }
 
 function toggleTheme() {
