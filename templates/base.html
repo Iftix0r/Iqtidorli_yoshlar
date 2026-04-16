@@ -215,6 +215,7 @@
         <a href="{% url 'market' %}" class="sb-link {% if request.resolver_match.url_name == 'market' %}active-link{% endif %}"><i data-lucide="shopping-bag"></i> Market</a>
         <a href="{% url 'courses' %}" class="sb-link {% if request.resolver_match.url_name == 'courses' %}active-link{% endif %}"><i data-lucide="graduation-cap"></i> Kurslar</a>
         <a href="{% url 'jobs' %}" class="sb-link {% if request.resolver_match.url_name == 'jobs' %}active-link{% endif %}"><i data-lucide="briefcase"></i> Ish O'rinlari</a>
+        <a href="{% url 'games' %}" class="sb-link {% if 'game' in request.resolver_match.url_name %}active-link{% endif %}"><i data-lucide="gamepad-2"></i> Games 🎮</a>
       </div>
       <div class="sidebar-section divider">
         <h4 class="sb-label">SIZ</h4>
