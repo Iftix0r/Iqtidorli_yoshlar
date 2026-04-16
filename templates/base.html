@@ -48,6 +48,14 @@
     <i data-lucide="zap"></i> Iqtidorli Yoshlar
   </a>
 
+  <!-- YouTube-style Search Bar -->
+  <div class="nav-search">
+    <form action="{% url 'talents' %}" method="GET" style="display:flex;width:100%;">
+      <input type="text" name="q" placeholder="Qidiruv..." aria-label="Search">
+      <button type="submit"><i data-lucide="search"></i></button>
+    </form>
+  </div>
+
   {% if user.is_authenticated %}
   <!-- Login qilingan: faqat ikonlar + hamburger -->
   <div class="nav-right">
@@ -226,6 +234,13 @@
   box-shadow: 0 0 10px rgba(108, 99, 255, 0.5);
   display: none;
 }
+/* ── NAV SEARCH ── */
+.nav-search { flex: 1; max-width: 500px; margin: 0 40px; display: none; }
+.nav-search form { background: var(--card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; display: flex; align-items: center; }
+.nav-search input { flex: 1; border: none; background: transparent; padding: 8px 16px; color: var(--text); outline: none; font-size: .88rem; }
+.nav-search button { background: var(--border); border: none; padding: 8px 18px; color: var(--muted); cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; }
+.nav-search button:hover { background: rgba(108,99,255,.15); color: var(--primary); }
+@media (min-width: 768px) { .nav-search { display: block; } }
 </style>
 <div id="loading-bar"></div>
 
