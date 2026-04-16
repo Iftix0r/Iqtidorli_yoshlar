@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}O'zbekiston Geografiyasi{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:580px;margin:0 auto;padding:0 20px;text-align:center;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i></a>
+    <h2 style="font-size:1.3rem;font-weight:800;">🌍 O'zbekiston Quiz</h2>
+    <div style="font-size:.9rem;font-weight:700;color:var(--primary);">Ball: <span id="score">0</span></div>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;">Savol <span id="qn">0</span>/<span id="total">0</span></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;">✅ <span id="correct">0</span></div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;">
+    <div id="category" style="font-size:.75rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;"></div>
+    <div id="question" style="font-size:1.05rem;font-weight:700;line-height:1.6;">Boshlash tugmasini bosing</div>
+  </div>
+
+  <div id="options" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;"></div>
+  <div id="msg" style="font-size:.95rem;min-height:24px;margin-bottom:12px;"></div>
+  <button onclick="startGame()" id="startBtn" class="btn-primary" style="padding:10px 28px;">▶ Boshlash</button>
+</div>
+</section>
+<script>
+const QS=[
+  {cat:"Viloyatlar",q:"O'zbekistonning poytaxti?",opts:["Toshkent","Samarqand","Buxoro","Namangan"],ans:0},
+  {cat:"Viloyatlar",q:"O'zbekistonda nechta viloyat bor?",opts:["14","12","13","15"],ans:0},
+  {cat:"Tarix",q:"O'zbekiston mustaqillikka qachon erishdi?",opts:["1991","1990","1992","1989"],ans:0},
+  {cat:"Geografiya",q:"O'zbekistonning eng katta ko'li?",opts:["Orol dengizi","Charvak","Aydar","Tuzkon"],ans:0},
+  {cat:"Geografiya",q:"Amudaryo qaysi dengizga quyiladi?",opts:["Orol","Kaspiy","Qora","Azov"],ans:0},
+  {cat:"Viloyatlar",q:"Farg'ona vodiysi nechta viloyatdan iborat?",opts:["3","2","4","5"],ans:0},
+  {cat:"Tarix",q:"Amir Temur qaysi shaharda tug'ilgan?",opts:["Kesh (Shahrisabz)","Samarqand","Buxoro","Toshkent"],ans:0},
+  {cat:"Geografiya",q:"O'zbekistonning eng baland tog'i?",opts:["Xazrat Sulton","Chimyon","Beshtor","Muztog'"],ans:0},
+  {cat:"Iqtisodiyot",q:"O'zbekistonning milliy valyutasi?",opts:["So'm","Rubl","Dollar","Tenge"],ans:0},
+  {cat:"Madaniyat",q:"Navro'z qachon nishonlanadi?",opts:["21 mart","1 yanvar","9 may","1 sentyabr"],ans:0},
+  {cat:"Viloyatlar",q:"Qoraqalpog'iston Respublikasining poytaxti?",opts:["Nukus","Urganch","Xiva","Beruniy"],ans:0},
+  {cat:"Tarix",q:"Ulug'bek rasadxonasi qayerda joylashgan?",opts:["Samarqand","Buxoro","Toshkent","Xiva"],ans:0},
+  {cat:"Geografiya",q:"Sirdaryo qaysi dengizga quyiladi?",opts:["Orol","Kaspiy","Qora","Azov"],ans:0},
+  {cat:"Madaniyat",q:"O'zbekiston mustaqillik kuni?",opts:["1 sentyabr","9 may","8 dekabr","21 mart"],ans:0},
+  {cat:"Iqtisodiyot",q:"O'zbekistonning asosiy eksport mahsuloti?",opts:["Paxta","Neft","Oltin","Gaz"],ans:0},
+];
+
+let qs,idx=0,score=0,correct=0;
+
+function startGame(){
+  qs=shuffle([...QS]);
+  idx=0;score=0;correct=0;
+  document.getElementById('score').textContent=0;
+  document.getElementById('correct').textContent=0;
+  document.getElementById('total').textContent=qs.length;
+  document.getElementById('startBtn').textContent='↺ Qayta';
+  document.getElementById('msg').textContent='';
+  showQ();
+}
+
+function showQ(){
+  if(idx>=qs.length){endGame();return;}
+  const q=qs[idx];
+  document.getElementById('qn').textContent=idx+1;
+  document.getElementById('category').textContent=q.cat;
+  document.getElementById('question').textContent=q.q;
+  document.getElementById('msg').textContent='';
+  const d=document.getElementById('options');
+  d.innerHTML='';
+  const shuffled=q.opts.map((o,i)=>({o,correct:i===q.ans})).sort(()=>Math.random()-.5);
+  shuffled.forEach(({o,correct:isAns})=>{
+    const btn=document.createElement('button');
+    btn.textContent=o;
+    btn.style.cssText='padding:12px;border-radius:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:.9rem;cursor:pointer;transition:.15s;font-family:inherit;';
+    btn.onmouseover=()=>btn.style.borderColor='var(--primary)';
+    btn.onmouseout=()=>btn.style.borderColor='var(--border)';
+    btn.onclick=()=>answer(isAns,btn,d);
+    d.appendChild(btn);
+  });
+}
+
+function answer(isAns,btn,d){
+  Array.from(d.children).forEach(b=>b.onclick=null);
+  if(isAns){
+    score+=15;correct++;
+    document.getElementById('score').textContent=score;
+    document.getElementById('correct').textContent=correct;
+    btn.style.background='rgba(67,233,123,.2)';btn.style.borderColor='#43E97B';
+    document.getElementById('msg').textContent='✅ To\'g\'ri! +15';
+  } else {
+    btn.style.background='rgba(255,101,132,.2)';btn.style.borderColor='#FF6584';
+    document.getElementById('msg').textContent='❌ Noto\'g\'ri!';
+  }
+  idx++;setTimeout(showQ,900);
+}
+
+function endGame(){
+  document.getElementById('question').textContent=`🏁 Tugadi! ${correct}/${QS.length} to'g'ri — ${score} ball`;
+  document.getElementById('options').innerHTML='';
+  {% if user.is_authenticated %}saveScore('geo',score);{% endif %}
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-.5);}
+
+{% if user.is_authenticated %}
+async function saveScore(game,score){
+  await fetch('/games/score/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({game,score})});
+}
+{% endif %}
+</script>
+{% endblock %}

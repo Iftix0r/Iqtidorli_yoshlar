@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Word Scramble{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:500px;margin:0 auto;padding:0 20px;text-align:center;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i></a>
+    <h2 style="font-size:1.3rem;font-weight:800;">📝 Word Scramble</h2>
+    <div style="font-size:.9rem;font-weight:700;color:var(--primary);">Ball: <span id="score">0</span></div>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;">⏱ <span id="timer">60</span>s</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;">Savol: <span id="qn">0</span></div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;">
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px;" id="hint"></div>
+    <div id="scrambled" style="font-size:2rem;font-weight:900;letter-spacing:8px;color:var(--primary);margin-bottom:8px;">?????</div>
+  </div>
+
+  <input id="answer" type="text" placeholder="Javobni kiriting..."
+    style="width:100%;background:var(--bg);border:2px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:1rem;font-family:inherit;outline:none;text-align:center;text-transform:lowercase;margin-bottom:10px;"
+    onkeydown="if(event.key==='Enter')check()" disabled>
+
+  <div style="display:flex;gap:10px;justify-content:center;">
+    <button onclick="check()" class="btn-primary" style="padding:9px 24px;">✓ Tekshirish</button>
+    <button onclick="skip()" class="btn-outline" style="padding:9px 16px;">⏭ O'tkazish</button>
+  </div>
+  <div id="msg" style="margin-top:12px;font-size:.95rem;min-height:24px;"></div>
+  <button onclick="startGame()" id="startBtn" class="btn-primary" style="margin-top:12px;padding:10px 28px;">▶ Boshlash</button>
+</div>
+</section>
+<script>
+const WORDS=[
+  {w:'python',h:'Dasturlash tili 🐍'},
+  {w:'algoritm',h:'Muammo yechish ketma-ketligi'},
+  {w:'internet',h:'Global tarmoq 🌐'},
+  {w:'kompyuter',h:'Hisoblash qurilmasi 💻'},
+  {w:'dasturchi',h:'Kod yozuvchi mutaxassis'},
+  {w:'matematik',h:'Raqamlar fani'},
+  {w:'fizika',h:'Tabiat qonunlari fani'},
+  {w:'kimyo',h:'Moddalar fani'},
+  {w:'biologiya',h:'Tirik organizmlar fani'},
+  {w:'tarix',h:'O\'tgan voqealar fani'},
+  {w:'ingliz',h:'Xalqaro til'},
+  {w:'loyiha',h:'Maqsadli ish rejasi'},
+  {w:'jamoa',h:'Birgalikda ishlovchilar'},
+  {w:'mentor',h:'Tajribali yo\'lboshchi'},
+  {w:'startup',h:'Yangi biznes g\'oyasi'},
+  {w:'innovatsiya',h:'Yangilik kiritish'},
+  {w:'texnologiya',h:'Ilmiy usullar majmuasi'},
+  {w:'raqamli',h:'Digital'},
+  {w:'platforma',h:'Xizmat ko\'rsatish muhiti'},
+  {w:'sertifikat',h:'Malaka hujjati 📜'},
+];
+
+let words,idx,score=0,timer,running=false;
+
+function startGame(){
+  words=shuffle([...WORDS]);
+  idx=0;score=0;
+  document.getElementById('score').textContent=0;
+  document.getElementById('answer').disabled=false;
+  document.getElementById('startBtn').textContent='↺ Qayta';
+  running=true;
+  showWord();
+  let t=60;
+  document.getElementById('timer').textContent=t;
+  if(timer)clearInterval(timer);
+  timer=setInterval(()=>{
+    t--;document.getElementById('timer').textContent=t;
+    if(t<=0){clearInterval(timer);endGame();}
+  },1000);
+}
+
+function showWord(){
+  if(idx>=words.length){endGame();return;}
+  const w=words[idx];
+  document.getElementById('qn').textContent=idx+1;
+  document.getElementById('hint').textContent=w.h;
+  document.getElementById('scrambled').textContent=scramble(w.w).toUpperCase();
+  document.getElementById('answer').value='';
+  document.getElementById('msg').textContent='';
+  document.getElementById('answer').focus();
+}
+
+function scramble(w){
+  let a=w.split('');
+  do{a.sort(()=>Math.random()-.5);}while(a.join('')===w);
+  return a.join('');
+}
+
+function check(){
+  if(!running)return;
+  const val=document.getElementById('answer').value.trim().toLowerCase();
+  const correct=words[idx].w;
+  if(val===correct){
+    score+=15;document.getElementById('score').textContent=score;
+    document.getElementById('msg').textContent='✅ To\'g\'ri! +15';
+    idx++;setTimeout(showWord,600);
+  } else {
+    document.getElementById('msg').textContent='❌ Noto\'g\'ri, qayta urinib ko\'ring';
+    document.getElementById('answer').style.borderColor='#FF6584';
+    setTimeout(()=>document.getElementById('answer').style.borderColor='var(--border)',500);
+  }
+}
+
+function skip(){
+  if(!running)return;
+  document.getElementById('msg').textContent=`Javob: ${words[idx].w}`;
+  idx++;setTimeout(showWord,800);
+}
+
+function endGame(){
+  running=false;clearInterval(timer);
+  document.getElementById('scrambled').textContent='🏁';
+  document.getElementById('hint').textContent=`Tugadi! Ball: ${score}`;
+  document.getElementById('answer').disabled=true;
+  {% if user.is_authenticated %}saveScore('word',score);{% endif %}
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-.5);}
+
+{% if user.is_authenticated %}
+async function saveScore(game,score){
+  await fetch('/games/score/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({game,score})});
+}
+{% endif %}
+</script>
+{% endblock %}

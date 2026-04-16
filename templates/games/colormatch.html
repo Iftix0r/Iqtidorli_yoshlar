@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Color Match{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:480px;margin:0 auto;padding:0 20px;text-align:center;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i></a>
+    <h2 style="font-size:1.3rem;font-weight:800;">🎨 Color Match</h2>
+    <div style="font-size:.9rem;font-weight:700;color:var(--primary);">Ball: <span id="score">0</span></div>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;">⏱ <span id="timer">45</span>s</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;">Streak: <span id="streak">0</span>🔥</div>
+  </div>
+
+  <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px;">So'z <b>ma'nosiga</b> mos rangni bosing (so'zning rangi emas!)</p>
+
+  <div id="word" style="font-size:3rem;font-weight:900;margin-bottom:24px;min-height:70px;display:flex;align-items:center;justify-content:center;border-radius:16px;background:var(--card);border:1px solid var(--border);padding:16px;">
+    ?
+  </div>
+
+  <div id="colors" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;"></div>
+  <div id="msg" style="font-size:.95rem;min-height:24px;margin-bottom:12px;"></div>
+  <button onclick="startGame()" id="startBtn" class="btn-primary" style="padding:10px 28px;">▶ Boshlash</button>
+</div>
+</section>
+<script>
+const COLORS={
+  'QIZIL':'#FF6584','KO\'K':'#4facfe','YASHIL':'#43E97B',
+  'SARIQ':'#FFD700','BINAFSHA':'#6C63FF','TO\'Q SARIQ':'#FF9A44',
+  'PUSHTI':'#f093fb','JIGARRANG':'#a0522d','KULRANG':'#a7a9be'
+};
+const NAMES=Object.keys(COLORS);
+const HEX=Object.values(COLORS);
+
+let score=0,streak=0,timer,running=false,correctColor;
+
+function startGame(){
+  score=0;streak=0;
+  document.getElementById('score').textContent=0;
+  document.getElementById('streak').textContent=0;
+  document.getElementById('msg').textContent='';
+  document.getElementById('startBtn').textContent='↺ Qayta';
+  running=true;
+  nextRound();
+  let t=45;
+  document.getElementById('timer').textContent=t;
+  if(timer)clearInterval(timer);
+  timer=setInterval(()=>{
+    t--;document.getElementById('timer').textContent=t;
+    if(t<=0){clearInterval(timer);endGame();}
+  },1000);
+}
+
+function nextRound(){
+  if(!running)return;
+  // So'z va uning ma'nosi (to'g'ri rang)
+  const correctIdx=Math.floor(Math.random()*NAMES.length);
+  correctColor=NAMES[correctIdx];
+  // So'z boshqa rangda ko'rsatiladi
+  let displayColorIdx;
+  do{displayColorIdx=Math.floor(Math.random()*NAMES.length);}
+  while(displayColorIdx===correctIdx);
+
+  document.getElementById('word').textContent=correctColor;
+  document.getElementById('word').style.color=HEX[displayColorIdx];
+
+  // 6 ta rang tugmasi
+  const opts=shuffle([...NAMES]).slice(0,5);
+  if(!opts.includes(correctColor))opts[0]=correctColor;
+  const shuffled=shuffle(opts);
+
+  const d=document.getElementById('colors');
+  d.innerHTML='';
+  shuffled.forEach(name=>{
+    const btn=document.createElement('button');
+    btn.textContent=name;
+    btn.style.cssText=`padding:12px;border-radius:10px;background:${COLORS[name]};border:none;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;transition:.15s;text-shadow:0 1px 2px rgba(0,0,0,.3);`;
+    btn.onclick=()=>check(name,btn,d);
+    d.appendChild(btn);
+  });
+  document.getElementById('msg').textContent='';
+}
+
+function check(name,btn,d){
+  Array.from(d.children).forEach(b=>b.onclick=null);
+  if(name===correctColor){
+    streak++;score+=10+Math.min(streak*2,20);
+    document.getElementById('score').textContent=score;
+    document.getElementById('streak').textContent=streak;
+    document.getElementById('msg').textContent=`✅ To'g'ri! +${10+Math.min(streak*2,20)} (streak: ${streak})`;
+    btn.style.transform='scale(1.1)';
+    setTimeout(nextRound,600);
+  } else {
+    streak=0;document.getElementById('streak').textContent=0;
+    btn.style.opacity='.4';
+    document.getElementById('msg').textContent=`❌ Noto'g'ri! To'g'ri: ${correctColor}`;
+    setTimeout(nextRound,800);
+  }
+}
+
+function endGame(){
+  running=false;
+  document.getElementById('word').textContent='🏁';
+  document.getElementById('word').style.color='var(--text)';
+  document.getElementById('colors').innerHTML='';
+  document.getElementById('msg').textContent=`Tugadi! Ball: ${score}`;
+  {% if user.is_authenticated %}saveScore('color',score);{% endif %}
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-.5);}
+
+{% if user.is_authenticated %}
+async function saveScore(game,score){
+  await fetch('/games/score/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({game,score})});
+}
+{% endif %}
+</script>
+{% endblock %}

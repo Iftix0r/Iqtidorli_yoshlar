@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Code Quiz{% endblock %}
+{% block content %}
+<section style="padding-top:90px;padding-bottom:40px;">
+<div style="max-width:600px;margin:0 auto;padding:0 20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <a href="{% url 'games' %}" class="btn-outline" style="padding:6px 14px;font-size:.82rem;"><i data-lucide="arrow-left"></i></a>
+    <h2 style="font-size:1.3rem;font-weight:800;">💻 Code Quiz</h2>
+    <div style="font-size:.9rem;font-weight:700;color:var(--primary);"><span id="score">0</span> ball</div>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;font-size:.85rem;">Savol <span id="qn">0</span>/<span id="total">0</span></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 14px;font-size:.85rem;">✅ <span id="correct">0</span> to'g'ri</div>
+  </div>
+
+  <div id="qbox" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;">
+    <div id="category" style="font-size:.75rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;"></div>
+    <div id="question" style="font-size:1rem;font-weight:700;line-height:1.6;margin-bottom:16px;">Boshlash tugmasini bosing</div>
+    <div id="code" style="display:none;background:#0a0a0f;border-radius:10px;padding:14px;font-family:monospace;font-size:.88rem;color:#a8ff78;margin-bottom:16px;white-space:pre;overflow-x:auto;"></div>
+    <div id="options" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <div id="msg" style="text-align:center;font-size:.95rem;min-height:24px;margin-bottom:12px;"></div>
+  <div style="text-align:center;">
+    <button onclick="startGame()" id="startBtn" class="btn-primary" style="padding:10px 28px;">▶ Boshlash</button>
+  </div>
+</div>
+</section>
+<script>
+const QS=[
+  {cat:'Python',q:'Python da ro\'yxat (list) yaratish?',code:'',opts:['[]','{}','()','<>'],ans:0},
+  {cat:'JavaScript',q:'JavaScript da o\'zgaruvchi e\'lon qilish?',code:'',opts:['var x = 5','int x = 5','x := 5','dim x = 5'],ans:0},
+  {cat:'HTML',q:'HTML da sarlavha tegi?',code:'',opts:['<h1>','<head>','<header>','<title>'],ans:0},
+  {cat:'CSS',q:'CSS da rang berish?',code:'',opts:['color: red','font: red','text: red','style: red'],ans:0},
+  {cat:'Python',q:'Bu kod nima chiqaradi?',code:'print(2 ** 3)',opts:['8','6','9','5'],ans:0},
+  {cat:'JavaScript',q:'Bu kod nima qaytaradi?',code:'typeof "hello"',opts:['"string"','"text"','"char"','"word"'],ans:0},
+  {cat:'SQL',q:'Barcha ma\'lumotlarni olish?',code:'',opts:['SELECT * FROM table','GET ALL FROM table','FETCH * table','READ table'],ans:0},
+  {cat:'Git',q:'Yangi branch yaratish?',code:'',opts:['git branch new','git create branch','git new branch','git add branch'],ans:0},
+  {cat:'Python',q:'Bu funksiya nima qaytaradi?',code:'def f(x):\n    return x * 2\nprint(f(5))',opts:['10','5','25','2'],ans:0},
+  {cat:'HTML',q:'Havola (link) tegi?',code:'',opts:['<a href="">','<link>','<url>','<href>'],ans:0},
+  {cat:'CSS',q:'Flexbox yoqish?',code:'',opts:['display: flex','flex: on','layout: flex','position: flex'],ans:0},
+  {cat:'JavaScript',q:'Massiv uzunligi?',code:'const a = [1,2,3,4,5]',opts:['a.length','a.size','a.count','len(a)'],ans:0},
+  {cat:'Python',q:'Lug\'at (dict) yaratish?',code:'',opts:['{}','[]','()','<>'],ans:0},
+  {cat:'Linux',q:'Fayl tarkibini ko\'rish?',code:'',opts:['cat file.txt','read file.txt','open file.txt','show file.txt'],ans:0},
+  {cat:'HTTP',q:'Muvaffaqiyatli so\'rov kodi?',code:'',opts:['200','404','500','301'],ans:0},
+];
+
+let idx=0,score=0,correct=0,qs;
+
+function startGame(){
+  qs=shuffle([...QS]);
+  idx=0;score=0;correct=0;
+  document.getElementById('score').textContent=0;
+  document.getElementById('correct').textContent=0;
+  document.getElementById('total').textContent=qs.length;
+  document.getElementById('startBtn').textContent='↺ Qayta';
+  document.getElementById('msg').textContent='';
+  showQ();
+}
+
+function showQ(){
+  if(idx>=qs.length){endGame();return;}
+  const q=qs[idx];
+  document.getElementById('qn').textContent=idx+1;
+  document.getElementById('category').textContent=q.cat;
+  document.getElementById('question').textContent=q.q;
+  const cd=document.getElementById('code');
+  if(q.code){cd.style.display='block';cd.textContent=q.code;}
+  else cd.style.display='none';
+  document.getElementById('msg').textContent='';
+  const d=document.getElementById('options');
+  d.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.textContent=o;
+    btn.style.cssText='padding:11px 16px;border-radius:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:.9rem;cursor:pointer;text-align:left;transition:.15s;font-family:monospace;';
+    btn.onmouseover=()=>btn.style.borderColor='var(--primary)';
+    btn.onmouseout=()=>btn.style.borderColor='var(--border)';
+    btn.onclick=()=>answer(i,q.ans,btn,d);
+    d.appendChild(btn);
+  });
+}
+
+function answer(i,ans,btn,d){
+  Array.from(d.children).forEach(b=>b.onclick=null);
+  if(i===ans){
+    score+=20;correct++;
+    document.getElementById('score').textContent=score;
+    document.getElementById('correct').textContent=correct;
+    btn.style.background='rgba(67,233,123,.2)';btn.style.borderColor='#43E97B';
+    document.getElementById('msg').textContent='✅ To\'g\'ri! +20';
+  } else {
+    btn.style.background='rgba(255,101,132,.2)';btn.style.borderColor='#FF6584';
+    d.children[ans].style.background='rgba(67,233,123,.2)';
+    d.children[ans].style.borderColor='#43E97B';
+    document.getElementById('msg').textContent='❌ Noto\'g\'ri!';
+  }
+  idx++;
+  setTimeout(showQ,1000);
+}
+
+function endGame(){
+  document.getElementById('question').textContent=`🏁 Tugadi! ${correct}/${QS.length} to'g'ri — ${score} ball`;
+  document.getElementById('options').innerHTML='';
+  document.getElementById('code').style.display='none';
+  {% if user.is_authenticated %}saveScore('code',score);{% endif %}
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-.5);}
+
+{% if user.is_authenticated %}
+async function saveScore(game,score){
+  await fetch('/games/score/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({game,score})});
+}
+{% endif %}
+</script>
+{% endblock %}

@@ -56,4 +56,9 @@ urlpatterns += [
     path('games/memory/',           game_views.game_memory,  name='game_memory'),
     path('games/tictactoe/',        game_views.game_ttt,     name='game_ttt'),
     path('games/score/',            game_views.game_score,   name='game_score'),
+    path('games/mathquiz/',         game_views.game_math,    name='game_math'),
+    path('games/codequiz/',         game_views.game_code,    name='game_code'),
+    path('games/geoguess/',         game_views.game_geo,     name='game_geo'),
+    path('games/wordscramble/',     game_views.game_word,    name='game_word'),
+    path('games/colormatch/',       game_views.game_color,   name='game_color'),
 ]

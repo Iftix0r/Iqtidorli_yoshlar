@@ -49,3 +49,19 @@ def game_score(request):
         xp_earned = xp
 
     return JsonResponse({'ok': True, 'xp': xp_earned, 'score': score})
+
+
+def game_math(request):
+    return render(request, 'games/mathquiz.html')
+
+def game_code(request):
+    return render(request, 'games/codequiz.html')
+
+def game_geo(request):
+    return render(request, 'games/geoguess.html')
+
+def game_word(request):
+    return render(request, 'games/wordscramble.html')
+
+def game_color(request):
+    return render(request, 'games/colormatch.html')
