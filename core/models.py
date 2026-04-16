@@ -80,6 +80,7 @@ class Project(models.Model):
     funding_goal      = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Maqsad qilingan summa")
     funding_collected = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Yig'ilgan summa")
     status            = models.CharField(max_length=20, choices=STATUS, default='idea')
+    required_resources = models.TextField(blank=True, verbose_name="Nimalar kerak? (uskunalar, ofis, va h.k.)")
     
     video_url   = models.URLField(blank=True, verbose_name="Video havola (YouTube/Vimeo)")
     is_public   = models.BooleanField(default=True, verbose_name="Ommaviy ko'rinsinmi?")
