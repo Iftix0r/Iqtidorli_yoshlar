@@ -218,7 +218,6 @@
     <div class="topbar-right">
       <a href="{% url 'notifications' %}" class="tb-btn" title="Bildirishnomalar">
         <i data-lucide="bell"></i>
-        {% if user.unread_notifications %}<span style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#FF6584;"></span>{% endif %}
       </a>
       <a href="{% url 'inbox' %}" class="tb-btn" title="Xabarlar">
         <i data-lucide="message-circle"></i>
@@ -226,39 +225,6 @@
       <button class="tb-btn" onclick="toggleTheme()" title="Tema">
         <i data-lucide="moon" id="theme-icon"></i>
       </button>
-      <!-- O'ng tepada avatar — Gemini uslubi -->
-      <div style="position:relative;">
-        <button onclick="toggleProfileMenu()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;gap:8px;border-radius:20px;padding:4px 8px;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
-          {% if user.avatar %}
-            <img src="{{ user.avatar.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
-          {% else %}
-            <div style="width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;">{{ user.initial }}</div>
-          {% endif %}
-        </button>
-        <!-- Dropdown -->
-        <div id="profile-menu" style="display:none;position:absolute;right:0;top:44px;width:220px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:100;overflow:hidden;">
-          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
-            <div style="font-weight:700;font-size:.88rem;">{{ user.get_full_name|default:user.phone }}</div>
-            <div style="font-size:.72rem;color:var(--muted);">{{ user.phone }}</div>
-          </div>
-          <div style="padding:6px;">
-            <button onclick="go('settings');toggleProfileMenu()" style="width:100%;text-align:left;background:none;border:none;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;font-size:.85rem;font-family:inherit;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
-              <i data-lucide="user" style="width:15px;height:15px;color:var(--muted);"></i> Profil
-            </button>
-            <button onclick="go('settings');toggleProfileMenu()" style="width:100%;text-align:left;background:none;border:none;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;font-size:.85rem;font-family:inherit;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
-              <i data-lucide="settings" style="width:15px;height:15px;color:var(--muted);"></i> Sozlamalar
-            </button>
-            <a href="{% url 'public_profile' pk=user.pk %}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:.85rem;color:var(--text);text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
-              <i data-lucide="eye" style="width:15px;height:15px;color:var(--muted);"></i> Ommaviy profil
-            </a>
-          </div>
-          <div style="padding:6px;border-top:1px solid var(--border);">
-            <a href="{% url 'logout' %}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:.85rem;color:var(--danger);text-decoration:none;" onmouseover="this.style.background='rgba(255,101,132,.08)'" onmouseout="this.style.background='none'">
-              <i data-lucide="log-out" style="width:15px;height:15px;"></i> Chiqish
-            </a>
-          </div>
-        </div>
-      </div>
     </div>
   </header>
 
@@ -527,15 +493,6 @@ function toggleTheme() {
   document.getElementById('theme-icon').setAttribute('data-lucide', t === 'dark' ? 'moon' : 'sun');
   lucide.createIcons();
 }
-
-function toggleProfileMenu() {
-  const m = document.getElementById('profile-menu');
-  m.style.display = m.style.display === 'none' ? 'block' : 'none';
-}
-document.addEventListener('click', e => {
-  const m = document.getElementById('profile-menu');
-  if (m && !m.parentElement.contains(e.target)) m.style.display = 'none';
-});
 
 // Sidebar holati
 if (localStorage.getItem('sb_collapsed') === 'true') {
