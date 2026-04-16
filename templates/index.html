@@ -63,7 +63,7 @@
       <!-- PROJECT CARDS -->
       {% for p in recent_projects %}
       <div class="feed-card project-card">
-        <a href="{% url 'portal' %}" class="card-thumb">
+        <a href="{% url 'project_detail' p.pk %}" class="card-thumb">
           {% if p.image %}
             <img src="{{ p.image.url }}" alt="{{ p.title }}">
           {% else %}
@@ -130,7 +130,7 @@
         <div class="feed-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
           {% for s in startups %}
           <div class="feed-card project-card startup-card">
-            <a href="{% url 'portal' %}" class="card-thumb">
+            <a href="{% url 'project_detail' s.pk %}" class="card-thumb">
               {% if s.image %}<img src="{{ s.image.url }}">{% else %}<div class="thumb-placeholder" style="background:linear-gradient(135deg,#2ecc71,#27ae60);"><i data-lucide="zap"></i></div>{% endif %}
               <div class="startup-badge">STARTUP</div>
             </a>

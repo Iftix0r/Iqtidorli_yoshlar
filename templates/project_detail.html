@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ p.title }} — Iqtidorli Yoshlar{% endblock %}
+
+{% block content %}
+<style>
+  .detail-hero {
+    position: relative;
+    padding: 60px 0;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+  .detail-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(108,99,255,0.1) 0%, transparent 70%);
+    z-index: 0;
+  }
+  .hero-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-img {
+    width: 450px;
+    aspect-ratio: 16/9;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    background: var(--bg);
+  }
+  .hero-img img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--grad);
+    color: #fff;
+  }
+  .hero-placeholder i { width: 64px; height: 64px; }
+
+  .hero-info { flex: 1; }
+  .p-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .tag-startup { background: rgba(67,233,123,.1); color: var(--accent); border: 1px solid rgba(67,233,123,.2); }
+  .tag-project { background: rgba(108,99,255,.1); color: var(--primary); border: 1px solid rgba(108,99,255,.2); }
+
+  .hero-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 12px; line-height: 1.1; }
+  .hero-meta { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; color: var(--muted); font-size: .95rem; }
+  .hero-meta .user { display: flex; align-items: center; gap: 8px; color: var(--text); font-weight: 600; text-decoration: none; }
+  .hero-meta .user:hover { color: var(--primary); }
+  .hero-btns { display: flex; gap: 12px; }
+  
+  .main-content { max-width: 1200px; margin: 0 auto; padding: 0 24px 60px; display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+  
+  .section-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .text-content { line-height: 1.7; color: var(--text); font-size: 1.05rem; white-space: pre-wrap; }
+  
+  .side-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 24px; }
+  .funding-box { text-align: center; background: linear-gradient(to bottom, rgba(67,233,123,0.05), transparent); }
+  .funding-amount { font-size: 2rem; font-weight: 900; color: var(--accent); margin: 8px 0; }
+  .funding-lbl { font-size: .8rem; color: var(--muted); text-transform: uppercase; }
+
+  .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; background: #000; margin-top: 30px; }
+  .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+  .related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  .rel-card { text-decoration: none; display: block; group; }
+  .rel-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; margin-bottom: 8px; }
+  .rel-thumb img { width: 100%; height: 100%; object-fit: cover; transition: .3s; }
+  .rel-card:hover .rel-thumb img { transform: scale(1.05); }
+  .rel-title { font-size: .88rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+
+  @media (max-width: 992px) {
+    .hero-container { flex-direction: column; text-align: center; }
+    .hero-img { width: 100%; max-width: 500px; }
+    .hero-meta { justify-content: center; }
+    .hero-btns { justify-content: center; }
+    .main-content { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="detail-hero">
+  <div class="hero-container">
+    <div class="hero-img">
+      {% if p.image %}
+        <img src="{{ p.image.url }}" alt="{{ p.title }}">
+      {% else %}
+        <div class="hero-placeholder"><i data-lucide="zap"></i></div>
+      {% endif %}
+    </div>
+    <div class="hero-info">
+      {% if p.is_startup %}
+        <span class="p-tag tag-startup"><i data-lucide="rocket" style="width:12px;"></i> STARTAP</span>
+      {% else %}
+        <span class="p-tag tag-project"><i data-lucide="folder" style="width:12px;"></i> LOYIHA</span>
+      {% endif %}
+      
+      <h1 class="hero-title">{{ p.title }}</h1>
+      
+      <div class="hero-meta">
+        <a href="{% url 'public_profile' p.user.pk %}" class="user">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;">{{ p.user.initial }}</div>
+          {{ p.user.get_full_name|default:p.user.phone }}
+        </a>
+        <span><i data-lucide="calendar" style="width:16px;vertical-align:middle;margin-right:4px;"></i> {{ p.created_at|date:"d-M, Y" }}</span>
+      </div>
+
+      <div class="hero-btns">
+        {% if p.link %}
+          <a href="{{ p.link }}" target="_blank" class="btn-grad btn-p" style="padding:12px 24px; border-radius:12px;"><i data-lucide="external-link"></i> Loyihani ko'rish</a>
+        {% endif %}
+        <button class="btn-ghost btn-p" style="padding:12px 24px; border-radius:12px;"><i data-lucide="share-2"></i> Ulashish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="main-content">
+  <!-- LEFT: Description & Materials -->
+  <div class="content-left">
+    <section>
+      <h2 class="section-title"><i data-lucide="text-align-left" style="color:var(--primary);"></i> Loyiha haqida</h2>
+      <div class="text-content">
+        {{ p.description|default:"Tavsif kiritilmagan." }}
+      </div>
+    </section>
+
+    {% if p.video_url %}
+    <section style="margin-top: 40px;">
+      <h2 class="section-title"><i data-lucide="video" style="color:var(--danger);"></i> Video-prezentatsiya</h2>
+      {% if 'youtube.com' in p.video_url or 'youtu.be' in p.video_url %}
+        <div class="video-container">
+          <iframe src="https://www.youtube.com/embed/{{ p.video_url|slice:'-11:' }}" allowfullscreen></iframe>
+        </div>
+      {% else %}
+        <a href="{{ p.video_url }}" target="_blank" class="btn-ghost btn-p" style="width:100%; justify-content:center; padding:20px; border-style:dashed;">
+          <i data-lucide="play-circle"></i> Tashqi videoni ko'rish
+        </a>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <section style="margin-top: 40px;">
+      <h2 class="section-title"><i data-lucide="image" style="color:var(--accent);"></i> Galereya & Fayllar</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px;">
+        {% for m in p.materials.all %}
+          {% if m.mat_type == 'image' and m.file %}
+             <a href="{{ m.file.url }}" target="_blank" style="border-radius:10px; overflow:hidden; border:1px solid var(--border);"><img src="{{ m.file.url }}" style="width:100%; height:120px; object-fit:cover;"></a>
+          {% else %}
+             <a href="{{ m.file.url|default:m.link }}" target="_blank" class="btn-ghost btn-p" style="height:120px; flex-direction:column; gap:8px;">
+               <i data-lucide="file-text"></i>
+               <span style="font-size:.7rem; text-align:center;">{{ m.title|default:"Material" }}</span>
+             </a>
+          {% endif %}
+        {% empty %}
+          <p style="color:var(--muted); font-size:.9rem;">Qo'shimcha materiallar yuklanmagan.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <!-- RIGHT: Sidebar Info -->
+  <div class="content-right">
+    {% if p.is_startup and p.funding_amount %}
+    <div class="side-card funding-box">
+      <div class="funding-lbl">Investitsiya ehtiyoji</div>
+      <div class="funding-amount">{{ p.funding_amount }}</div>
+      <a href="{% url 'inbox' %}" class="btn-grad btn-p" style="width:100%; justify-content:center; margin-top:10px;"><i data-lucide="send"></i> Investor sifatida bog'lanish</a>
+    </div>
+    {% endif %}
+
+    {% if p.needs_team %}
+    <div class="side-card" style="border-left: 4px solid var(--primary);">
+      <h3 class="section-title" style="font-size:1.1rem;"><i data-lucide="users"></i> Hamkorlar kerak</h3>
+      <p style="font-size:.85rem; color:var(--muted); line-height:1.5;">Muallif ushbu loyihani birgalikda amalga oshirish uchun jamoa va hamkorlar qidirmoqda.</p>
+      {% if p.required_resources %}
+        <div style="margin-top:12px; font-size:.85rem; background:rgba(255,255,255,.03); padding:10px; border-radius:8px;">
+          <strong>Kerak:</strong> {{ p.required_resources }}
+        </div>
+      {% endif %}
+      <a href="{% url 'inbox' %}" class="btn-ghost btn-p" style="width:100%; justify-content:center; margin-top:15px;"><i data-lucide="user-plus"></i> Jamoaga qo'shilish</a>
+    </div>
+    {% endif %}
+
+    <div class="side-card">
+      <h3 class="section-title" style="font-size:1.1rem;">O'xshash loyihalar</h3>
+      <div class="related-list">
+        {% for rp in related_projects %}
+        <a href="{% url 'project_detail' rp.pk %}" class="rel-card" style="margin-bottom:15px; display:flex; gap:12px; align-items:center;">
+          <div style="width:80px; height:50px; border-radius:8px; overflow:hidden; background:var(--bg); flex-shrink:0;">
+            {% if rp.image %}<img src="{{ rp.image.url }}" style="width:100%; height:100%; object-fit:cover;">{% else %}<div style="width:100%; height:100%; background:var(--grad); display:flex; align-items:center; justify-content:center; color:#fff;"><i data-lucide="zap" style="width:12px;"></i></div>{% endif %}
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div class="rel-title" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ rp.title }}</div>
+            <div style="font-size:.72rem; color:var(--muted);">{{ rp.user.get_full_name|default:"Muallif" }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</main>
+
+{% endblock %}
