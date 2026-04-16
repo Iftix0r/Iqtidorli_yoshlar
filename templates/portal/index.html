@@ -119,8 +119,31 @@
     .badge-box.locked{opacity:.4;filter:grayscale(1);}
 
     /* THEME */
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    .section-content{animation:fadeIn .2s ease;}
+    /* YOUTUBE FEED STYLE */
+    .feed-categories{display:flex;gap:10px;overflow-x:auto;padding:12px 0 20px;border-bottom:1px solid var(--border);margin-bottom:20px;-ms-overflow-style:none;scrollbar-width:none;}
+    .feed-categories::-webkit-scrollbar{display:none;}
+    .cat-pill{padding:7px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;font-size:.82rem;white-space:nowrap;cursor:pointer;transition:.2s;}
+    .cat-pill.active{background:var(--text);color:var(--bg);border-color:var(--text);}
+    .cat-pill:hover:not(.active){background:rgba(255,255,255,.12);}
+
+    .video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px 20px;}
+    .v-card{cursor:pointer;transition:.2s;}
+    .v-thumb{position:relative;width:100%;aspect-ratio:16/9;background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid var(--border);}
+    .v-thumb img{width:100%;height:100%;object-fit:cover;transition:.3s;}
+    .v-card:hover .v-thumb img{transform:scale(1.04);}
+    .v-meta{display:flex;gap:12px;}
+    .v-avatar{width:36px;height:36px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#fff;font-weight:700;flex-shrink:0;}
+    .v-info{flex:1;min-width:0;}
+    .v-title{font-size:.95rem;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px;line-height:1.4;}
+    .v-sub{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:1px;}
+    .v-badge{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.8);color:#fff;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;}
+
+    /* SEARCH BAR */
+    .header-search{width:100%;max-width:600px;margin:0 auto;position:relative;}
+    .header-search input{width:100%;background:rgba(0,0,0,.15);border:1px solid var(--border);padding:9px 15px 9px 40px;border-radius:24px;font-family:inherit;font-size:.9rem;color:var(--text);transition:.2s;}
+    .header-search input:focus{background:rgba(0,0,0,.3);border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(108,99,255,.15);}
+    .header-search i{position:absolute;left:14px;top:10px;color:var(--muted);width:16px;height:16px;}
+
 
     /* Sessiya hover menu */
     .sess-row:hover .sess-menu-btn{opacity:1!important;}
@@ -313,131 +336,146 @@
 <!-- MAIN -->
 <div id="main">
   <!-- Floating ikonlar — header o'rniga -->
-  <div id="floating-btns">
-    <a href="{% url 'notifications' %}" class="fb" title="Bildirishnomalar">
-      <i data-lucide="bell"></i>
-    </a>
-    <a href="{% url 'inbox' %}" class="fb" title="Xabarlar">
-      <i data-lucide="message-circle"></i>
-    </a>
-    <button class="fb" onclick="toggleTheme()" title="Tema">
-      <i data-lucide="moon" id="theme-icon"></i>
-    </button>
-    <button onclick="toggleProfileMenu(event)" style="background:none;border:none;cursor:pointer;padding:2px;" title="Profil">
-      {% if user.avatar %}
-        <img src="{{ user.avatar.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(108,99,255,.4);">
-      {% else %}
-        <div style="width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;">{{ user.initial }}</div>
-      {% endif %}
-    </button>
+  <div id="floating-btns" style="display:flex;align-items:center;padding:12px 24px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:900;justify-content:space-between;gap:20px;">
+    
+    <!-- Logo/Toggle for mobile if needed -->
+    <div style="display:flex;align-items:center;gap:12px;">
+       <button class="sb-toggle" onclick="toggleSb()" style="display:none;padding:8px;background:none;border:none;color:var(--text);cursor:pointer;"><i data-lucide="menu"></i></button>
+    </div>
+
+    <!-- YouTube Search Bar -->
+    <div class="header-search">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Qidiruv..." onkeyup="if(event.key==='Enter')alert('Tez kunda...')">
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="{% url 'notifications' %}" class="fb" title="Bildirishnomalar" style="position:relative;width:40px;height:40px;background:none;border:none;box-shadow:none;">
+        <i data-lucide="bell"></i>
+        {% if notifications.count %}<span style="position:absolute;top:10px;right:10px;width:8px;height:8px;background:var(--danger);border-radius:50%;border:2px solid var(--card);"></span>{% endif %}
+      </a>
+      <a href="{% url 'inbox' %}" class="fb" title="Xabarlar" style="width:40px;height:40px;background:none;border:none;box-shadow:none;">
+        <i data-lucide="message-circle"></i>
+      </a>
+      <button class="fb" onclick="toggleTheme()" title="Tema" style="width:40px;height:40px;background:none;border:none;box-shadow:none;">
+        <i data-lucide="moon" id="theme-icon"></i>
+      </button>
+      <button onclick="toggleProfileMenu(event)" style="background:none;border:none;cursor:pointer;padding:2px;" title="Profil">
+        {% if user.avatar %}
+          <img src="{{ user.avatar.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+        {% else %}
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;">{{ user.initial }}</div>
+        {% endif %}
+      </button>
+    </div>
   </div>
 
   <div id="content" {% if section == 'ai' %}class="no-pad"{% endif %}>
 
-  <!-- ── HOME ── -->
+  <!-- ── HOME (YOUTUBE FEED) ── -->
   {% if section == 'home' %}
   <div class="section-content">
-    <div class="stat-row">
-      <div class="stat-box"><div class="stat-num">{{ user.score }}</div><div class="stat-lbl">⚡ Ball</div></div>
-      <div class="stat-box"><div class="stat-num">{{ badges|length }}</div><div class="stat-lbl">🎖️ Nishon</div></div>
-      <div class="stat-box"><div class="stat-num">{{ total_xp }}</div><div class="stat-lbl">XP</div></div>
-      <div class="stat-box"><div class="stat-num">{% if streak %}{{ streak.current_streak }}{% else %}0{% endif %}</div><div class="stat-lbl">🔥 Streak</div></div>
-      <div class="stat-box"><div class="stat-num">{{ projects|length }}</div><div class="stat-lbl">📁 Loyiha</div></div>
-      <div class="stat-box"><div class="stat-num">{{ enrollments|length }}</div><div class="stat-lbl">🎓 Kurs</div></div>
+    
+    <!-- Topic Pills -->
+    <div class="feed-categories">
+      <div class="cat-pill active">Asosiy</div>
+      <div class="cat-pill">Kurslar</div>
+      <div class="cat-pill">Loyihalar</div>
+      <div class="cat-pill">Smart Matching</div>
+      <div class="cat-pill">Market</div>
+      <div class="cat-pill">Tanlovlar</div>
+      <div class="cat-pill">Kutubxona</div>
+      <div class="cat-pill">Mentorlik</div>
     </div>
 
-    {% if mentor_requests %}
-    <div class="p-card">
-      <div class="p-card-title"><i data-lucide="handshake"></i> Mentor So'rovlari ({{ mentor_requests|length }})</div>
-      {% for req in mentor_requests %}
-      <div class="list-item">
-        <div class="list-icon"><i data-lucide="user"></i></div>
-        <div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">{{ req.sender.get_full_name }}</div><div style="font-size:.75rem;color:var(--muted);">{{ req.message|truncatechars:60 }}</div></div>
-        <a href="{% url 'mentor_handle' req_id=req.pk action='accept' %}" class="btn-p btn-grad" style="padding:5px 12px;font-size:.75rem;">Qabul</a>
-        <a href="{% url 'mentor_handle' req_id=req.pk action='reject' %}" class="btn-p btn-ghost" style="padding:5px 12px;font-size:.75rem;">Rad</a>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
-      <!-- Kurslar -->
-      <div class="p-card" style="margin-bottom:0;">
-        <div class="p-card-title"><i data-lucide="graduation-cap"></i> Davom etayotgan kurslar</div>
-        {% for e in enrollments|slice:":4" %}
-        <div class="list-item">
-          <div class="list-icon"><i data-lucide="play-circle"></i></div>
-          <div style="flex:1;">
-            <div style="font-size:.88rem;font-weight:600;">{{ e.course.title }}</div>
-            <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-              <div style="flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;">
-                <div style="height:100%;width:{{ e.course.progress|default:0 }}%;background:var(--grad);border-radius:2px;"></div>
-              </div>
-              <span style="font-size:.72rem;color:var(--muted);">{{ e.course.progress|default:0 }}%</span>
+    <!-- Feed Grid -->
+    <div class="video-grid">
+      
+      <!-- Davom etayotgan kurslar (Promoted) -->
+      {% for e in enrollments %}
+      <div class="v-card" onclick="window.location.href='{% url 'course_detail' e.course.pk %}'">
+        <div class="v-thumb">
+          {% if e.course.cover %}<img src="{{ e.course.cover.url }}">{% else %}<div style="width:100%;height:100%;background:var(--grad);opacity:.4;"></div>{% endif %}
+          <div class="v-badge">{{ e.course.progress|default:0 }}%</div>
+        </div>
+        <div class="v-meta">
+          <div class="v-avatar">{{ e.course.author.initial|default:"🎓" }}</div>
+          <div class="v-info">
+            <div class="v-title">{{ e.course.title }}</div>
+            <div class="v-sub">
+              <span>{{ e.course.author.get_full_name|default:"Markaz" }}</span>
+              <span>Davom etayotgan kurs • {{ e.course.lesson_count }} dars</span>
             </div>
           </div>
-          <a href="{% url 'course_detail' pk=e.course.pk %}" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.72rem;">Kirish</a>
         </div>
-        {% empty %}
-        <div style="text-align:center;padding:20px;">
-          <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px;">Hali kurslarga yozilmagansiz</p>
-          <a href="{% url 'courses' %}" class="btn-p btn-grad" style="font-size:.75rem;">Kurslarni ko'rish</a>
-        </div>
-        {% endfor %}
       </div>
+      {% endfor %}
 
       <!-- Market Tavsiyalari -->
-      <div class="p-card" style="margin-bottom:0;">
-        <div class="p-card-title"><i data-lucide="shopping-bag"></i> Siz uchun tavsiyalar</div>
-        {% for item in market_items|slice:":4" %}
-        <div class="list-item">
-          <div style="width:34px;height:34px;border-radius:8px;background:rgba(67,233,123,.1);display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
-            {% if item.category == 'certificate' %}📜{% elif item.category == 'mentoring' %}👨‍🏫{% else %}🎁{% endif %}
-          </div>
-          <div style="flex:1;">
-            <div style="font-size:.85rem;font-weight:600;">{{ item.title }}</div>
-            <div style="font-size:.72rem;color:var(--muted);">{{ item.price }} ⚡ Ball</div>
-          </div>
-          <a href="{% url 'market_buy' pk=item.pk %}" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.72rem;">Olish</a>
+      {% for item in market_items %}
+      <div class="v-card" onclick="window.location.href='{% url 'market_buy' item.pk %}'">
+        <div class="v-thumb">
+          {% if item.image %}<img src="{{ item.image.url }}">{% else %}<div style="width:100%;height:100%;background:rgba(67,233,123,.1);display:flex;align-items:center;justify-content:center;font-size:3rem;">{% if item.category == 'certificate' %}📜{% elif item.category == 'mentoring' %}👨‍🏫{% else %}🎁{% endif %}</div>{% endif %}
+          <div class="v-badge" style="background:var(--accent);">{{ item.price }} ball</div>
         </div>
-        {% empty %}
-        <p style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">Hozircha tavsiyalar yo'q</p>
-        {% endfor %}
+        <div class="v-meta">
+          <div class="v-avatar" style="background:var(--accent);">✨</div>
+          <div class="v-info">
+            <div class="v-title">{{ item.title }}</div>
+            <div class="v-sub">
+              <span>Iqtidor Market</span>
+              <span>{{ item.get_category_display }} • Eksklyuziv</span>
+            </div>
+          </div>
+        </div>
       </div>
+      {% endfor %}
+
     </div>
   </div>
 
-  <!-- ── SETTINGS ── -->
-  {% elif section == 'settings' %}
-  <div class="section-content">
-    <div class="p-card">
-      <div class="p-card-title"><i data-lucide="user"></i> Profil Ma'lumotlari</div>
-      <form method="post" enctype="multipart/form-data" class="p-form">
-        {% csrf_token %}<input type="hidden" name="action" value="profile">
-        <div class="row">
-          <div><label>Ism</label><input type="text" name="first_name" value="{{ user.first_name }}"></div>
-          <div><label>Familiya</label><input type="text" name="last_name" value="{{ user.last_name }}"></div>
-        </div>
-        <div class="row">
-          <div><label>Telefon</label><input type="text" value="{{ user.phone }}" disabled style="opacity:.5;"></div>
-          <div><label>Email</label><input type="email" name="email" value="{{ user.email }}"></div>
-        </div>
-        <div class="row">
-          <div><label>Viloyat</label>
-            <select name="region">
-              <option value="">— Tanlang —</option>
-              {% for val, lbl in profile_form.fields.region.choices %}<option value="{{ val }}" {% if user.region == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
-            </select>
+  <!-- ── CHAT WITH USER (PRIVATE) ── -->
+  {% elif section == 'chat_user' %}
+  <div class="section-content" style="height:calc(100vh - 80px);display:flex;flex-direction:column;">
+    <div class="p-card" style="flex:1;display:flex;flex-direction:column;margin-bottom:0;padding:0;overflow:hidden;">
+      <!-- Header -->
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+         <div style="width:40px;height:40px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;">
+           {{ msg_partner.first_name|slice:":1"|default:msg_partner.phone|slice:":1" }}
+         </div>
+         <div style="flex:1;">
+           <div style="font-size:1rem;font-weight:600;">{{ msg_partner.get_full_name|default:msg_partner.phone }}</div>
+           <div style="font-size:.75rem;color:var(--accent);">Onlayn</div>
+         </div>
+         <button onclick="window.history.back()" class="btn-p btn-ghost" style="padding:8px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+      </div>
+
+      <!-- Messages -->
+      <div id="private-msgs" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:rgba(0,0,0,.05);">
+        {% for m in private_msgs %}
+        <div style="display:flex; {% if m.sender == user %}justify-content:flex-end{% endif %};">
+          <div style="max-width:70%; padding:10px 14px; border-radius:14px; font-size:.9rem; line-height:1.5; 
+            {% if m.sender == user %}
+              background:var(--primary); color:#fff; border-bottom-right-radius:2px;
+            {% else %}
+              background:var(--card); border:1px solid var(--border); border-bottom-left-radius:2px;
+            {% endif %}">
+            {{ m.body }}
+            <div style="font-size:.65rem; margin-top:4px; opacity:.7; text-align:right;">{{ m.created_at|date:"H:i" }}</div>
           </div>
-          <div><label>Rol</label>
-            <select name="role">
-              {% for val, lbl in profile_form.fields.role.choices %}<option value="{{ val }}" {% if user.role == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
-            </select>
-          </div>
         </div>
-        <div style="margin-bottom:12px;"><label>Bio</label><textarea name="bio" rows="3">{{ user.bio }}</textarea></div>
-        <div style="margin-bottom:16px;"><label>Avatar</label><input type="file" name="avatar" accept="image/*"></div>
-        <button type="submit" class="btn-p btn-grad"><i data-lucide="save"></i> Saqlash</button>
+        {% empty %}
+        <div style="text-align:center;padding:40px;color:var(--muted);">Suhbatni boshlang...</div>
+        {% endfor %}
+      </div>
+
+      <!-- Input -->
+      <form method="post" action="{% url 'conversation' msg_partner.pk %}" style="padding:16px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--card);">
+        {% csrf_token %}
+        <input type="text" name="body" placeholder="Xabar yozing..." required style="flex:1;background:rgba(0,0,0,.15);border:1px solid var(--border);padding:10px 16px;border-radius:24px;color:var(--text);font-family:inherit;">
+        <button type="submit" style="width:42px;height:42px;border-radius:50%;background:var(--grad);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;">
+          <i data-lucide="send" style="width:18px;height:18px;"></i>
+        </button>
       </form>
     </div>
   </div>
