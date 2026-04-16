@@ -194,36 +194,31 @@
       <i data-lucide="sparkles"></i><span class="sb-item-label">✦ Yangi suhbat</span>
     </button>
 
-    <div class="sb-section" id="sb-sess-label">Suhbatlar</div>
+    <div class="sb-section" id="sb-sess-label">Suhbatlar (Telegram kabi)</div>
     <div id="sb-sess-list">
-      {% for s in ai_sessions %}
-      <div style="position:relative;display:flex;align-items:center;" class="sess-row" data-id="{{ s.pk }}" data-title="{{ s.title|default:'Yangi suhbat'|lower }}">
-        <button class="sb-item {% if ai_session_id == s.pk %}active{% endif %}" onclick="goAI({{ s.pk }})" style="flex:1;min-width:0;">
-          <i data-lucide="message-square" style="flex-shrink:0;"></i>
-          <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ s.title|default:"Yangi suhbat"|truncatechars:18 }}</span>
-        </button>
-        <button class="sess-menu-btn" onclick="toggleSessMenu(event,{{ s.pk }})"
-          style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px;opacity:0;transition:.15s;flex-shrink:0;">
-          <i data-lucide="more-horizontal" style="width:14px;height:14px;"></i>
-        </button>
+      {% for chat in chats %}
+      <div style="position:relative;display:flex;align-items:center;" class="sess-row" data-id="{{ chat.id }}" data-type="{{ chat.type }}">
+        {% if chat.type == 'ai' %}
+          <button class="sb-item {% if ai_session_id == chat.id %}active{% endif %}" onclick="goAI({{ chat.id }})" style="flex:1;min-width:0;">
+            <i data-lucide="sparkles" style="color:var(--primary);flex-shrink:0;"></i>
+            <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ chat.title|truncatechars:18 }}</span>
+          </button>
+          <button class="sess-menu-btn" onclick="toggleSessMenu(event,{{ chat.id }})"
+            style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px;opacity:0;transition:.15s;flex-shrink:0;">
+            <i data-lucide="more-horizontal" style="width:14px;height:14px;"></i>
+          </button>
+        {% else %}
+          <a href="{{ chat.url }}" class="sb-item" style="flex:1;min-width:0;">
+            <div style="width:22px;height:22px;border-radius:50%;background:rgba(108,99,255,.12);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--primary);flex-shrink:0;font-weight:700;margin-right:2px;">
+              {{ chat.initial }}
+            </div>
+            <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ chat.title|truncatechars:18 }}</span>
+          </a>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
-    <div id="sb-no-results" class="{% if ai_sessions %}hidden{% endif %}" style="font-size:.78rem;color:var(--muted);padding:8px 10px;">Hali suhbatlar yo'q</div>
-
-
-
-    <div class="sb-section">Xabarlar</div>
-    {% for c in contacts %}
-    <a href="{% url 'conversation' c.pk %}" class="sb-item">
-      <div style="width:24px;height:24px;border-radius:50%;background:rgba(108,99,255,.12);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--primary);flex-shrink:0;font-weight:700;">
-        {{ c.first_name|slice:":1"|default:c.phone|slice:":1" }}
-      </div>
-      <span class="sb-item-label">{{ c.get_full_name|default:c.phone|truncatechars:18 }}</span>
-    </a>
-    {% empty %}
-    <div style="font-size:.78rem;color:var(--muted);padding:8px 10px;">Hali yozishmalar yo'q</div>
-    {% endfor %}
+    <div id="sb-no-results" class="{% if chats %}hidden{% endif %}" style="font-size:.78rem;color:var(--muted);padding:8px 10px;">Hali suhbatlar yo'q</div>
 
     <div class="sb-section">Boshqa</div>
   </nav>

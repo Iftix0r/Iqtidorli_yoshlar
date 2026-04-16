@@ -641,22 +641,49 @@ def portal_view(request, section='home'):
         'enrollments':    CourseEnrollment.objects.filter(user=user).select_related('course'),
         'orders':         MarketOrder.objects.filter(user=user).select_related('item')[:10],
         'badges':         user.badges.all(),
-        'ai_sessions':    AIChatSession.objects.filter(user=user).order_by('-updated_at')[:20],
-        'ai_session_id':  ai_session_id,
-        'ai_messages':    ai_messages,
-        'ai_mode':        ai_mode,
         'ai_modes':       AI_MODES,
         'mentor_requests': user.received_requests.filter(status='pending'),
-        'contacts':        User.objects.filter(
-            Q(sent_messages__receiver=user) |
-            Q(received_messages__sender=user)
-        ).distinct().exclude(pk=user.pk)[:15],
     }
 
     # Market mahsulotlari
     from .models import MarketItem
     ctx['market_items'] = MarketItem.objects.filter(is_active=True)
     ctx['market_categories'] = MarketItem.CATEGORIES
+
+    # Birlashtirilgan suhbatlar (Telegram kabi chronological)
+    chat_list = []
+    # AI Sessiyalar
+    for s in AIChatSession.objects.filter(user=user).order_by('-updated_at')[:15]:
+        chat_list.append({
+            'type': 'ai',
+            'id': s.pk,
+            'title': s.title or "✨ Yangi suhbat",
+            'updated': s.updated_at,
+            'icon': 'sparkles',
+            'url': f'/portal/ai/?sid={s.pk}'
+        })
+    # Foydalanuvchi xabarlari (Suhbatdoshlar)
+    contacts = User.objects.filter(
+        Q(sent_messages__receiver=user) |
+        Q(received_messages__sender=user)
+    ).distinct().exclude(pk=user.pk)
+    for c in contacts:
+        # Oxirgi xabar vaqtini olish
+        last_msg = Message.objects.filter(
+            Q(sender=user, receiver=c) | Q(sender=c, receiver=user)
+        ).order_by('-created_at').first()
+        chat_list.append({
+            'type': 'user',
+            'id': c.pk,
+            'title': c.get_full_name() or c.phone,
+            'updated': last_msg.created_at if last_msg else timezone.now(),
+            'initial': c.first_name[0].upper() if c.first_name else '?',
+            'url': f'/portal/messages/{c.pk}/' # Yoki portal ichida xabar ochish
+        })
+    
+    # Chronological tartiblash
+    chat_list.sort(key=lambda x: x['updated'], reverse=True)
+    ctx['chats'] = chat_list[:25]
 
     try:
         ctx['streak'] = user.streak
