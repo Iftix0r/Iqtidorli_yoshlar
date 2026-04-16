@@ -184,7 +184,46 @@
   </div>
 {% endif %}
 
-{% block content %}{% endblock %}
+  <!-- ── MAIN WRAPPER (YouTube Style) ── -->
+  <div class="category-wrapper">
+    <div class="category-scroll">
+      <button class="cat-pill active"><i data-lucide="layout"></i> Barchasi</button>
+      <button class="cat-pill"><i data-lucide="code"></i> Dasturlash</button>
+      <button class="cat-pill"><i data-lucide="palette"></i> San'at</button>
+      <button class="cat-pill"><i data-lucide="music"></i> Fan</button>
+      <button class="cat-pill"><i data-lucide="trophy"></i> Sport</button>
+      <button class="cat-pill"><i data-lucide="pen-tool"></i> Dizayn</button>
+    </div>
+  </div>
+
+  <div class="feed-container">
+    <!-- SIDEBAR -->
+    <aside class="feed-sidebar">
+      <div class="sidebar-section">
+        <h4 class="sb-label">ASOSIY</h4>
+        <a href="{% url 'index' %}" class="sb-link {% if request.resolver_match.url_name == 'index' %}active-link{% endif %}"><i data-lucide="home"></i> Bosh sahifa</a>
+        <a href="{% url 'talents' %}" class="sb-link {% if request.resolver_match.url_name == 'talents' %}active-link{% endif %}"><i data-lucide="users"></i> Iqtidorlar</a>
+        <a href="{% url 'contests' %}" class="sb-link {% if request.resolver_match.url_name == 'contests' %}active-link{% endif %}"><i data-lucide="trophy"></i> Tanlovlar</a>
+        <a href="{% url 'leaderboard' %}" class="sb-link {% if request.resolver_match.url_name == 'leaderboard' %}active-link{% endif %}"><i data-lucide="bar-chart-2"></i> Reyting</a>
+      </div>
+      <div class="sidebar-section">
+        <h4 class="sb-label">KASHFIYOT</h4>
+        <a href="{% url 'market' %}" class="sb-link {% if request.resolver_match.url_name == 'market' %}active-link{% endif %}"><i data-lucide="shopping-bag"></i> Market</a>
+        <a href="{% url 'courses' %}" class="sb-link {% if request.resolver_match.url_name == 'courses' %}active-link{% endif %}"><i data-lucide="graduation-cap"></i> Kurslar</a>
+        <a href="{% url 'jobs' %}" class="sb-link {% if request.resolver_match.url_name == 'jobs' %}active-link{% endif %}"><i data-lucide="briefcase"></i> Ish O'rinlari</a>
+      </div>
+      <div class="sidebar-section divider">
+        <h4 class="sb-label">SIZ</h4>
+        <a href="{% url 'portal' %}" class="sb-link"><i data-lucide="user"></i> Mening profilim</a>
+        <a href="{% url 'inbox' %}" class="sb-link"><i data-lucide="message-square"></i> Xabarlar</a>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="feed-main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
 
 <!-- NOTIFICATION PERMISSION BANNER -->
 {% if user.is_authenticated %}

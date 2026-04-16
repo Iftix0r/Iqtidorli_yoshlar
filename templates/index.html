@@ -131,16 +131,29 @@
           {% for s in startups %}
           <div class="feed-card project-card startup-card">
             <a href="{% url 'project_detail' s.pk %}" class="card-thumb">
-              {% if s.image %}<img src="{{ s.image.url }}">{% else %}<div class="thumb-placeholder" style="background:linear-gradient(135deg,#2ecc71,#27ae60);"><i data-lucide="zap"></i></div>{% endif %}
-              <div class="startup-badge">STARTUP</div>
+              {% if s.image %}<img src="{{ s.image.url }}">{% else %}<div class="thumb-placeholder" style="background:linear-gradient(135deg,#6C63FF,#4834d4);"><i data-lucide="zap"></i></div>{% endif %}
+              <div class="startup-badge">STARTAP</div>
             </a>
             <div class="card-body">
-              <div class="user-avatar" style="background:#2ecc71;">{{ s.user.initial }}</div>
-              <div class="card-info">
+              <div class="user-avatar" style="background:{{ s.get_status_color }};">{{ s.user.initial }}</div>
+              <div class="card-info" style="flex:1;">
                 <h3 class="card-title">{{ s.title }}</h3>
                 <p class="card-meta">Asoschi: {{ s.user.get_full_name|default:s.user.phone }}</p>
+                
+                {% if s.funding_goal > 0 %}
+                  <div style="margin-top:12px;">
+                    <div style="display:flex; justify-content:space-between; font-size:.65rem; color:var(--muted); margin-bottom:4px;">
+                      <span>{{ s.funding_percentage }}% yig'ildi</span>
+                      <span style="color:{{ s.get_status_color }}; font-weight:700;">{{ s.get_status_display }}</span>
+                    </div>
+                    <div style="height:6px; background:rgba(255,255,255,.05); border-radius:10px; overflow:hidden;">
+                      <div style="height:100%; width:{{ s.funding_percentage }}%; background:{{ s.get_status_color }}; transition: .6s;"></div>
+                    </div>
+                  </div>
+                {% endif %}
+
                 <div style="margin-top:8px;display:flex;gap:5px;">
-                   <span class="mini-tag" style="background:rgba(46,204,113,.1);color:#27ae60;border:1px solid rgba(46,204,113,.2);"><i data-lucide="users" style="width:10px;height:10px;"></i> Jamoa kerak</span>
+                   {% if s.needs_team %}<span class="mini-tag" style="background:rgba(46,204,113,.1);color:#27ae60;border:1px solid rgba(46,204,113,.2);"><i data-lucide="users" style="width:10px;height:10px;"></i> Jamoa</span>{% endif %}
                 </div>
               </div>
             </div>
