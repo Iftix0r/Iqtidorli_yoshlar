@@ -167,6 +167,9 @@
     </button>
 
     <div class="sb-section">AI & Market</div>
+    <button class="sb-item {% if section == 'market' %}active{% endif %}" onclick="go('market')">
+      <i data-lucide="shopping-bag"></i><span class="sb-item-label">Iqtidor Market</span>
+    </button>
     <button class="sb-item {% if section == 'ai' and not ai_session_id %}active{% endif %}" onclick="goAI(null)">
       <i data-lucide="sparkles"></i><span class="sb-item-label">✦ Yangi suhbat</span>
     </button>
@@ -180,10 +183,6 @@
     </button>
     {% endfor %}
     {% endif %}
-
-    <button class="sb-item {% if section == 'market' %}active{% endif %}" onclick="go('market')">
-      <i data-lucide="shopping-bag"></i><span class="sb-item-label">Iqtidor Market</span>
-    </button>
 
     <div class="sb-section">Boshqa</div>
   </nav>
