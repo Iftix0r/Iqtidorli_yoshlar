@@ -125,18 +125,6 @@
     <button class="sb-toggle" onclick="toggleSb()"><i data-lucide="panel-left"></i></button>
   </div>
 
-  <div class="sb-profile">
-    {% if user.avatar %}
-      <img src="{{ user.avatar.url }}" class="sb-avatar">
-    {% else %}
-      <div class="sb-avatar">{{ user.initial }}</div>
-    {% endif %}
-    <div class="sb-profile-info">
-      <div class="sb-profile-name">{{ user.get_full_name|default:user.phone }}</div>
-      <div class="sb-profile-role">{{ user.get_role_display }} · ⚡ {{ user.score }}</div>
-    </div>
-  </div>
-
   <nav class="sb-nav">
     <div class="sb-section">Asosiy</div>
     <button class="sb-item {% if section == 'home' %}active{% endif %}" onclick="go('home')">
@@ -172,6 +160,20 @@
       <i data-lucide="shield"></i><span class="sb-item-label">Kirish Tarixi</span>
     </button>
 
+    <div class="sb-section">AI & Market</div>
+    <button class="sb-item {% if section == 'ai' %}active{% endif %}" onclick="go('ai')">
+      <i data-lucide="sparkles"></i><span class="sb-item-label">Iqtidor AI</span>
+      <span class="sb-item-label" style="margin-left:auto;font-size:.65rem;background:var(--grad);color:#fff;padding:1px 6px;border-radius:8px;">NEW</span>
+    </button>
+    <button class="sb-item {% if section == 'market' %}active{% endif %}" onclick="go('market')">
+      <i data-lucide="shopping-bag"></i><span class="sb-item-label">Iqtidor Market</span>
+    </button>
+
+    <div class="sb-section">Boshqa</div>
+    <a href="/" class="sb-item">
+      <i data-lucide="home"></i><span class="sb-item-label">Saytga qaytish</span>
+    </a>
+  </nav>
     <div class="sb-section">Tezkor</div>
     <a href="{% url 'ai_chat' %}" class="sb-item">
       <i data-lucide="sparkles"></i><span class="sb-item-label">Iqtidor AI</span>
@@ -182,12 +184,26 @@
     <a href="/" class="sb-item">
       <i data-lucide="external-link"></i><span class="sb-item-label">Saytga qaytish</span>
     </a>
-  </nav>
 
   <div class="sb-bottom">
+    <button class="sb-item {% if section == 'settings' %}active{% endif %}" onclick="go('settings')">
+      <i data-lucide="settings"></i><span class="sb-item-label">Sozlamalar</span>
+    </button>
     <a href="{% url 'logout' %}" class="sb-item" style="color:var(--danger);">
       <i data-lucide="log-out"></i><span class="sb-item-label">Chiqish</span>
     </a>
+    <!-- Profil pastda -->
+    <div class="sb-profile" style="margin-top:6px;padding:10px 8px;border-top:1px solid var(--border);border-radius:0;">
+      {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" class="sb-avatar">
+      {% else %}
+        <div class="sb-avatar">{{ user.initial }}</div>
+      {% endif %}
+      <div class="sb-profile-info">
+        <div class="sb-profile-name">{{ user.get_full_name|default:user.phone }}</div>
+        <div class="sb-profile-role">{{ user.get_role_display }} · ⚡ {{ user.score }}</div>
+      </div>
+    </div>
   </div>
 </aside>
 
@@ -205,6 +221,8 @@
       {% elif section == 'orders' %}📦 Market Buyurtmalar
       {% elif section == 'activity' %}📊 Faoliyat Tarixi
       {% elif section == 'logins' %}🔐 Kirish Tarixi
+      {% elif section == 'ai' %}✨ Iqtidor AI
+      {% elif section == 'market' %}🛍️ Iqtidor Market
       {% else %}Portal{% endif %}
     </div>
     <div class="topbar-right">
@@ -218,9 +236,39 @@
       <button class="tb-btn" onclick="toggleTheme()" title="Tema">
         <i data-lucide="moon" id="theme-icon"></i>
       </button>
-      <a href="{% url 'public_profile' pk=user.pk %}" class="tb-btn" title="Ommaviy profil">
-        <i data-lucide="eye"></i>
-      </a>
+      <!-- O'ng tepada avatar — Gemini uslubi -->
+      <div style="position:relative;">
+        <button onclick="toggleProfileMenu()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;gap:8px;border-radius:20px;padding:4px 8px;transition:.15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
+          {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+          {% else %}
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;">{{ user.initial }}</div>
+          {% endif %}
+        </button>
+        <!-- Dropdown -->
+        <div id="profile-menu" style="display:none;position:absolute;right:0;top:44px;width:220px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:100;overflow:hidden;">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="font-weight:700;font-size:.88rem;">{{ user.get_full_name|default:user.phone }}</div>
+            <div style="font-size:.72rem;color:var(--muted);">{{ user.phone }}</div>
+          </div>
+          <div style="padding:6px;">
+            <button onclick="go('settings');toggleProfileMenu()" style="width:100%;text-align:left;background:none;border:none;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;font-size:.85rem;font-family:inherit;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
+              <i data-lucide="user" style="width:15px;height:15px;color:var(--muted);"></i> Profil
+            </button>
+            <button onclick="go('settings');toggleProfileMenu()" style="width:100%;text-align:left;background:none;border:none;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;font-size:.85rem;font-family:inherit;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
+              <i data-lucide="settings" style="width:15px;height:15px;color:var(--muted);"></i> Sozlamalar
+            </button>
+            <a href="{% url 'public_profile' pk=user.pk %}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:.85rem;color:var(--text);text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='none'">
+              <i data-lucide="eye" style="width:15px;height:15px;color:var(--muted);"></i> Ommaviy profil
+            </a>
+          </div>
+          <div style="padding:6px;border-top:1px solid var(--border);">
+            <a href="{% url 'logout' %}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:.85rem;color:var(--danger);text-decoration:none;" onmouseover="this.style.background='rgba(255,101,132,.08)'" onmouseout="this.style.background='none'">
+              <i data-lucide="log-out" style="width:15px;height:15px;"></i> Chiqish
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -489,6 +537,15 @@ function toggleTheme() {
   document.getElementById('theme-icon').setAttribute('data-lucide', t === 'dark' ? 'moon' : 'sun');
   lucide.createIcons();
 }
+
+function toggleProfileMenu() {
+  const m = document.getElementById('profile-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', e => {
+  const m = document.getElementById('profile-menu');
+  if (m && !m.parentElement.contains(e.target)) m.style.display = 'none';
+});
 
 // Sidebar holati
 if (localStorage.getItem('sb_collapsed') === 'true') {
