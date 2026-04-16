@@ -81,15 +81,7 @@
   </div>
 
   {% else %}
-  <!-- Login qilinmagan: oddiy nav -->
-  <ul class="nav-links">
-    <li><a href="{% url 'talents' %}"><i data-lucide="users"></i> Iqtidorlar</a></li>
-    <li><a href="{% url 'leaderboard' %}"><i data-lucide="bar-chart-2"></i> Reyting</a></li>
-    <li><a href="{% url 'courses' %}"><i data-lucide="graduation-cap"></i> Kurslar</a></li>
-    <li><a href="{% url 'contests' %}"><i data-lucide="trophy"></i> Tanlovlar</a></li>
-    <li><a href="{% url 'jobs' %}"><i data-lucide="briefcase"></i> Ish</a></li>
-    <li><a href="{% url 'market' %}"><i data-lucide="shopping-bag"></i> Market</a></li>
-  </ul>
+  <!-- Login qilinmagan -->
   <div class="nav-right">
     <button class="theme-toggle" id="themeToggle" title="Tema">
       <i data-lucide="moon" class="icon-moon"></i>
@@ -235,12 +227,15 @@
   display: none;
 }
 /* ── NAV SEARCH ── */
-.nav-search { flex: 1; max-width: 500px; margin: 0 40px; display: none; }
-.nav-search form { background: var(--card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; display: flex; align-items: center; }
-.nav-search input { flex: 1; border: none; background: transparent; padding: 8px 16px; color: var(--text); outline: none; font-size: .88rem; }
-.nav-search button { background: var(--border); border: none; padding: 8px 18px; color: var(--muted); cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; }
-.nav-search button:hover { background: rgba(108,99,255,.15); color: var(--primary); }
+.nav-search { flex: 1; max-width: 420px; margin: 0 20px; display: none; }
+.nav-search form { background: var(--bg); border: 1px solid var(--border); border-radius: 40px; overflow: hidden; display: flex; align-items: center; }
+.nav-search input { flex: 1; border: none; background: transparent; padding: 7px 16px; color: var(--text); outline: none; font-size: .85rem; }
+.nav-search button { background: var(--border); border: none; padding: 7px 16px; color: var(--muted); cursor: pointer; transition: .2s; display: flex; align-items: center; justify-content: center; }
+.nav-search button:hover { background: rgba(108,99,255,.08); color: var(--primary); }
 @media (min-width: 768px) { .nav-search { display: block; } }
+
+nav { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 64px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+.nav-right { display: flex; align-items: center; gap: 12px; }
 </style>
 <div id="loading-bar"></div>
 

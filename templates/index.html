@@ -15,6 +15,23 @@
 </div>
 
 <div class="feed-container">
+  <!-- SIDEBAR (Shortcuts) - Now on the left like YouTube -->
+  <aside class="feed-sidebar">
+    <div class="sidebar-section">
+      <h4 style="font-size: .65rem;">ASOSIY</h4>
+      <a href="{% url 'index' %}" class="active-link"><i data-lucide="home"></i> Bosh sahifa</a>
+      <a href="{% url 'talents' %}"><i data-lucide="users"></i> Iqtidorlar</a>
+      <a href="{% url 'contests' %}"><i data-lucide="trophy"></i> Tanlovlar</a>
+      <a href="{% url 'leaderboard' %}"><i data-lucide="bar-chart-2"></i> Reyting</a>
+    </div>
+    <div class="sidebar-section">
+      <h4 style="font-size: .65rem;">KASHFIYOT</h4>
+      <a href="{% url 'market' %}"><i data-lucide="shopping-bag"></i> Market</a>
+      <a href="{% url 'courses' %}"><i data-lucide="graduation-cap"></i> Kurslar</a>
+      <a href="{% url 'jobs' %}"><i data-lucide="briefcase"></i> Ish O'rinlari</a>
+    </div>
+  </aside>
+
   <!-- PRIMARY FEED -->
   <main class="feed-main">
     <div class="feed-grid">
@@ -90,29 +107,18 @@
 
     </div>
   </main>
-
-  <!-- SIDEBAR (Shortcuts) -->
-  <aside class="feed-sidebar">
-    <div class="sidebar-section">
-      <h4>Platforma</h4>
-      <a href="{% url 'contests' %}"><i data-lucide="trophy"></i> Tanlovlar</a>
-      <a href="{% url 'leaderboard' %}"><i data-lucide="bar-chart-2"></i> Reyting</a>
-      <a href="{% url 'market' %}"><i data-lucide="shopping-bag"></i> Market</a>
-    </div>
-    <div class="sidebar-section">
-      <h4>Kutubxona</h4>
-      <a href="{% url 'courses' %}"><i data-lucide="graduation-cap"></i> Kurslar</a>
-      <a href="{% url 'jobs' %}"><i data-lucide="briefcase"></i> Ish O'rinlari</a>
-    </div>
-  </aside>
 </div>
 
 <style>
 /* FEED LAYOUT */
-.feed-container { display: flex; gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px; }
-.feed-main { flex: 1; }
-.feed-sidebar { width: 240px; position: sticky; top: 80px; height: fit-content; display: none; }
+.feed-container { display: flex; gap: 20px; max-width: 1600px; margin: 0 auto; padding: 0 24px; }
+.feed-main { flex: 1; min-width: 0; }
+.feed-sidebar { width: 220px; position: sticky; top: 140px; height: fit-content; display: none; }
 @media (min-width: 1024px) { .feed-sidebar { display: block; } }
+
+.active-link { background: rgba(108,99,255,.08) !important; color: var(--primary) !important; font-weight: 700 !important; }
+.active-link i { color: var(--primary) !important; }
+
 
 /* CATEGORIES */
 .category-wrapper { background: var(--bg); position: sticky; top: 60px; z-index: 100; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
