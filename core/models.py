@@ -66,6 +66,9 @@ class Project(models.Model):
     title       = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     link        = models.URLField(blank=True)
+    image       = models.ImageField(upload_to='projects/', blank=True, null=True)
+    is_startup  = models.BooleanField(default=False, verbose_name="Startapmi?")
+    needs_team  = models.BooleanField(default=False, verbose_name="Jamoa kerakmi?")
     created_at  = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
