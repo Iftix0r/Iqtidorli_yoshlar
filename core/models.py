@@ -69,14 +69,36 @@ class Project(models.Model):
     image       = models.ImageField(upload_to='projects/', blank=True, null=True)
     is_startup  = models.BooleanField(default=False, verbose_name="Startapmi?")
     needs_team  = models.BooleanField(default=False, verbose_name="Jamoa kerakmi?")
-    funding_amount = models.CharField(max_length=100, blank=True, verbose_name="Kerakli mablag' (masalan: $5000)")
-    required_resources = models.TextField(blank=True, verbose_name="Nimalar kerak? (uskunalar, ofis, va h.k.)")
+    STATUS = [
+        ('idea',    'G\'oya bosqichi'),
+        ('funding', 'Mablag\' yig\'ilmoqda (Crowdfunding)'),
+        ('dev',     'Amalga oshirilmoqda (Development)'),
+        ('active',  'Ishga tushirilgan (Launched)'),
+        ('profit',  'Foydada (Profitable)'),
+        ('failed',  'Zararda/To\'xtatilgan'),
+    ]
+    funding_goal      = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Maqsad qilingan summa")
+    funding_collected = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Yig'ilgan summa")
+    status            = models.CharField(max_length=20, choices=STATUS, default='idea')
+    
     video_url   = models.URLField(blank=True, verbose_name="Video havola (YouTube/Vimeo)")
     is_public   = models.BooleanField(default=True, verbose_name="Ommaviy ko'rinsinmi?")
     created_at  = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+
+    def funding_percentage(self):
+        if not self.funding_goal or self.funding_goal == 0:
+            return 0
+        return min(int((self.funding_collected / self.funding_goal) * 100), 100)
+
+    def get_status_color(self):
+        colors = {
+            'idea': '#71717a', 'funding': '#6C63FF', 'dev': '#f59e0b',
+            'active': '#10b981', 'profit': '#34d399', 'failed': '#ef4444'
+        }
+        return colors.get(self.status, '#71717a')
 
 
 class ProjectMaterial(models.Model):

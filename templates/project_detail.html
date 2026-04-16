@@ -109,11 +109,17 @@
       {% endif %}
     </div>
     <div class="hero-info">
-      {% if p.is_startup %}
-        <span class="p-tag tag-startup"><i data-lucide="rocket" style="width:12px;"></i> STARTAP</span>
-      {% else %}
-        <span class="p-tag tag-project"><i data-lucide="folder" style="width:12px;"></i> LOYIHA</span>
-      {% endif %}
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        {% if p.is_startup %}
+          <span class="p-tag tag-startup"><i data-lucide="rocket" style="width:12px;"></i> STARTAP</span>
+        {% else %}
+          <span class="p-tag tag-project"><i data-lucide="folder" style="width:12px;"></i> LOYIHA</span>
+        {% endif %}
+        
+        <span class="p-tag" style="background:{{ p.get_status_color }}22; color:{{ p.get_status_color }}; border:1px solid {{ p.get_status_color }}44; margin-bottom:0;">
+          {{ p.get_status_display }}
+        </span>
+      </div>
       
       <h1 class="hero-title">{{ p.title }}</h1>
       
@@ -181,11 +187,22 @@
 
   <!-- RIGHT: Sidebar Info -->
   <div class="content-right">
-    {% if p.is_startup and p.funding_amount %}
-    <div class="side-card funding-box">
-      <div class="funding-lbl">Investitsiya ehtiyoji</div>
-      <div class="funding-amount">{{ p.funding_amount }}</div>
-      <a href="{% url 'inbox' %}" class="btn-grad btn-p" style="width:100%; justify-content:center; margin-top:10px;"><i data-lucide="send"></i> Investor sifatida bog'lanish</a>
+    {% if p.funding_goal > 0 %}
+    <div class="side-card funding-box" style="text-align:left;">
+      <div class="funding-lbl">Crowdfunding — Qo'llab-quvvatlash</div>
+      <div class="funding-amount" style="font-size:1.6rem; margin:12px 0 4px;">{{ p.funding_collected }} <span style="font-size:.9rem; color:var(--muted); font-weight:400;">/ {{ p.funding_goal }} so'm</span></div>
+      
+      <!-- Progress Bar -->
+      <div style="height:10px; background:rgba(255,255,255,.08); border-radius:10px; overflow:hidden; margin-bottom:12px;">
+        <div style="height:100%; width:{{ p.funding_percentage }}%; background:var(--grad); transition: .6s;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:.75rem; font-weight:700; color:var(--muted); margin-bottom:20px;">
+        <span>{{ p.funding_percentage }}% yig'ildi</span>
+        <span>Maqsad sari</span>
+      </div>
+
+      <a href="{% url 'portal' %}" class="btn-grad btn-p" style="width:100%; justify-content:center; padding:12px; font-size:.9rem;"><i data-lucide="heart"></i> Loyihani qo'llab-quvvatlash</a>
+      <p style="font-size:.7rem; color:var(--muted); margin-top:10px; text-align:center;">Homiylik orqali loyiha ulushiga ega bo'lishingiz mumkin.</p>
     </div>
     {% endif %}
 
