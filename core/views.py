@@ -647,6 +647,10 @@ def portal_view(request, section='home'):
         'ai_mode':        ai_mode,
         'ai_modes':       AI_MODES,
         'mentor_requests': user.received_requests.filter(status='pending'),
+        'contacts':        User.objects.filter(
+            Q(sent_messages__receiver=user) |
+            Q(received_messages__sender=user)
+        ).distinct().exclude(pk=user.pk)[:15],
     }
 
     # Market mahsulotlari
