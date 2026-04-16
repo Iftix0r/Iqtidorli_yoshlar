@@ -22,6 +22,8 @@ urlpatterns = [
     path('mentor/<int:req_id>/<str:action>/', views.handle_mentor_request, name='mentor_handle'),
     path('messages/',                         views.inbox_view,            name='inbox'),
     path('messages/<int:pk>/',                views.conversation_view,     name='conversation'),
+    path('messages/<int:pk>/poll/',           views.messages_poll,         name='messages_poll'),
+    path('messages/<int:pk>/send/',           views.messages_send,         name='messages_send'),
     path('notifications/',                    views.notifications_view,    name='notifications'),
     path('resources/',                        views.resources_view,        name='resources'),
     path('jobs/',                             views.jobs_view,             name='jobs'),
@@ -39,6 +41,5 @@ urlpatterns = [
 
     # Portal
     path('portal/',                      views.portal_view,         name='portal'),
-    path('portal/messages/<int:msg_uid>/',views.portal_view,         name='portal_messages'),
     path('portal/<str:section>/',        views.portal_view,         name='portal_section'),
 ]

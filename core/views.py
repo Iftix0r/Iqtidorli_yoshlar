@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Max
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 from .models import User, Project, Contest, MentorRequest, Message, Notification, Resource, Certificate, ContestApplication, Job, ProfileView, ActivityLog
 from .forms  import (RegisterForm, ProfileForm, SkillForm, ProjectForm,
@@ -241,21 +242,6 @@ def talents_view(request):
         'talents': qs, 'regions': regions,
         'q': q, 'selected_region': region, 'selected_skill': skill,
     })
-
-
-# ── LEADERBOARD ───────────────────────────────────────────────────────────────
-def leaderboard_view(request):
-    role   = request.GET.get('role', 'yosh')
-    region = request.GET.get('region', '')
-    qs     = User.objects.filter(role=role).prefetch_related('skills').order_by('-score')
-    if region:
-        qs = qs.filter(region=region)
-    regions = (User.objects.exclude(region='')
-               .values_list('region', flat=True).distinct().order_by('region'))
-    return render(request, 'leaderboard.html', {
-        'users': qs[:50], 'role': role, 'regions': regions, 'selected_region': region,
-    })
-
 
 # ── CONTESTS ──────────────────────────────────────────────────────────────────
 def contests_view(request):
@@ -744,3 +730,91 @@ def project_detail(request, pk):
         'p': project,
         'related_projects': related_projects,
     })
+
+
+# ── REAL-TIME CHAT (Long Polling + Media) ─────────────────────────────────────
+@login_required
+def messages_poll(request, pk):
+    """Long polling — yangi xabarlarni qaytaradi"""
+    other    = get_object_or_404(User, pk=pk)
+    since_id = int(request.GET.get('since', 0))
+
+    msgs = Message.objects.filter(
+        Q(sender=request.user, receiver=other) |
+        Q(sender=other, receiver=request.user),
+        pk__gt=since_id
+    ).select_related('sender')
+
+    # O'qilmagan deb belgilash
+    msgs.filter(receiver=request.user, is_read=False).update(is_read=True)
+
+    data = []
+    for m in msgs:
+        item = {
+            'id':        m.pk,
+            'sender_id': m.sender.pk,
+            'body':      m.body,
+            'msg_type':  m.msg_type,
+            'time':      m.created_at.strftime('%H:%M'),
+            'is_mine':   m.sender == request.user,
+        }
+        if m.file:
+            item['file_url']  = m.file.url
+            item['file_name'] = m.file_name()
+            item['is_image']  = m.is_image()
+        data.append(item)
+
+    return JsonResponse({'messages': data})
+
+
+@login_required
+@require_POST
+def messages_send(request, pk):
+    """Xabar yuborish — matn yoki fayl"""
+    other = get_object_or_404(User, pk=pk)
+
+    body     = request.POST.get('body', '').strip()
+    file_obj = request.FILES.get('file')
+
+    if not body and not file_obj:
+        return JsonResponse({'error': 'Bo\'sh xabar'}, status=400)
+
+    msg_type = 'text'
+    if file_obj:
+        ext = file_obj.name.lower().split('.')[-1]
+        if ext in ('jpg', 'jpeg', 'png', 'gif', 'webp'):
+            msg_type = 'image'
+        else:
+            msg_type = 'file'
+
+    msg = Message.objects.create(
+        sender   = request.user,
+        receiver = other,
+        body     = body,
+        msg_type = msg_type,
+        file     = file_obj,
+    )
+
+    log_activity(request.user, 'msg_send', f'{other.get_full_name()} ga xabar')
+
+    # Bildirishnoma
+    Notification.objects.create(
+        user       = other,
+        notif_type = 'msg',
+        text       = f"{request.user.get_full_name()} sizga xabar yubordi.",
+        link       = f'/messages/{request.user.pk}/',
+    )
+
+    item = {
+        'id':       msg.pk,
+        'body':     msg.body,
+        'msg_type': msg.msg_type,
+        'time':     msg.created_at.strftime('%H:%M'),
+        'is_mine':  True,
+    }
+    if msg.file:
+        item['file_url']  = msg.file.url
+        item['file_name'] = msg.file_name()
+        item['is_image']  = msg.is_image()
+
+    return JsonResponse({'ok': True, 'message': item})

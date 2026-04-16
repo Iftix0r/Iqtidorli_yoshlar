@@ -1,0 +1,19 @@
+<div style="display:flex;{% if m.sender == user %}justify-content:flex-end;{% else %}align-items:flex-end;gap:8px;{% endif %}">
+  {% if m.sender != user %}
+  <div style="width:28px;height:28px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;font-weight:700;flex-shrink:0;">{{ m.sender.initial }}</div>
+  {% endif %}
+  <div class="msg-bubble" style="{% if m.sender == user %}background:var(--gradient);color:#fff;border-radius:18px 18px 4px 18px;{% else %}background:var(--card);border:1px solid var(--border);border-radius:18px 18px 18px 4px;{% endif %}">
+    {% if m.msg_type == 'image' and m.file %}
+      <img src="{{ m.file.url }}" alt="rasm" onclick="window.open('{{ m.file.url }}','_blank')" style="max-width:240px;border-radius:10px;display:block;cursor:pointer;">
+      {% if m.body %}<div style="margin-top:4px;">{{ m.body }}</div>{% endif %}
+    {% elif m.msg_type == 'file' and m.file %}
+      <a href="{{ m.file.url }}" target="_blank" style="display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;">
+        <i data-lucide="file" style="width:16px;height:16px;flex-shrink:0;"></i>
+        <span style="font-size:.85rem;">{{ m.file_name }}</span>
+      </a>
+    {% else %}
+      {{ m.body|linebreaksbr }}
+    {% endif %}
+    <div class="msg-time">{{ m.created_at|date:"H:i" }}</div>
+  </div>
+</div>

@@ -18,6 +18,9 @@ def drawer_links(request):
 def global_chats(request):
     if not request.user.is_authenticated:
         return {'last_chats': []}
+    # Faqat inbox sahifasida kerak — boshqa joylarda DB query qilmasin
+    if not request.path.startswith('/messages'):
+        return {'last_chats': []}
     from django.db.models import Q
     from .models import User
     user = request.user

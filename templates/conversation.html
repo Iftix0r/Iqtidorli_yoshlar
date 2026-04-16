@@ -2,56 +2,228 @@
 {% block title %}{{ other.get_full_name }} bilan suhbat{% endblock %}
 
 {% block content %}
-<section style="padding-top:100px;max-width:700px;margin:0 auto;padding-bottom:40px;">
+<section style="padding-top:80px;max-width:760px;margin:0 auto;height:calc(100vh - 80px);display:flex;flex-direction:column;padding-bottom:0;">
 
   <!-- Header -->
-  <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;background:var(--card);border-radius:16px;padding:16px 20px;border:1px solid rgba(108,99,255,.15);">
-    <a href="{% url 'inbox' %}" style="color:var(--muted);"><i data-lucide="arrow-left"></i></a>
-    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#43E97B);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">
-      {{ other.initial }}
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0;">
+    <a href="{% url 'inbox' %}" style="color:var(--muted);display:flex;align-items:center;">
+      <i data-lucide="arrow-left" style="width:20px;height:20px;"></i>
+    </a>
+    {% if other.avatar %}
+      <img src="{{ other.avatar.url }}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+    {% else %}
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;">{{ other.initial }}</div>
+    {% endif %}
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:.95rem;">{{ other.get_full_name|default:other.phone }}</div>
+      <div style="font-size:.75rem;color:var(--muted);" id="online-status">{{ other.get_role_display }}</div>
     </div>
-    <div>
-      <div style="font-weight:700;">{{ other.get_full_name|default:other.phone }}</div>
-      <div style="font-size:.8rem;color:var(--muted);">{{ other.get_role_display }}</div>
-    </div>
-    <a href="{% url 'public_profile' pk=other.pk %}" class="btn-outline" style="margin-left:auto;padding:6px 14px;font-size:.82rem;">
-      Profil
+    <a href="{% url 'public_profile' pk=other.pk %}" style="color:var(--muted);display:flex;align-items:center;" title="Profil">
+      <i data-lucide="user" style="width:18px;height:18px;"></i>
     </a>
   </div>
 
-  <!-- Messages -->
-  <div id="chat-box" style="display:flex;flex-direction:column;gap:10px;min-height:300px;max-height:500px;overflow-y:auto;padding:4px 0;margin-bottom:16px;">
+  <!-- Xabarlar -->
+  <div id="chat-box" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;">
     {% for m in msgs %}
-      <div style="display:flex;{% if m.sender == user %}justify-content:flex-end{% endif %};">
-        <div style="max-width:70%;padding:10px 16px;border-radius:{% if m.sender == user %}18px 18px 4px 18px{% else %}18px 18px 18px 4px{% endif %};
-          background:{% if m.sender == user %}var(--gradient){% else %}var(--card){% endif %};
-          color:{% if m.sender == user %}white{% else %}var(--text){% endif %};
-          border:{% if m.sender != user %}1px solid rgba(108,99,255,.15){% else %}none{% endif %};
-          font-size:.92rem;line-height:1.5;">
-          {{ m.body }}
-          <div style="font-size:.7rem;opacity:.6;margin-top:4px;text-align:right;">
-            {{ m.created_at|date:"H:i" }}
-          </div>
-        </div>
-      </div>
+      {% include "partials/message_bubble.html" with m=m user=user %}
     {% empty %}
-      <p style="text-align:center;color:var(--muted);padding:40px 0;">Suhbat boshlang...</p>
+      <div id="empty-msg" style="text-align:center;color:var(--muted);margin:auto;padding:40px 0;">
+        <i data-lucide="message-circle" style="width:40px;height:40px;opacity:.3;"></i>
+        <p style="margin-top:10px;">Suhbat boshlang...</p>
+      </div>
     {% endfor %}
+    <!-- Typing indicator -->
+    <div id="typing-indicator" style="display:none;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#fff;font-weight:700;">{{ other.initial }}</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 14px;">
+        <span style="display:inline-flex;gap:3px;">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);animation:bounce .8s infinite;display:inline-block;"></span>
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);animation:bounce .8s .15s infinite;display:inline-block;"></span>
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--muted);animation:bounce .8s .3s infinite;display:inline-block;"></span>
+        </span>
+      </div>
+    </div>
   </div>
 
-  <!-- Send form -->
-  <form method="post" style="display:flex;gap:10px;align-items:flex-end;">
-    {% csrf_token %}
-    <div style="flex:1;">{{ form.body }}</div>
-    <button type="submit" class="btn-primary" style="padding:10px 20px;height:fit-content;">
-      <i data-lucide="send"></i>
-    </button>
-  </form>
+  <!-- Input -->
+  <div style="padding:12px 16px;border-top:1px solid var(--border);background:var(--card);flex-shrink:0;">
+    <!-- Fayl preview -->
+    <div id="file-preview" style="display:none;margin-bottom:8px;padding:8px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--border);display:none;align-items:center;gap:10px;">
+      <i data-lucide="file" style="width:16px;height:16px;color:var(--primary);flex-shrink:0;"></i>
+      <span id="file-name" style="font-size:.82rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button onclick="clearFile()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end;">
+      <!-- Fayl yuborish -->
+      <label style="cursor:pointer;color:var(--muted);display:flex;align-items:center;padding:8px;border-radius:8px;transition:.15s;" title="Fayl yuborish" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='none'">
+        <i data-lucide="paperclip" style="width:18px;height:18px;"></i>
+        <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx,.zip,.txt" onchange="onFileSelect(this)">
+      </label>
+      <!-- Rasm yuborish -->
+      <label style="cursor:pointer;color:var(--muted);display:flex;align-items:center;padding:8px;border-radius:8px;transition:.15s;" title="Rasm yuborish" onmouseover="this.style.background='rgba(108,99,255,.1)'" onmouseout="this.style.background='none'">
+        <i data-lucide="image" style="width:18px;height:18px;"></i>
+        <input type="file" id="img-input" style="display:none;" accept="image/*" onchange="onFileSelect(this)">
+      </label>
+      <!-- Matn -->
+      <textarea id="msg-input" rows="1" placeholder="Xabar yozing..."
+        style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:.9rem;font-family:inherit;resize:none;outline:none;max-height:120px;transition:.2s;"
+        onfocus="this.style.borderColor='rgba(108,99,255,.5)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';notifyTyping();"></textarea>
+      <button onclick="sendMsg()" id="send-btn"
+        style="width:40px;height:40px;border-radius:12px;background:var(--gradient);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;">
+        <i data-lucide="send" style="width:17px;height:17px;color:#fff;"></i>
+      </button>
+    </div>
+  </div>
 </section>
 
+<style>
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+#chat-box::-webkit-scrollbar{width:4px;}
+#chat-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.msg-bubble{max-width:72%;padding:9px 14px;border-radius:18px;font-size:.9rem;line-height:1.55;word-break:break-word;}
+.msg-bubble img{max-width:100%;border-radius:10px;display:block;margin-top:4px;cursor:pointer;}
+.msg-time{font-size:.68rem;opacity:.55;margin-top:3px;text-align:right;}
+</style>
+
 <script>
-  // Pastga scroll
-  const box = document.getElementById('chat-box');
-  box.scrollTop = box.scrollHeight;
+const OTHER_ID = {{ other.pk }};
+const MY_ID    = {{ user.pk }};
+const CSRF     = '{{ csrf_token }}';
+let lastId     = {% if msgs %}{{ msgs.last.pk }}{% else %}0{% endif %};
+let selectedFile = null;
+let pollTimer  = null;
+
+// ── POLLING ───────────────────────────────────────────────────────────────────
+async function poll() {
+  try {
+    const r    = await fetch(`/messages/${OTHER_ID}/poll/?since=${lastId}`);
+    const data = await r.json();
+    if (data.messages && data.messages.length) {
+      const empty = document.getElementById('empty-msg');
+      if (empty) empty.remove();
+      data.messages.forEach(m => {
+        appendBubble(m);
+        lastId = Math.max(lastId, m.id);
+      });
+      scrollBottom();
+    }
+  } catch(e) {}
+  pollTimer = setTimeout(poll, 2000);
+}
+
+// ── XABAR YUBORISH ────────────────────────────────────────────────────────────
+async function sendMsg() {
+  const inp  = document.getElementById('msg-input');
+  const body = inp.value.trim();
+  if (!body && !selectedFile) return;
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+
+  const fd = new FormData();
+  if (body) fd.append('body', body);
+  if (selectedFile) fd.append('file', selectedFile);
+
+  inp.value = ''; inp.style.height = 'auto';
+  clearFile();
+
+  try {
+    const r    = await fetch(`/messages/${OTHER_ID}/send/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF},
+      body: fd,
+    });
+    const data = await r.json();
+    if (data.ok) {
+      const empty = document.getElementById('empty-msg');
+      if (empty) empty.remove();
+      appendBubble(data.message);
+      lastId = Math.max(lastId, data.message.id);
+      scrollBottom();
+    }
+  } catch(e) {}
+  btn.disabled = false;
+}
+
+// ── BUBBLE YARATISH ───────────────────────────────────────────────────────────
+function appendBubble(m) {
+  const box  = document.getElementById('chat-box');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;' + (m.is_mine ? 'justify-content:flex-end;' : 'align-items:flex-end;gap:8px;');
+
+  let content = '';
+  if (m.msg_type === 'image' && m.file_url) {
+    content = `<img src="${m.file_url}" alt="rasm" onclick="window.open('${m.file_url}','_blank')" style="max-width:240px;border-radius:12px;display:block;cursor:pointer;">`;
+    if (m.body) content += `<div style="margin-top:4px;">${esc(m.body)}</div>`;
+  } else if (m.msg_type === 'file' && m.file_url) {
+    content = `<a href="${m.file_url}" target="_blank" style="display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span style="font-size:.85rem;">${esc(m.file_name || 'Fayl')}</span>
+    </a>`;
+  } else {
+    content = esc(m.body).replace(/\n/g, '<br>');
+  }
+
+  const bubbleStyle = m.is_mine
+    ? 'background:var(--gradient);color:#fff;border-radius:18px 18px 4px 18px;'
+    : 'background:var(--card);border:1px solid var(--border);border-radius:18px 18px 18px 4px;';
+
+  if (!m.is_mine) {
+    wrap.innerHTML = `<div style="width:28px;height:28px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;font-weight:700;flex-shrink:0;">${'{{ other.initial }}'}</div>`;
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.style.cssText = bubbleStyle;
+  bubble.innerHTML = content + `<div class="msg-time">${m.time}</div>`;
+  wrap.appendChild(bubble);
+  box.insertBefore(wrap, document.getElementById('typing-indicator'));
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── FAYL ──────────────────────────────────────────────────────────────────────
+function onFileSelect(input) {
+  if (!input.files[0]) return;
+  selectedFile = input.files[0];
+  const preview = document.getElementById('file-preview');
+  document.getElementById('file-name').textContent = selectedFile.name;
+  preview.style.display = 'flex';
+  // Rasm bo'lsa preview ko'rsat
+  if (selectedFile.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('file-name').innerHTML =
+        `<img src="${e.target.result}" style="height:40px;border-radius:6px;object-fit:cover;"> ${selectedFile.name}`;
+    };
+    reader.readAsDataURL(selectedFile);
+  }
+}
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('img-input').value  = '';
+  document.getElementById('file-preview').style.display = 'none';
+}
+
+// ── TYPING ────────────────────────────────────────────────────────────────────
+let typingTimeout = null;
+function notifyTyping() {
+  // Kelajakda WebSocket bilan kengaytirish mumkin
+}
+
+function scrollBottom() {
+  const b = document.getElementById('chat-box');
+  b.scrollTop = b.scrollHeight;
+}
+
+// Boshlash
+scrollBottom();
+poll();
 </script>
 {% endblock %}

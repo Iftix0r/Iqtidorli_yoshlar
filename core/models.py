@@ -150,9 +150,17 @@ class MentorRequest(models.Model):
 
 
 class Message(models.Model):
+    MSG_TYPES = [
+        ('text',  'Matn'),
+        ('image', 'Rasm'),
+        ('file',  'Fayl'),
+        ('voice', 'Ovozli xabar'),
+    ]
     sender     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     receiver   = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
-    body       = models.TextField()
+    body       = models.TextField(blank=True)
+    msg_type   = models.CharField(max_length=10, choices=MSG_TYPES, default='text')
+    file       = models.FileField(upload_to='messages/', blank=True, null=True)
     is_read    = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -161,6 +169,17 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender} → {self.receiver}: {self.body[:40]}"
+
+    def file_name(self):
+        if self.file:
+            return self.file.name.split('/')[-1]
+        return ''
+
+    def is_image(self):
+        if self.file:
+            ext = self.file.name.lower().split('.')[-1]
+            return ext in ('jpg', 'jpeg', 'png', 'gif', 'webp')
+        return False
 
 
 class Notification(models.Model):
@@ -661,7 +680,3 @@ class MarketOrder(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.item} ({self.status})"
-
-# AIChatSession ga share imkoniyati (migration kerak)
-# AIChatSession.is_shared va share_token maydonlari
-# core/migrations da yangi migration yaratiladi
