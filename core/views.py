@@ -571,12 +571,6 @@ def error_403(request, exception):
 def portal_view(request, section='home'):
     user = request.user
 
-    # AI va Market — redirect
-    if section == 'ai':
-        return redirect('ai_chat')
-    if section == 'market':
-        return redirect('market')
-
     # POST — profil tahrirlash
     if request.method == 'POST':
         action = request.POST.get('action')

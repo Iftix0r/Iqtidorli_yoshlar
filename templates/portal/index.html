@@ -176,9 +176,6 @@
     </button>
 
     <div class="sb-section">Boshqa</div>
-    <a href="/" class="sb-item">
-      <i data-lucide="home"></i><span class="sb-item-label">Saytga qaytish</span>
-    </a>
   </nav>
 
   <div class="sb-bottom">
@@ -453,6 +450,37 @@
       {% endfor %}
     </div>
   </div>
+
+  <!-- ── IQTIDOR AI ── -->
+  {% elif section == 'ai' %}
+  <div class="section-content" style="height:calc(100vh - 120px);display:flex;flex-direction:column;">
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+      <h2 style="font-size:1.1rem;font-weight:700;">✨ Iqtidor AI</h2>
+      <a href="{% url 'ai_chat' %}" target="_blank" class="btn-p btn-ghost" style="font-size:.78rem;">
+        <i data-lucide="external-link" style="width:13px;height:13px;"></i> To'liq ochish
+      </a>
+    </div>
+    <iframe src="{% url 'ai_chat' %}"
+      style="flex:1;width:100%;border:1px solid var(--border);border-radius:14px;background:var(--bg);"
+      id="ai-frame">
+    </iframe>
+  </div>
+
+  <!-- ── IQTIDOR MARKET ── -->
+  {% elif section == 'market' %}
+  <div class="section-content" style="height:calc(100vh - 120px);display:flex;flex-direction:column;">
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+      <h2 style="font-size:1.1rem;font-weight:700;">🛍️ Iqtidor Market</h2>
+      <a href="{% url 'market' %}" target="_blank" class="btn-p btn-ghost" style="font-size:.78rem;">
+        <i data-lucide="external-link" style="width:13px;height:13px;"></i> To'liq ochish
+      </a>
+    </div>
+    <iframe src="{% url 'market' %}"
+      style="flex:1;width:100%;border:1px solid var(--border);border-radius:14px;background:var(--bg);"
+      id="market-frame">
+    </iframe>
+  </div>
+
   {% endif %}
 
   </div><!-- /content -->
