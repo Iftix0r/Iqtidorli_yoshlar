@@ -12,10 +12,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='project',
-            name='funding_amount',
-        ),
         migrations.AddField(
             model_name='message',
             name='file',
