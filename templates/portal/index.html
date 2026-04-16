@@ -216,6 +216,13 @@
     <button class="fb" onclick="toggleTheme()" title="Tema">
       <i data-lucide="moon" id="theme-icon"></i>
     </button>
+    <button onclick="go('settings')" style="background:none;border:none;cursor:pointer;padding:2px;" title="Profil">
+      {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(108,99,255,.4);">
+      {% else %}
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;">{{ user.initial }}</div>
+      {% endif %}
+    </button>
   </div>
 
   <div id="content">
