@@ -1,0 +1,504 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portal — {{ user.get_full_name }}</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/favicon-32.png' %}"/>
+  <script src="{% static 'js/lucide.min.js' %}"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --bg:#111113;--sb:#18181b;--card:#1c1c1f;--border:rgba(255,255,255,.08);
+      --text:#f4f4f5;--muted:#71717a;--primary:#6C63FF;--accent:#43E97B;
+      --grad:linear-gradient(135deg,#6C63FF,#43E97B);--danger:#FF6584;
+    }
+    [data-theme="light"]{
+      --bg:#fafafa;--sb:#f4f4f5;--card:#fff;--border:rgba(0,0,0,.08);
+      --text:#18181b;--muted:#71717a;
+    }
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;}
+
+    /* SIDEBAR */
+    #sb{width:240px;min-width:240px;height:100vh;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .2s;}
+    #sb.collapsed{width:56px;min-width:56px;}
+
+    .sb-top{padding:14px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+    .sb-logo{font-size:.95rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;overflow:hidden;}
+    #sb.collapsed .sb-logo{display:none;}
+    .sb-toggle{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;}
+    .sb-toggle:hover{background:rgba(255,255,255,.06);color:var(--text);}
+
+    .sb-profile{padding:14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;overflow:hidden;}
+    .sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0;object-fit:cover;}
+    .sb-profile-info{overflow:hidden;}
+    .sb-profile-name{font-size:.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .sb-profile-role{font-size:.72rem;color:var(--muted);}
+    #sb.collapsed .sb-profile-info{display:none;}
+
+    .sb-nav{flex:1;overflow-y:auto;padding:8px 6px;}
+    .sb-nav::-webkit-scrollbar{width:3px;}
+    .sb-nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    .sb-section{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:10px 8px 4px;white-space:nowrap;overflow:hidden;}
+    #sb.collapsed .sb-section{display:none;}
+
+    .sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:.85rem;transition:.15s;cursor:pointer;border:none;background:none;font-family:inherit;width:100%;text-align:left;white-space:nowrap;overflow:hidden;}
+    .sb-item:hover{background:rgba(255,255,255,.06);color:var(--text);}
+    .sb-item.active{background:rgba(108,99,255,.15);color:var(--primary);}
+    .sb-item [data-lucide]{width:16px;height:16px;flex-shrink:0;}
+    .sb-item-label{overflow:hidden;text-overflow:ellipsis;}
+    #sb.collapsed .sb-item-label{display:none;}
+    #sb.collapsed .sb-item{justify-content:center;padding:10px;}
+
+    .sb-bottom{padding:8px 6px;border-top:1px solid var(--border);}
+
+    /* MAIN */
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    #topbar{height:52px;background:var(--sb);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+    .topbar-title{font-size:.95rem;font-weight:700;color:var(--text);}
+    .topbar-right{display:flex;align-items:center;gap:10px;}
+    .tb-btn{background:none;border:none;color:var(--muted);cursor:pointer;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:.15s;text-decoration:none;}
+    .tb-btn:hover{background:rgba(255,255,255,.06);color:var(--text);}
+    .tb-btn [data-lucide]{width:17px;height:17px;}
+
+    #content{flex:1;overflow-y:auto;padding:24px;}
+    #content::-webkit-scrollbar{width:4px;}
+    #content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+    /* CARDS */
+    .p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
+    .p-card-title{font-size:.9rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--text);}
+    .p-card-title [data-lucide]{width:16px;height:16px;color:var(--primary);}
+
+    /* STAT GRID */
+    .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+    .stat-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+    .stat-num{font-size:1.6rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .stat-lbl{font-size:.72rem;color:var(--muted);margin-top:4px;}
+
+    /* FORM */
+    .p-form label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px;}
+    .p-form input,.p-form select,.p-form textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.88rem;font-family:inherit;outline:none;transition:.15s;}
+    .p-form input:focus,.p-form select:focus,.p-form textarea:focus{border-color:var(--primary);}
+    .p-form .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px;}
+    .p-form select option{background:var(--sb);}
+
+    /* BUTTONS */
+    .btn-p{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:.15s;text-decoration:none;}
+    .btn-grad{background:var(--grad);color:#fff;}
+    .btn-grad:hover{opacity:.85;}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border);}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);}
+    .btn-danger{background:rgba(255,101,132,.12);color:var(--danger);border:1px solid rgba(255,101,132,.2);}
+
+    /* BADGE */
+    .tag-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.2);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:.78rem;font-weight:600;}
+    .tag-green{background:rgba(67,233,123,.1);border-color:rgba(67,233,123,.2);color:var(--accent);}
+    .tag-gold{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.2);color:#FFD700;}
+    .tag-red{background:rgba(255,101,132,.1);border-color:rgba(255,101,132,.2);color:var(--danger);}
+
+    /* LIST ITEM */
+    .list-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .list-item:last-child{border-bottom:none;}
+    .list-icon{width:34px;height:34px;border-radius:8px;background:rgba(108,99,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .list-icon [data-lucide]{width:15px;height:15px;color:var(--primary);}
+
+    /* BADGE GRID */
+    .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
+    .badge-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+    .badge-box.earned{border-color:rgba(108,99,255,.35);background:rgba(108,99,255,.06);}
+    .badge-box.locked{opacity:.4;filter:grayscale(1);}
+
+    /* THEME */
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .section-content{animation:fadeIn .2s ease;}
+  </style>
+  <script>(function(){const t=localStorage.getItem('portal_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sb">
+  <div class="sb-top">
+    <span class="sb-logo">⚡ Iqtidorli Yoshlar</span>
+    <button class="sb-toggle" onclick="toggleSb()"><i data-lucide="panel-left"></i></button>
+  </div>
+
+  <div class="sb-profile">
+    {% if user.avatar %}
+      <img src="{{ user.avatar.url }}" class="sb-avatar">
+    {% else %}
+      <div class="sb-avatar">{{ user.initial }}</div>
+    {% endif %}
+    <div class="sb-profile-info">
+      <div class="sb-profile-name">{{ user.get_full_name|default:user.phone }}</div>
+      <div class="sb-profile-role">{{ user.get_role_display }} · ⚡ {{ user.score }}</div>
+    </div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section">Asosiy</div>
+    <button class="sb-item {% if section == 'home' %}active{% endif %}" onclick="go('home')">
+      <i data-lucide="home"></i><span class="sb-item-label">Bosh sahifa</span>
+    </button>
+    <button class="sb-item {% if section == 'settings' %}active{% endif %}" onclick="go('settings')">
+      <i data-lucide="user"></i><span class="sb-item-label">Profil & Sozlamalar</span>
+    </button>
+    <button class="sb-item {% if section == 'skills' %}active{% endif %}" onclick="go('skills')">
+      <i data-lucide="zap"></i><span class="sb-item-label">Ko'nikmalar</span>
+    </button>
+    <button class="sb-item {% if section == 'projects' %}active{% endif %}" onclick="go('projects')">
+      <i data-lucide="folder-open"></i><span class="sb-item-label">Loyihalar</span>
+    </button>
+    <button class="sb-item {% if section == 'certs' %}active{% endif %}" onclick="go('certs')">
+      <i data-lucide="award"></i><span class="sb-item-label">Sertifikatlar</span>
+    </button>
+
+    <div class="sb-section">Faoliyat</div>
+    <button class="sb-item {% if section == 'courses' %}active{% endif %}" onclick="go('courses')">
+      <i data-lucide="graduation-cap"></i><span class="sb-item-label">Kurslarim</span>
+    </button>
+    <button class="sb-item {% if section == 'badges' %}active{% endif %}" onclick="go('badges')">
+      <i data-lucide="trophy"></i><span class="sb-item-label">Nishonlar & XP</span>
+    </button>
+    <button class="sb-item {% if section == 'orders' %}active{% endif %}" onclick="go('orders')">
+      <i data-lucide="shopping-bag"></i><span class="sb-item-label">Market Buyurtmalar</span>
+    </button>
+    <button class="sb-item {% if section == 'activity' %}active{% endif %}" onclick="go('activity')">
+      <i data-lucide="activity"></i><span class="sb-item-label">Faoliyat Tarixi</span>
+    </button>
+    <button class="sb-item {% if section == 'logins' %}active{% endif %}" onclick="go('logins')">
+      <i data-lucide="shield"></i><span class="sb-item-label">Kirish Tarixi</span>
+    </button>
+
+    <div class="sb-section">Tezkor</div>
+    <a href="{% url 'ai_chat' %}" class="sb-item">
+      <i data-lucide="sparkles"></i><span class="sb-item-label">Iqtidor AI</span>
+    </a>
+    <a href="{% url 'market' %}" class="sb-item">
+      <i data-lucide="store"></i><span class="sb-item-label">Market</span>
+    </a>
+    <a href="/" class="sb-item">
+      <i data-lucide="external-link"></i><span class="sb-item-label">Saytga qaytish</span>
+    </a>
+  </nav>
+
+  <div class="sb-bottom">
+    <a href="{% url 'logout' %}" class="sb-item" style="color:var(--danger);">
+      <i data-lucide="log-out"></i><span class="sb-item-label">Chiqish</span>
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+  <header id="topbar">
+    <div class="topbar-title" id="topbar-title">
+      {% if section == 'home' %}🏠 Bosh sahifa
+      {% elif section == 'settings' %}👤 Profil & Sozlamalar
+      {% elif section == 'skills' %}⚡ Ko'nikmalar
+      {% elif section == 'projects' %}📁 Loyihalar
+      {% elif section == 'certs' %}🏅 Sertifikatlar
+      {% elif section == 'courses' %}🎓 Kurslarim
+      {% elif section == 'badges' %}🏆 Nishonlar & XP
+      {% elif section == 'orders' %}📦 Market Buyurtmalar
+      {% elif section == 'activity' %}📊 Faoliyat Tarixi
+      {% elif section == 'logins' %}🔐 Kirish Tarixi
+      {% else %}Portal{% endif %}
+    </div>
+    <div class="topbar-right">
+      <a href="{% url 'notifications' %}" class="tb-btn" title="Bildirishnomalar">
+        <i data-lucide="bell"></i>
+        {% if user.unread_notifications %}<span style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#FF6584;"></span>{% endif %}
+      </a>
+      <a href="{% url 'inbox' %}" class="tb-btn" title="Xabarlar">
+        <i data-lucide="message-circle"></i>
+      </a>
+      <button class="tb-btn" onclick="toggleTheme()" title="Tema">
+        <i data-lucide="moon" id="theme-icon"></i>
+      </button>
+      <a href="{% url 'public_profile' pk=user.pk %}" class="tb-btn" title="Ommaviy profil">
+        <i data-lucide="eye"></i>
+      </a>
+    </div>
+  </header>
+
+  <div id="content">
+
+  <!-- ── HOME ── -->
+  {% if section == 'home' %}
+  <div class="section-content">
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num">{{ user.score }}</div><div class="stat-lbl">⚡ Ball</div></div>
+      <div class="stat-box"><div class="stat-num">{{ badges|length }}</div><div class="stat-lbl">🎖️ Nishon</div></div>
+      <div class="stat-box"><div class="stat-num">{{ total_xp }}</div><div class="stat-lbl">XP</div></div>
+      <div class="stat-box"><div class="stat-num">{% if streak %}{{ streak.current_streak }}{% else %}0{% endif %}</div><div class="stat-lbl">🔥 Streak</div></div>
+      <div class="stat-box"><div class="stat-num">{{ projects|length }}</div><div class="stat-lbl">📁 Loyiha</div></div>
+      <div class="stat-box"><div class="stat-num">{{ enrollments|length }}</div><div class="stat-lbl">🎓 Kurs</div></div>
+    </div>
+
+    {% if mentor_requests %}
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="handshake"></i> Mentor So'rovlari ({{ mentor_requests|length }})</div>
+      {% for req in mentor_requests %}
+      <div class="list-item">
+        <div class="list-icon"><i data-lucide="user"></i></div>
+        <div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">{{ req.sender.get_full_name }}</div><div style="font-size:.75rem;color:var(--muted);">{{ req.message|truncatechars:60 }}</div></div>
+        <a href="{% url 'mentor_handle' req_id=req.pk action='accept' %}" class="btn-p btn-grad" style="padding:5px 12px;font-size:.75rem;">Qabul</a>
+        <a href="{% url 'mentor_handle' req_id=req.pk action='reject' %}" class="btn-p btn-ghost" style="padding:5px 12px;font-size:.75rem;">Rad</a>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="activity"></i> So'nggi Faoliyat</div>
+      {% for act in activities|slice:":8" %}
+      <div class="list-item">
+        <div class="list-icon"><i data-lucide="clock"></i></div>
+        <div style="flex:1;"><div style="font-size:.85rem;">{{ act.get_action_display }}</div><div style="font-size:.72rem;color:var(--muted);">{{ act.detail|truncatechars:50 }}</div></div>
+        <span style="font-size:.72rem;color:var(--muted);">{{ act.created_at|date:"d.m H:i" }}</span>
+      </div>
+      {% empty %}<p style="color:var(--muted);font-size:.85rem;">Hali faoliyat yo'q</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  {% elif section == 'settings' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="user"></i> Profil Ma'lumotlari</div>
+      <form method="post" enctype="multipart/form-data" class="p-form">
+        {% csrf_token %}<input type="hidden" name="action" value="profile">
+        <div class="row">
+          <div><label>Ism</label><input type="text" name="first_name" value="{{ user.first_name }}"></div>
+          <div><label>Familiya</label><input type="text" name="last_name" value="{{ user.last_name }}"></div>
+        </div>
+        <div class="row">
+          <div><label>Telefon</label><input type="text" value="{{ user.phone }}" disabled style="opacity:.5;"></div>
+          <div><label>Email</label><input type="email" name="email" value="{{ user.email }}"></div>
+        </div>
+        <div class="row">
+          <div><label>Viloyat</label>
+            <select name="region">
+              <option value="">— Tanlang —</option>
+              {% for val, lbl in profile_form.fields.region.choices %}<option value="{{ val }}" {% if user.region == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+            </select>
+          </div>
+          <div><label>Rol</label>
+            <select name="role">
+              {% for val, lbl in profile_form.fields.role.choices %}<option value="{{ val }}" {% if user.role == val %}selected{% endif %}>{{ lbl }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;"><label>Bio</label><textarea name="bio" rows="3">{{ user.bio }}</textarea></div>
+        <div style="margin-bottom:16px;"><label>Avatar</label><input type="file" name="avatar" accept="image/*"></div>
+        <button type="submit" class="btn-p btn-grad"><i data-lucide="save"></i> Saqlash</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── SKILLS ── -->
+  {% elif section == 'skills' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="zap"></i> Ko'nikmalar</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        {% for s in skills %}
+        <span class="tag-pill">{{ s.skill_name }}
+          <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="del_skill"><input type="hidden" name="skill_id" value="{{ s.pk }}"><button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;font-size:.8rem;padding:0 0 0 4px;">✕</button></form>
+        </span>
+        {% empty %}<p style="color:var(--muted);font-size:.85rem;">Ko'nikma qo'shing</p>
+        {% endfor %}
+      </div>
+      <form method="post" class="p-form" style="display:flex;gap:10px;">
+        {% csrf_token %}<input type="hidden" name="action" value="skill">
+        <input type="text" name="skill_name" placeholder="Yangi ko'nikma..." style="flex:1;">
+        <button type="submit" class="btn-p btn-grad"><i data-lucide="plus"></i> Qo'shish</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── PROJECTS ── -->
+  {% elif section == 'projects' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="folder-open"></i> Loyihalar</div>
+      {% for p in projects %}
+      <div class="list-item">
+        <div class="list-icon"><i data-lucide="code-2"></i></div>
+        <div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">{{ p.title }}</div><div style="font-size:.75rem;color:var(--muted);">{{ p.description|truncatechars:60 }}</div></div>
+        {% if p.link %}<a href="{{ p.link }}" target="_blank" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.75rem;"><i data-lucide="external-link"></i></a>{% endif %}
+      </div>
+      {% empty %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;">Hali loyiha yo'q</p>
+      {% endfor %}
+    </div>
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="plus-circle"></i> Yangi Loyiha</div>
+      <form method="post" class="p-form">
+        {% csrf_token %}<input type="hidden" name="action" value="project">
+        <div class="row"><div><label>Nomi</label><input type="text" name="title" required></div><div><label>Havola</label><input type="url" name="link" placeholder="https://..."></div></div>
+        <div style="margin-bottom:12px;"><label>Tavsif</label><textarea name="description" rows="2"></textarea></div>
+        <button type="submit" class="btn-p btn-grad"><i data-lucide="save"></i> Saqlash</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── CERTS ── -->
+  {% elif section == 'certs' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="award"></i> Sertifikatlar</div>
+      {% for c in certificates %}
+      <div class="list-item">
+        <div class="list-icon"><i data-lucide="file-badge"></i></div>
+        <div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">{{ c.title }}</div><div style="font-size:.75rem;color:var(--muted);">{{ c.issuer }} {% if c.issued_date %}· {{ c.issued_date|date:"Y" }}{% endif %}</div></div>
+        {% if c.link %}<a href="{{ c.link }}" target="_blank" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.75rem;"><i data-lucide="external-link"></i></a>{% endif %}
+      </div>
+      {% empty %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:16px;">Hali sertifikat yo'q</p>
+      {% endfor %}
+    </div>
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="plus-circle"></i> Yangi Sertifikat</div>
+      <form method="post" enctype="multipart/form-data" class="p-form">
+        {% csrf_token %}<input type="hidden" name="action" value="certificate">
+        <div class="row"><div><label>Nomi</label><input type="text" name="title" required></div><div><label>Beruvchi tashkilot</label><input type="text" name="issuer"></div></div>
+        <div class="row"><div><label>Sana</label><input type="date" name="issued_date"></div><div><label>Havola</label><input type="url" name="link" placeholder="https://..."></div></div>
+        <div style="margin-bottom:12px;"><label>Rasm</label><input type="file" name="image" accept="image/*"></div>
+        <button type="submit" class="btn-p btn-grad"><i data-lucide="save"></i> Saqlash</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── COURSES ── -->
+  {% elif section == 'courses' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="graduation-cap"></i> Yozilgan Kurslar</div>
+      {% for e in enrollments %}
+      <div class="list-item">
+        <div class="list-icon"><i data-lucide="book-open"></i></div>
+        <div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">{{ e.course.title }}</div>
+          <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:5px;width:120px;"><div style="height:100%;width:{{ e.course.progress|default:0 }}%;background:var(--grad);border-radius:2px;"></div></div>
+        </div>
+        {% if e.completed %}<span class="tag-pill tag-green">✓ Tugatildi</span>{% else %}<a href="{% url 'course_detail' pk=e.course.pk %}" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.75rem;">Davom etish</a>{% endif %}
+      </div>
+      {% empty %}<p style="color:var(--muted);font-size:.85rem;">Hali kursga yozilmagan. <a href="{% url 'courses' %}" style="color:var(--primary);">Kurslarga o'tish →</a></p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── BADGES ── -->
+  {% elif section == 'badges' %}
+  <div class="section-content">
+    <div class="stat-row" style="margin-bottom:16px;">
+      <div class="stat-box"><div class="stat-num">{{ total_xp }}</div><div class="stat-lbl">Jami XP</div></div>
+      <div class="stat-box"><div class="stat-num">{{ badges|length }}</div><div class="stat-lbl">Nishonlar</div></div>
+      {% if streak %}<div class="stat-box"><div class="stat-num" style="color:#FF6432;">{{ streak.current_streak }}🔥</div><div class="stat-lbl">Streak</div></div>
+      <div class="stat-box"><div class="stat-num">{{ streak.longest_streak }}</div><div class="stat-lbl">Eng uzun</div></div>{% endif %}
+    </div>
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="trophy"></i> Nishonlar</div>
+      <div class="badge-grid">
+        {% for b in badges %}
+        <div class="badge-box earned">
+          <div style="font-size:1.8rem;margin-bottom:6px;">{{ b.info.icon }}</div>
+          <div style="font-size:.78rem;font-weight:700;">{{ b.info.name }}</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:3px;">+{{ b.info.xp }} XP</div>
+        </div>
+        {% empty %}<p style="color:var(--muted);font-size:.85rem;grid-column:1/-1;">Hali nishon yo'q. Faol bo'ling!</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ORDERS ── -->
+  {% elif section == 'orders' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="shopping-bag"></i> Market Buyurtmalar</div>
+      {% for o in orders %}
+      <div class="list-item">
+        <div class="list-icon"><i data-lucide="package"></i></div>
+        <div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">{{ o.item.title }}</div><div style="font-size:.72rem;color:var(--muted);">{{ o.created_at|date:"d.m.Y" }}</div></div>
+        <span style="font-size:.82rem;font-weight:700;color:var(--primary);">-{{ o.price_paid }} ⚡</span>
+        <span class="tag-pill {% if o.status == 'approved' or o.status == 'delivered' %}tag-green{% elif o.status == 'rejected' %}tag-red{% else %}tag-gold{% endif %}" style="margin-left:8px;">{{ o.get_status_display }}</span>
+      </div>
+      {% empty %}<p style="color:var(--muted);font-size:.85rem;">Hali buyurtma yo'q. <a href="{% url 'market' %}" style="color:var(--primary);">Marketga o'tish →</a></p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── ACTIVITY ── -->
+  {% elif section == 'activity' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="activity"></i> Faoliyat Tarixi</div>
+      {% for act in activities %}
+      <div class="list-item">
+        <div class="list-icon"><i data-lucide="clock"></i></div>
+        <div style="flex:1;"><div style="font-size:.85rem;font-weight:600;">{{ act.get_action_display }}</div><div style="font-size:.75rem;color:var(--muted);">{{ act.detail }}</div></div>
+        <span style="font-size:.72rem;color:var(--muted);">{{ act.created_at|date:"d.m H:i" }}</span>
+      </div>
+      {% empty %}<p style="color:var(--muted);font-size:.85rem;">Faoliyat yo'q</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── LOGINS ── -->
+  {% elif section == 'logins' %}
+  <div class="section-content">
+    <div class="p-card">
+      <div class="p-card-title"><i data-lucide="shield"></i> Kirish Tarixi</div>
+      {% for l in login_history %}
+      <div class="list-item">
+        <div class="list-icon" style="background:{% if l.is_success %}rgba(67,233,123,.1){% else %}rgba(255,101,132,.1){% endif %};">
+          <i data-lucide="{% if l.is_success %}check-circle{% else %}x-circle{% endif %}" style="color:{% if l.is_success %}var(--accent){% else %}var(--danger){% endif %};"></i>
+        </div>
+        <div style="flex:1;"><div style="font-size:.85rem;">{{ l.device }} · {{ l.os }} · {{ l.browser }}</div><div style="font-size:.75rem;color:var(--muted);">{{ l.ip_address }}</div></div>
+        <span style="font-size:.72rem;color:var(--muted);">{{ l.created_at|date:"d.m H:i" }}</span>
+      </div>
+      {% empty %}<p style="color:var(--muted);font-size:.85rem;">Kirish tarixi yo'q</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+lucide.createIcons();
+
+function go(sec) {
+  window.location.href = '/portal/' + sec + '/';
+}
+
+function toggleSb() {
+  document.getElementById('sb').classList.toggle('collapsed');
+  localStorage.setItem('sb_collapsed', document.getElementById('sb').classList.contains('collapsed'));
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const t = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', t);
+  localStorage.setItem('portal_theme', t);
+  document.getElementById('theme-icon').setAttribute('data-lucide', t === 'dark' ? 'moon' : 'sun');
+  lucide.createIcons();
+}
+
+// Sidebar holati
+if (localStorage.getItem('sb_collapsed') === 'true') {
+  document.getElementById('sb').classList.add('collapsed');
+}
+
+// Theme icon
+const th = localStorage.getItem('portal_theme') || 'dark';
+document.getElementById('theme-icon').setAttribute('data-lucide', th === 'dark' ? 'moon' : 'sun');
+lucide.createIcons();
+</script>
+</body>
+</html>

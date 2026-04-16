@@ -63,13 +63,13 @@
       <i data-lucide="moon" class="icon-moon"></i>
       <i data-lucide="sun" class="icon-sun" style="display:none"></i>
     </button>
-    <button class="nav-hamburger" id="drawerToggle" onclick="openDrawer()">
+    <a href="{% url 'portal' %}" class="nav-hamburger" title="Portal" style="text-decoration:none;">
       {% if user.avatar %}
-        <img src="{{ user.avatar.url }}" alt="{{ user.initial }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"/>
+        <img src="{{ user.avatar.url }}" alt="{{ user.initial }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(108,99,255,.4);"/>
       {% else %}
         <div class="nav-avatar-placeholder">{{ user.initial }}</div>
       {% endif %}
-    </button>
+    </a>
   </div>
 
   {% else %}

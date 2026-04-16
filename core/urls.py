@@ -35,4 +35,8 @@ urlpatterns = [
     path('market/',              market_views.market_view,  name='market'),
     path('market/<int:pk>/buy/', market_views.market_buy,   name='market_buy'),
     path('market/orders/',       market_views.my_orders,    name='my_orders'),
+
+    # Portal
+    path('portal/',              views.portal_view,         name='portal'),
+    path('portal/<str:section>/',views.portal_view,         name='portal_section'),
 ]

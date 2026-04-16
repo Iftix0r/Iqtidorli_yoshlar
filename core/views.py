@@ -564,3 +564,75 @@ def error_500(request):
 
 def error_403(request, exception):
     return render(request, '404.html', status=403)
+
+
+# ── PORTAL ────────────────────────────────────────────────────────────────────
+@login_required
+def portal_view(request, section='home'):
+    user = request.user
+
+    # POST — profil tahrirlash
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'profile':
+            from .forms import ProfileForm
+            form = ProfileForm(request.POST, request.FILES, instance=user)
+            if form.is_valid():
+                form.save()
+                log_activity(user, 'profile_edit', 'Profil yangilandi')
+                messages.success(request, 'Profil yangilandi.')
+            return redirect('portal_section', section='settings')
+        elif action == 'skill':
+            from .forms import SkillForm
+            form = SkillForm(request.POST)
+            if form.is_valid():
+                s = form.save(commit=False); s.user = user; s.save()
+                log_activity(user, 'skill_add', s.skill_name)
+            return redirect('portal_section', section='skills')
+        elif action == 'del_skill':
+            user.skills.filter(pk=request.POST.get('skill_id')).delete()
+            return redirect('portal_section', section='skills')
+        elif action == 'project':
+            from .forms import ProjectForm
+            form = ProjectForm(request.POST)
+            if form.is_valid():
+                p = form.save(commit=False); p.user = user; p.save()
+                log_activity(user, 'project_add', p.title)
+            return redirect('portal_section', section='projects')
+        elif action == 'certificate':
+            from .forms import CertificateForm
+            form = CertificateForm(request.POST, request.FILES)
+            if form.is_valid():
+                c = form.save(commit=False); c.user = user; c.save()
+                log_activity(user, 'cert_add', c.title)
+            return redirect('portal_section', section='certs')
+
+    from .forms import ProfileForm, SkillForm, ProjectForm, CertificateForm
+    from .models import (CourseEnrollment, MarketOrder, Badge,
+                         UserStreak, XPLog, AIChatSession)
+
+    ctx = {
+        'section':       section,
+        'profile_form':  ProfileForm(instance=user),
+        'skill_form':    SkillForm(),
+        'project_form':  ProjectForm(),
+        'cert_form':     CertificateForm(),
+        'skills':        user.skills.all(),
+        'projects':      user.projects.order_by('-created_at'),
+        'certificates':  user.certificates.order_by('-issued_date'),
+        'activities':    user.activities.all()[:20],
+        'login_history': user.login_history.all()[:10],
+        'notifs':        user.notifications.all()[:15],
+        'enrollments':   CourseEnrollment.objects.filter(user=user).select_related('course'),
+        'orders':        MarketOrder.objects.filter(user=user).select_related('item')[:10],
+        'badges':        user.badges.all(),
+        'ai_sessions':   AIChatSession.objects.filter(user=user)[:5],
+        'mentor_requests': user.received_requests.filter(status='pending'),
+    }
+    try:
+        ctx['streak'] = user.streak
+    except Exception:
+        ctx['streak'] = None
+    ctx['total_xp'] = sum(x.amount for x in user.xp_logs.all())
+
+    return render(request, 'portal/index.html', ctx)
