@@ -111,6 +111,7 @@ urlpatterns = [
     # AI imkoniyatlari
     path('ai/',                      ai_views.ai_chat,            name='ai_chat'),
     path('ai/new/',                  ai_views.ai_new_session,     name='ai_new_session'),
+    path('ai/new-json/',             ai_views.ai_new_session_json, name='ai_new_session_json'),
     path('ai/<int:session_id>/',     ai_views.ai_chat,            name='ai_chat_session'),
     path('ai/<int:session_id>/send/',ai_views.ai_send_message,    name='ai_send_message'),
     path('ai/<int:session_id>/del/', ai_views.ai_delete_session,  name='ai_delete_session'),

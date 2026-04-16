@@ -98,7 +98,23 @@ def ai_chat(request, session_id=None):
 def ai_new_session(request):
     mode    = request.POST.get('mode', 'general')
     session = AIChatSession.objects.create(user=request.user, mode=mode, title='')
+    next_url = request.POST.get('next', '')
+    if next_url == 'portal':
+        return redirect(f'/portal/ai/?sid={session.pk}')
     return redirect('ai_chat_session', session_id=session.pk)
+
+
+@login_required
+@require_POST
+def ai_new_session_json(request):
+    """Portal JS uchun — JSON response"""
+    try:
+        data = json.loads(request.body)
+        mode = data.get('mode', 'general')
+    except Exception:
+        mode = 'general'
+    session = AIChatSession.objects.create(user=request.user, mode=mode, title='')
+    return JsonResponse({'session_id': session.pk})
 
 
 @login_required

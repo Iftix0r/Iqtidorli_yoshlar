@@ -21,7 +21,7 @@
     body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;}
 
     /* SIDEBAR */
-    #sb{width:240px;min-width:240px;height:100vh;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .2s;}
+    #sb{width:240px;min-width:240px;height:100vh;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .2s;overflow:hidden;}
     #sb.collapsed{width:56px;min-width:56px;}
 
     .sb-top{padding:14px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
@@ -54,7 +54,7 @@
     .sb-bottom{padding:8px 6px;border-top:1px solid var(--border);}
 
     /* MAIN */
-    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;min-height:0;}
 
     /* Floating ikonlar — header yo'q */
     #floating-btns{
@@ -68,10 +68,10 @@
     .fb:hover{background:rgba(255,255,255,.08);color:var(--text);}
     .fb [data-lucide]{width:17px;height:17px;}
 
-    #content{flex:1;overflow-y:auto;padding:24px;padding-top:56px;}
+    #content{flex:1;overflow-y:auto;padding:24px;padding-top:56px;min-height:0;}
     #content::-webkit-scrollbar{width:4px;}
     #content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-    #content.no-pad{padding:0;overflow:hidden;}
+    #content.no-pad{padding:0;overflow:hidden;height:100%;display:flex;flex-direction:column;}
 
     /* CARDS */
     .p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
@@ -462,9 +462,9 @@
 
   <!-- ── IQTIDOR AI ── -->
   {% elif section == 'ai' %}
-  <div class="section-content" style="height:100vh;display:flex;flex-direction:column;">
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
 
-    <div id="ai-msgs" style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:0;">
+    <div id="ai-msgs" style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:0;min-height:0;">
       {% if not ai_messages %}
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;">
         <div style="font-size:2.5rem;margin-bottom:12px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">✦</div>
@@ -622,13 +622,23 @@ async function aiSend() {
       const r = await fetch('/ai/new/', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
-        body: 'mode=' + currentAIMode,
-        redirect: 'manual'
+        body: 'mode=' + currentAIMode + '&next=portal'
       });
-      // Redirect URL dan session ID olish
-      const loc = r.headers.get('location') || r.url;
-      const m = loc.match(/\/ai\/(\d+)\//);
-      if (m) currentSID = parseInt(m[1]);
+      const text = await r.text();
+      // URL dan sid olish
+      const m = r.url.match(/sid=(\d+)/);
+      if (m) {
+        currentSID = parseInt(m[1]);
+      } else {
+        // Fallback: JSON endpoint orqali yaratish
+        const r2 = await fetch('/ai/new-json/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+          body: JSON.stringify({mode: currentAIMode})
+        });
+        const d2 = await r2.json();
+        if (d2.session_id) currentSID = d2.session_id;
+      }
     }
 
     if (!currentSID) {
