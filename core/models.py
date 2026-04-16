@@ -69,6 +69,9 @@ class Project(models.Model):
     image       = models.ImageField(upload_to='projects/', blank=True, null=True)
     is_startup  = models.BooleanField(default=False, verbose_name="Startapmi?")
     needs_team  = models.BooleanField(default=False, verbose_name="Jamoa kerakmi?")
+    funding_amount = models.CharField(max_length=100, blank=True, verbose_name="Kerakli mablag' (masalan: $5000)")
+    required_resources = models.TextField(blank=True, verbose_name="Nimalar kerak? (uskunalar, ofis, va h.k.)")
+    is_public   = models.BooleanField(default=True, verbose_name="Ommaviy ko'rinsinmi?")
     created_at  = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

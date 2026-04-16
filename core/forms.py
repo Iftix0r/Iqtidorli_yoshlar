@@ -76,11 +76,14 @@ class SkillForm(forms.ModelForm):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model   = Project
-        fields  = ('title', 'description', 'link')
+        fields  = ('title', 'description', 'link', 'is_startup', 'needs_team', 'funding_amount', 'required_resources', 'image')
         widgets = {
-            'title':       forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Loyiha nomi'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'link':        forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
+            'title':       forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Loyiha yoki Startap nomi'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Loyiha haqida batafsil ma\'lumot...'}),
+            'link':        forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://demo-link.uz'}),
+            'funding_amount': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masalan: $2000 yoki 20,000,000 so\'m'}),
+            'required_resources': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Ofis, serverlar, investor, va b.'}),
+            'image':       forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
 
 
