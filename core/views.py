@@ -818,3 +818,50 @@ def messages_send(request, pk):
         item['is_image']  = msg.is_image()
 
     return JsonResponse({'ok': True, 'message': item})
+
+
+# ── WEBRTC SIGNALING ──────────────────────────────────────────────────────────
+@login_required
+@require_POST
+def call_signal(request, pk):
+    """WebRTC signaling — offer/answer/candidate/call/accept/reject/end"""
+    import json as _json
+    other = get_object_or_404(User, pk=pk)
+    try:
+        data = _json.loads(request.body)
+    except Exception:
+        return JsonResponse({'error': 'bad request'}, status=400)
+
+    from .models import CallSignal
+    CallSignal.objects.create(
+        sender    = request.user,
+        receiver  = other,
+        sig_type  = data.get('type', 'offer'),
+        call_type = data.get('call_type', 'video'),
+        payload   = data.get('payload', ''),
+    )
+    return JsonResponse({'ok': True})
+
+
+@login_required
+def call_poll(request, pk):
+    """Signallarni olish"""
+    from .models import CallSignal
+    signals = CallSignal.objects.filter(
+        receiver=request.user,
+        sender_id=pk,
+        is_read=False,
+    ).order_by('created_at')
+
+    result = [{'type': s.sig_type, 'call_type': s.call_type,
+               'payload': s.payload, 'id': s.pk} for s in signals]
+    signals.update(is_read=True)
+
+    # Eski signallarni tozalash (5 daqiqadan eski)
+    from django.utils import timezone
+    from datetime import timedelta
+    CallSignal.objects.filter(
+        created_at__lt=timezone.now() - timedelta(minutes=5)
+    ).delete()
+
+    return JsonResponse({'signals': result})

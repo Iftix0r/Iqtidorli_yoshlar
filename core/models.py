@@ -680,3 +680,28 @@ class MarketOrder(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.item} ({self.status})"
+
+
+# ── VIDEO/OVOZ QONGIROQ ───────────────────────────────────────────────────────
+class CallSignal(models.Model):
+    TYPES = [
+        ('offer',     'Offer'),
+        ('answer',    'Answer'),
+        ('candidate', 'ICE Candidate'),
+        ('call',      'Qongiroq'),
+        ('accept',    'Qabul'),
+        ('reject',    'Rad'),
+        ('end',       'Tugatish'),
+    ]
+    CALL_TYPES = [('video', 'Video'), ('audio', 'Ovoz')]
+
+    sender    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_signals')
+    receiver  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_signals')
+    sig_type  = models.CharField(max_length=15, choices=TYPES)
+    call_type = models.CharField(max_length=10, choices=CALL_TYPES, default='video')
+    payload   = models.TextField(blank=True)  # JSON: SDP yoki ICE candidate
+    is_read   = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
