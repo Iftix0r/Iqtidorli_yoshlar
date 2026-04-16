@@ -330,16 +330,50 @@
     </div>
     {% endif %}
 
-    <div class="p-card">
-      <div class="p-card-title"><i data-lucide="activity"></i> So'nggi Faoliyat</div>
-      {% for act in activities|slice:":8" %}
-      <div class="list-item">
-        <div class="list-icon"><i data-lucide="clock"></i></div>
-        <div style="flex:1;"><div style="font-size:.85rem;">{{ act.get_action_display }}</div><div style="font-size:.72rem;color:var(--muted);">{{ act.detail|truncatechars:50 }}</div></div>
-        <span style="font-size:.72rem;color:var(--muted);">{{ act.created_at|date:"d.m H:i" }}</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <!-- Kurslar -->
+      <div class="p-card" style="margin-bottom:0;">
+        <div class="p-card-title"><i data-lucide="graduation-cap"></i> Davom etayotgan kurslar</div>
+        {% for e in enrollments|slice:":4" %}
+        <div class="list-item">
+          <div class="list-icon"><i data-lucide="play-circle"></i></div>
+          <div style="flex:1;">
+            <div style="font-size:.88rem;font-weight:600;">{{ e.course.title }}</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+              <div style="flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;">
+                <div style="height:100%;width:{{ e.course.progress|default:0 }}%;background:var(--grad);border-radius:2px;"></div>
+              </div>
+              <span style="font-size:.72rem;color:var(--muted);">{{ e.course.progress|default:0 }}%</span>
+            </div>
+          </div>
+          <a href="{% url 'course_detail' pk=e.course.pk %}" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.72rem;">Kirish</a>
+        </div>
+        {% empty %}
+        <div style="text-align:center;padding:20px;">
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px;">Hali kurslarga yozilmagansiz</p>
+          <a href="{% url 'courses' %}" class="btn-p btn-grad" style="font-size:.75rem;">Kurslarni ko'rish</a>
+        </div>
+        {% endfor %}
       </div>
-      {% empty %}<p style="color:var(--muted);font-size:.85rem;">Hali faoliyat yo'q</p>
-      {% endfor %}
+
+      <!-- Market Tavsiyalari -->
+      <div class="p-card" style="margin-bottom:0;">
+        <div class="p-card-title"><i data-lucide="shopping-bag"></i> Siz uchun tavsiyalar</div>
+        {% for item in market_items|slice:":4" %}
+        <div class="list-item">
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(67,233,123,.1);display:flex;align-items:center;justify-content:center;font-size:1.1rem;">
+            {% if item.category == 'certificate' %}📜{% elif item.category == 'mentoring' %}👨‍🏫{% else %}🎁{% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:.85rem;font-weight:600;">{{ item.title }}</div>
+            <div style="font-size:.72rem;color:var(--muted);">{{ item.price }} ⚡ Ball</div>
+          </div>
+          <a href="{% url 'market_buy' pk=item.pk %}" class="btn-p btn-ghost" style="padding:4px 10px;font-size:.72rem;">Olish</a>
+        </div>
+        {% empty %}
+        <p style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">Hozircha tavsiyalar yo'q</p>
+        {% endfor %}
+      </div>
     </div>
   </div>
 
