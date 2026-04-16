@@ -11,6 +11,7 @@ urlpatterns = [
     path('profile/',                          views.profile_view,                 name='profile'),
     path('profile/user/<int:pk>/',            views.public_profile,               name='public_profile'),
     path('talents/',                          views.talents_view,                 name='talents'),
+    path('projects/<int:pk>/',                views.project_detail,               name='project_detail'),
     path('leaderboard/',                      gamification_views.leaderboard_view, name='leaderboard'),
     path('badges/',                           gamification_views.my_badges,       name='my_badges'),
     path('streak/checkin/',                   gamification_views.streak_checkin,  name='streak_checkin'),
