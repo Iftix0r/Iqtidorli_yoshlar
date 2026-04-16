@@ -41,7 +41,8 @@ def _context_message(mode, user):
         skills   = ', '.join(s.skill_name for s in user.skills.all()) or "yo'q"
         projects = ', '.join(p.title for p in user.projects.all()) or "yo'q"
         certs    = ', '.join(c.title for c in user.certificates.all()) or "yo'q"
-        return f"Mening portfolio ma'lumotlarim:\nKo'nikmalar: {skills}\nLoyihalar: {projects}\nSertifikatlar: {certs}\nBio: {user.bio or 'yo\'q'}"
+        bio      = user.bio or "yo'q"
+        return f"Mening portfolio ma'lumotlarim:\nKo'nikmalar: {skills}\nLoyihalar: {projects}\nSertifikatlar: {certs}\nBio: {bio}"
     if mode == 'matching':
         from .models import User as U
         mentors = U.objects.filter(role='mentor', is_active=True).prefetch_related('skills')[:15]
