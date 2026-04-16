@@ -68,7 +68,9 @@
     .fb:hover{background:rgba(255,255,255,.08);color:var(--text);}
     .fb [data-lucide]{width:17px;height:17px;}
 
-    #content{flex:1;overflow-y:auto;padding:24px;padding-top:16px;}
+    #content{flex:1;overflow-y:auto;padding:24px;padding-top:56px;}
+    #content::-webkit-scrollbar{width:4px;}
+    #content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 
     /* CARDS */
     .p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
