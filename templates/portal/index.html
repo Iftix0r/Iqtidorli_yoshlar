@@ -188,18 +188,6 @@
     <a href="{% url 'logout' %}" class="sb-item" style="color:var(--danger);">
       <i data-lucide="log-out"></i><span class="sb-item-label">Chiqish</span>
     </a>
-    <!-- Profil pastda -->
-    <div class="sb-profile" style="margin-top:6px;padding:10px 8px;border-top:1px solid var(--border);border-radius:0;">
-      {% if user.avatar %}
-        <img src="{{ user.avatar.url }}" class="sb-avatar">
-      {% else %}
-        <div class="sb-avatar">{{ user.initial }}</div>
-      {% endif %}
-      <div class="sb-profile-info">
-        <div class="sb-profile-name">{{ user.get_full_name|default:user.phone }}</div>
-        <div class="sb-profile-role">{{ user.get_role_display }} · ⚡ {{ user.score }}</div>
-      </div>
-    </div>
   </div>
 </aside>
 
