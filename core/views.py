@@ -733,3 +733,14 @@ def portal_view(request, section='home', msg_uid=None):
     ctx['total_xp'] = sum(x.amount for x in user.xp_logs.all())
 
     return render(request, 'portal/index.html', ctx)
+
+
+def project_detail(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    # Tavsiya etiladigan boshqa loyihalar
+    related_projects = Project.objects.exclude(pk=pk).order_by('?')[:4]
+    
+    return render(request, 'project_detail.html', {
+        'p': project,
+        'related_projects': related_projects,
+    })
