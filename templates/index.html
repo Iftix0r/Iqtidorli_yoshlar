@@ -53,8 +53,15 @@
         </div>
       </div>
 
+      <!-- RECENT PROJECTS SECTION HEADER -->
+      <div class="feed-full-row" style="margin-top:0; border-top:none; padding-top:10px;">
+        <div class="row-header" style="margin-bottom:15px;">
+          <h2 style="font-size:1.2rem;"><i data-lucide="layout-grid" style="color:var(--primary);"></i> So'nggi Loyihalar</h2>
+        </div>
+      </div>
+
       <!-- PROJECT CARDS -->
-      {% for p in recent_projects|slice:":4" %}
+      {% for p in recent_projects %}
       <div class="feed-card project-card">
         <a href="{% url 'portal' %}" class="card-thumb">
           {% if p.image %}
