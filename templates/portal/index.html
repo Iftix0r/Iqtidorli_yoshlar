@@ -40,6 +40,7 @@
     .sb-nav{flex:1;overflow-y:auto;padding:8px 6px;}
     .sb-nav::-webkit-scrollbar{width:3px;}
     .sb-nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    .hidden{display:none;}
     .sb-section{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:10px 8px 4px;white-space:nowrap;overflow:hidden;}
     #sb.collapsed .sb-section{display:none;}
 
@@ -151,7 +152,12 @@
   </div>
 
   <!-- Qidiruv tugmasi -->
-
+  <div style="padding:6px 10px;border-bottom:1px solid var(--border);" id="sb-search-wrap">
+    <button onclick="openSearch()" style="width:100%;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.82rem;transition:.2s;" onmouseover="this.style.borderColor='rgba(108,99,255,.4)'" onmouseout="this.style.borderColor='var(--border)'">
+      <i data-lucide="search" style="width:14px;height:14px;flex-shrink:0;"></i>
+      <span class="sb-item-label">Suhbatlarni qidirish</span>
+    </button>
+  </div>
 
   <nav class="sb-nav">
     <div class="sb-section">Asosiy</div>
@@ -187,6 +193,23 @@
     <button class="sb-item {% if section == 'ai' and not ai_session_id %}active{% endif %}" onclick="goAI(null)">
       <i data-lucide="sparkles"></i><span class="sb-item-label">✦ Yangi suhbat</span>
     </button>
+
+    <div class="sb-section" id="sb-sess-label">Suhbatlar</div>
+    <div id="sb-sess-list">
+      {% for s in ai_sessions %}
+      <div style="position:relative;display:flex;align-items:center;" class="sess-row" data-id="{{ s.pk }}" data-title="{{ s.title|default:'Yangi suhbat'|lower }}">
+        <button class="sb-item {% if ai_session_id == s.pk %}active{% endif %}" onclick="goAI({{ s.pk }})" style="flex:1;min-width:0;">
+          <i data-lucide="message-square" style="flex-shrink:0;"></i>
+          <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ s.title|default:"Yangi suhbat"|truncatechars:18 }}</span>
+        </button>
+        <button class="sess-menu-btn" onclick="toggleSessMenu(event,{{ s.pk }})"
+          style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px;opacity:0;transition:.15s;flex-shrink:0;">
+          <i data-lucide="more-horizontal" style="width:14px;height:14px;"></i>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    <div id="sb-no-results" class="{% if ai_sessions %}hidden{% endif %}" style="font-size:.78rem;color:var(--muted);padding:8px 10px;">Hali suhbatlar yo'q</div>
 
 
 
@@ -736,25 +759,36 @@ async function aiSend() {
   try {
     // Sessiya yo'q bo'lsa — yangi yaratish
     if (!currentSID) {
-      const r = await fetch('/ai/new/', {
+      const r_new = await fetch('/ai/new-json/', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
-        body: 'mode=' + currentAIMode + '&next=portal'
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+        body: JSON.stringify({mode: currentAIMode})
       });
-      const text = await r.text();
-      // URL dan sid olish
-      const m = r.url.match(/sid=(\d+)/);
-      if (m) {
-        currentSID = parseInt(m[1]);
-      } else {
-        // Fallback: JSON endpoint orqali yaratish
-        const r2 = await fetch('/ai/new-json/', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
-          body: JSON.stringify({mode: currentAIMode})
-        });
-        const d2 = await r2.json();
-        if (d2.session_id) currentSID = d2.session_id;
+      const d_new = await r_new.json();
+      if (d_new.session_id) {
+        currentSID = d_new.session_id;
+        // Sidebar listiga qo'shish
+        const list = document.getElementById('sb-sess-list');
+        const noRes = document.getElementById('sb-no-results');
+        if (list) {
+          if (noRes) noRes.classList.add('hidden');
+          const div = document.createElement('div');
+          div.style.cssText = 'position:relative;display:flex;align-items:center;';
+          div.className = 'sess-row';
+          div.dataset.id = currentSID;
+          div.dataset.title = 'yangi suhbat';
+          div.innerHTML = `
+            <button class="sb-item active" onclick="goAI(${currentSID})" style="flex:1;min-width:0;">
+              <i data-lucide="message-square" style="flex-shrink:0;"></i>
+              <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">Yangi suhbat</span>
+            </button>
+            <button class="sess-menu-btn" onclick="toggleSessMenu(event,${currentSID})" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px;opacity:0;transition:.15s;flex-shrink:0;">
+              <i data-lucide="more-horizontal" style="width:14px;height:14px;"></i>
+            </button>
+          `;
+          list.insertBefore(div, list.firstChild);
+          if(window.lucide) lucide.createIcons();
+        }
       }
     }
 
