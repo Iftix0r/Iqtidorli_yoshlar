@@ -2,43 +2,6 @@
 {% block title %}Iqtidorli Yoshlar — Iste'dodlar Markazi{% endblock %}
 
 {% block content %}
-
-<!-- FEED HEADER (Categories) -->
-<div class="category-wrapper">
-  <div class="category-scroll">
-    {% for cat in categories %}
-    <button class="cat-pill {% if forloop.first %}active{% endif %}" data-id="{{ cat.id }}">
-      <i data-lucide="{{ cat.icon }}"></i> {{ cat.name }}
-    </button>
-    {% endfor %}
-  </div>
-</div>
-
-<div class="feed-container">
-  <!-- SIDEBAR -->
-  <aside class="feed-sidebar">
-    <div class="sidebar-section">
-      <h4 class="sb-label">ASOSIY</h4>
-      <a href="{% url 'index' %}" class="sb-link active-link"><i data-lucide="home"></i> Bosh sahifa</a>
-      <a href="{% url 'talents' %}" class="sb-link"><i data-lucide="users"></i> Iqtidorlar</a>
-      <a href="{% url 'contests' %}" class="sb-link"><i data-lucide="trophy"></i> Tanlovlar</a>
-      <a href="{% url 'leaderboard' %}" class="sb-link"><i data-lucide="bar-chart-2"></i> Reyting</a>
-    </div>
-    <div class="sidebar-section">
-      <h4 class="sb-label">KASHFIYOT</h4>
-      <a href="{% url 'market' %}" class="sb-link"><i data-lucide="shopping-bag"></i> Market</a>
-      <a href="{% url 'courses' %}" class="sb-link"><i data-lucide="graduation-cap"></i> Kurslar</a>
-      <a href="{% url 'jobs' %}" class="sb-link"><i data-lucide="briefcase"></i> Ish O'rinlari</a>
-    </div>
-    <div class="sidebar-section divider">
-      <h4 class="sb-label">SIZ</h4>
-      <a href="{% url 'portal' %}" class="sb-link"><i data-lucide="user"></i> Mening profilim</a>
-      <a href="{% url 'inbox' %}" class="sb-link"><i data-lucide="message-square"></i> Xabarlar</a>
-    </div>
-  </aside>
-
-  <!-- PRIMARY FEED -->
-  <main class="feed-main">
     <div class="feed-grid">
       <!-- HERO AD (YouTube Style) -->
       <div class="feed-card hero-promo">
