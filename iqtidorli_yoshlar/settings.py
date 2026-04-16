@@ -84,6 +84,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.csp',
                 'core.context_processors.drawer_links',
+                'core.context_processors.global_chats',
             ],
         },
     },
