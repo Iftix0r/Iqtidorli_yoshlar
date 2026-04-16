@@ -54,17 +54,21 @@
     .sb-bottom{padding:8px 6px;border-top:1px solid var(--border);}
 
     /* MAIN */
-    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-    #topbar{height:52px;background:var(--sb);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
-    .topbar-title{font-size:.95rem;font-weight:700;color:var(--text);}
-    .topbar-right{display:flex;align-items:center;gap:10px;}
-    .tb-btn{background:none;border:none;color:var(--muted);cursor:pointer;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:.15s;text-decoration:none;}
-    .tb-btn:hover{background:rgba(255,255,255,.06);color:var(--text);}
-    .tb-btn [data-lucide]{width:17px;height:17px;}
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 
-    #content{flex:1;overflow-y:auto;padding:24px;}
-    #content::-webkit-scrollbar{width:4px;}
-    #content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    /* Floating ikonlar — header yo'q */
+    #floating-btns{
+      position:absolute;top:12px;right:16px;
+      display:flex;align-items:center;gap:6px;z-index:50;
+    }
+    .fb{background:none;border:none;color:var(--muted);cursor:pointer;
+        width:34px;height:34px;border-radius:8px;
+        display:flex;align-items:center;justify-content:center;
+        transition:.15s;text-decoration:none;}
+    .fb:hover{background:rgba(255,255,255,.08);color:var(--text);}
+    .fb [data-lucide]{width:17px;height:17px;}
+
+    #content{flex:1;overflow-y:auto;padding:24px;padding-top:16px;}
 
     /* CARDS */
     .p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
@@ -199,34 +203,18 @@
 
 <!-- MAIN -->
 <div id="main">
-  <header id="topbar">
-    <div class="topbar-title" id="topbar-title">
-      {% if section == 'home' %}🏠 Bosh sahifa
-      {% elif section == 'settings' %}👤 Profil & Sozlamalar
-      {% elif section == 'skills' %}⚡ Ko'nikmalar
-      {% elif section == 'projects' %}📁 Loyihalar
-      {% elif section == 'certs' %}🏅 Sertifikatlar
-      {% elif section == 'courses' %}🎓 Kurslarim
-      {% elif section == 'badges' %}🏆 Nishonlar & XP
-      {% elif section == 'orders' %}📦 Market Buyurtmalar
-      {% elif section == 'activity' %}📊 Faoliyat Tarixi
-      {% elif section == 'logins' %}🔐 Kirish Tarixi
-      {% elif section == 'ai' %}✨ Iqtidor AI
-      {% elif section == 'market' %}🛍️ Iqtidor Market
-      {% else %}Portal{% endif %}
-    </div>
-    <div class="topbar-right">
-      <a href="{% url 'notifications' %}" class="tb-btn" title="Bildirishnomalar">
-        <i data-lucide="bell"></i>
-      </a>
-      <a href="{% url 'inbox' %}" class="tb-btn" title="Xabarlar">
-        <i data-lucide="message-circle"></i>
-      </a>
-      <button class="tb-btn" onclick="toggleTheme()" title="Tema">
-        <i data-lucide="moon" id="theme-icon"></i>
-      </button>
-    </div>
-  </header>
+  <!-- Floating ikonlar — header o'rniga -->
+  <div id="floating-btns">
+    <a href="{% url 'notifications' %}" class="fb" title="Bildirishnomalar">
+      <i data-lucide="bell"></i>
+    </a>
+    <a href="{% url 'inbox' %}" class="fb" title="Xabarlar">
+      <i data-lucide="message-circle"></i>
+    </a>
+    <button class="fb" onclick="toggleTheme()" title="Tema">
+      <i data-lucide="moon" id="theme-icon"></i>
+    </button>
+  </div>
 
   <div id="content">
 
