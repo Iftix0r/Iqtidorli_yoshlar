@@ -167,17 +167,26 @@
     </button>
 
     <div class="sb-section">AI & Market</div>
-    <button class="sb-item {% if section == 'ai' %}active{% endif %}" onclick="go('ai')">
-      <i data-lucide="sparkles"></i><span class="sb-item-label">Iqtidor AI</span>
-      <span class="sb-item-label" style="margin-left:auto;font-size:.65rem;background:var(--grad);color:#fff;padding:1px 6px;border-radius:8px;">NEW</span>
+    <button class="sb-item {% if section == 'ai' and not ai_session_id %}active{% endif %}" onclick="goAI(null)">
+      <i data-lucide="sparkles"></i><span class="sb-item-label">✦ Yangi suhbat</span>
     </button>
+
+    {% if ai_sessions %}
+    <div class="sb-section">Suhbatlar</div>
+    {% for s in ai_sessions %}
+    <button class="sb-item {% if ai_session_id == s.pk %}active{% endif %}" onclick="goAI({{ s.pk }})" style="width:100%;">
+      <i data-lucide="message-square" style="flex-shrink:0;"></i>
+      <span class="sb-item-label" style="overflow:hidden;text-overflow:ellipsis;">{{ s.title|default:"Yangi suhbat"|truncatechars:18 }}</span>
+    </button>
+    {% endfor %}
+    {% endif %}
+
     <button class="sb-item {% if section == 'market' %}active{% endif %}" onclick="go('market')">
       <i data-lucide="shopping-bag"></i><span class="sb-item-label">Iqtidor Market</span>
     </button>
 
     <div class="sb-section">Boshqa</div>
   </nav>
-
   <div class="sb-bottom">
     <button class="sb-item {% if section == 'settings' %}active{% endif %}" onclick="go('settings')">
       <i data-lucide="settings"></i><span class="sb-item-label">Sozlamalar</span>
@@ -453,32 +462,144 @@
 
   <!-- ── IQTIDOR AI ── -->
   {% elif section == 'ai' %}
-  <div class="section-content" style="height:calc(100vh - 120px);display:flex;flex-direction:column;">
-    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
-      <h2 style="font-size:1.1rem;font-weight:700;">✨ Iqtidor AI</h2>
-      <a href="{% url 'ai_chat' %}" target="_blank" class="btn-p btn-ghost" style="font-size:.78rem;">
-        <i data-lucide="external-link" style="width:13px;height:13px;"></i> To'liq ochish
-      </a>
+  <div class="section-content" style="height:calc(100vh - 80px);display:flex;flex-direction:column;padding:0;margin:-24px;margin-top:-56px;">
+
+    <!-- AI Sessiyalar mini-sidebar -->
+    <div style="display:flex;height:100%;overflow:hidden;">
+    <div style="width:200px;min-width:200px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--sb);">
+      <div style="padding:10px 8px;border-bottom:1px solid var(--border);">
+        <form method="post" action="{% url 'ai_new_session' %}">
+          {% csrf_token %}<input type="hidden" name="mode" value="general">
+          <button type="submit" style="width:100%;background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.2);color:var(--primary);border-radius:8px;padding:7px 10px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
+            <i data-lucide="plus" style="width:13px;height:13px;"></i> Yangi suhbat
+          </button>
+        </form>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:6px;">
+        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:5px 6px 3px;">Rejimlar</div>
+        {% for val, label in ai_modes %}
+        <form method="post" action="{% url 'ai_new_session' %}">
+          {% csrf_token %}<input type="hidden" name="mode" value="{{ val }}">
+          <button type="submit" style="width:100%;text-align:left;background:none;border:none;color:var(--muted);cursor:pointer;padding:5px 8px;border-radius:6px;font-size:.78rem;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onmouseover="this.style.background='rgba(108,99,255,.08)';this.style.color='var(--text)'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">{{ label }}</button>
+        </form>
+        {% endfor %}
+        <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 6px 3px;">Tarix</div>
+        {% for s in ai_sessions %}
+        <a href="/portal/ai/?sid={{ s.pk }}" style="display:block;padding:5px 8px;border-radius:6px;text-decoration:none;color:{% if ai_session_id == s.pk %}var(--primary){% else %}var(--muted){% endif %};font-size:.78rem;background:{% if ai_session_id == s.pk %}rgba(108,99,255,.1){% else %}transparent{% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.15s;" onmouseover="this.style.background='rgba(108,99,255,.08)'" onmouseout="this.style.background='{% if ai_session_id == s.pk %}rgba(108,99,255,.1){% else %}transparent{% endif %}'">
+          {{ s.title|default:"Yangi suhbat"|truncatechars:22 }}
+        </a>
+        {% empty %}
+        <p style="font-size:.75rem;color:var(--muted);padding:5px 8px;">Hali suhbat yo'q</p>
+        {% endfor %}
+      </div>
     </div>
-    <iframe src="{% url 'ai_chat' %}"
-      style="flex:1;width:100%;border:1px solid var(--border);border-radius:14px;background:var(--bg);"
-      id="ai-frame">
-    </iframe>
-  </div>
+
+    <!-- Chat asosiy qism -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div id="ai-msgs" style="flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:0;">
+      {% if not ai_messages %}
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;">
+        <div style="font-size:2.5rem;margin-bottom:12px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">✦</div>
+        <div style="font-size:1.4rem;font-weight:800;margin-bottom:20px;">Salom, {{ user.first_name|default:user.phone }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:500px;">
+          <button class="w-chip" onclick="sendQ('Menga o\'quv yo\'l xaritasi tuz')">O'quv yo'l xaritasi</button>
+          <button class="w-chip" onclick="sendQ('Portfoliomni baholab ber')">Portfolio baholash</button>
+          <button class="w-chip" onclick="sendQ('Menga mos mentor topib ber')">Mentor topish</button>
+          <button class="w-chip" onclick="sendQ('IT sohasida ish topish')">IT ish bozori</button>
+        </div>
+      </div>
+      {% endif %}
+
+      {% for msg in ai_messages %}
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;{% if msg.role == 'user' %}flex-direction:row-reverse;{% endif %}">
+        {% if msg.role == 'user' %}
+          <div style="max-width:75%;background:rgba(108,99,255,.18);border:1px solid rgba(108,99,255,.25);border-radius:18px 18px 4px 18px;padding:11px 16px;font-size:.9rem;line-height:1.65;color:var(--text);">{{ msg.content }}</div>
+        {% else %}
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;color:#fff;font-weight:700;">✦</div>
+          <div style="flex:1;font-size:.9rem;line-height:1.75;color:var(--text);" class="ai-md">{{ msg.content }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <div id="ai-typing" style="display:none;margin-bottom:16px;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#fff;font-weight:700;">✦</div>
+          <div style="display:flex;gap:4px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--muted);animation:td 1.2s infinite;display:inline-block;"></span>
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--muted);animation:td 1.2s .2s infinite;display:inline-block;"></span>
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--muted);animation:td 1.2s .4s infinite;display:inline-block;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Input -->
+    <div style="padding:12px 16px 16px;border-top:1px solid var(--border);">
+      <!-- Rejim tanlash -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        {% for val, label in ai_modes %}<button class="mpill {% if ai_mode == val %}on{% endif %}" onclick="setAIMode('{{ val }}',this)">{{ label }}</button>{% endfor %}
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <textarea id="ai-in" rows="1" placeholder="Iqtidor AI ga yozing..."
+          style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:.9rem;font-family:inherit;resize:none;outline:none;max-height:120px;"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend();}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button onclick="aiSend()" id="ai-send-btn"
+          style="width:38px;height:38px;border-radius:10px;background:var(--grad);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i data-lucide="arrow-up" style="width:16px;height:16px;color:#fff;"></i>
+        </button>
+      </div>
+    </div>
+    </div><!-- /chat-main -->
+    </div><!-- /flex-wrapper -->
+  </div><!-- /section-content -->
+
+  <style>
+  @keyframes td{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+  .w-chip{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:7px 14px;color:var(--muted);font-size:.82rem;cursor:pointer;font-family:inherit;transition:.15s;}
+  .w-chip:hover{border-color:var(--primary);color:var(--primary);}
+  .mpill{background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.15);border-radius:20px;padding:4px 12px;color:var(--muted);font-size:.75rem;cursor:pointer;font-family:inherit;transition:.15s;}
+  .mpill.on,.mpill:hover{background:rgba(108,99,255,.2);border-color:rgba(108,99,255,.4);color:var(--primary);}
+  .ai-md h1,.ai-md h2,.ai-md h3{color:var(--primary);margin:10px 0 4px;font-weight:700;}
+  .ai-md p{margin:4px 0;}
+  .ai-md ul,.ai-md ol{padding-left:18px;margin:4px 0;}
+  .ai-md code{background:rgba(108,99,255,.15);padding:1px 5px;border-radius:4px;font-size:.85em;}
+  .ai-md pre{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;margin:6px 0;}
+  .ai-md strong{color:var(--text);font-weight:700;}
+  #ai-msgs::-webkit-scrollbar{width:3px;}
+  #ai-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  </style>
 
   <!-- ── IQTIDOR MARKET ── -->
   {% elif section == 'market' %}
-  <div class="section-content" style="height:calc(100vh - 120px);display:flex;flex-direction:column;">
-    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
-      <h2 style="font-size:1.1rem;font-weight:700;">🛍️ Iqtidor Market</h2>
-      <a href="{% url 'market' %}" target="_blank" class="btn-p btn-ghost" style="font-size:.78rem;">
-        <i data-lucide="external-link" style="width:13px;height:13px;"></i> To'liq ochish
-      </a>
+  <div class="section-content">
+    <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:20px;">🛍️ Iqtidor Market</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+      {% for val, label in market_categories %}
+      <span style="padding:6px 14px;border-radius:20px;font-size:.82rem;font-weight:600;background:var(--card);color:var(--muted);border:1px solid var(--border);">{{ label }}</span>
+      {% endfor %}
     </div>
-    <iframe src="{% url 'market' %}"
-      style="flex:1;width:100%;border:1px solid var(--border);border-radius:14px;background:var(--bg);"
-      id="market-frame">
-    </iframe>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
+      {% for item in market_items %}
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;">
+        <div style="font-size:2.5rem;text-align:center;margin-bottom:10px;">
+          {% if item.category == 'certificate' %}📜{% elif item.category == 'mentoring' %}👨‍🏫{% elif item.category == 'course' %}🎓{% elif item.category == 'badge' %}🏅{% elif item.category == 'gift' %}🎁{% else %}✨{% endif %}
+        </div>
+        <div style="font-size:.85rem;font-weight:700;margin-bottom:4px;">{{ item.title }}</div>
+        <div style="font-size:.75rem;color:var(--muted);flex:1;margin-bottom:12px;">{{ item.description|truncatechars:50 }}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-weight:800;color:var(--primary);">⚡ {{ item.price }}</span>
+          {% if user.score >= item.price and item.in_stock %}
+          <a href="{% url 'market_buy' pk=item.pk %}" style="background:var(--grad);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:600;text-decoration:none;">Olish</a>
+          {% else %}
+          <button disabled style="background:var(--border);color:var(--muted);border:none;border-radius:8px;padding:6px 12px;font-size:.78rem;cursor:not-allowed;">{% if not item.in_stock %}Tugagan{% else %}Yetarli emas{% endif %}</button>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px;">Hali mahsulot yo'q. Admin qo'shishi kerak.</p>
+      {% endfor %}
+    </div>
   </div>
 
   {% endif %}
@@ -491,6 +612,118 @@ lucide.createIcons();
 
 function go(sec) {
   window.location.href = '/portal/' + sec + '/';
+}
+
+function goAI(sid) {
+  const url = sid ? '/portal/ai/?sid=' + sid : '/portal/ai/';
+  window.location.href = url;
+}
+
+let currentAIMode = '{{ ai_mode }}';
+let currentSID = {% if ai_session_id %}{{ ai_session_id }}{% else %}null{% endif %};
+const CSRF = '{{ csrf_token }}';
+
+function setAIMode(m, btn) {
+  currentAIMode = m;
+  document.querySelectorAll('.mpill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+function sendQ(t) {
+  const inp = document.getElementById('ai-in');
+  if (inp) { inp.value = t; aiSend(); }
+}
+
+async function aiSend() {
+  const inp = document.getElementById('ai-in');
+  if (!inp) return;
+  const txt = inp.value.trim();
+  if (!txt) return;
+
+  // Welcome screen olib tashlash
+  const welcome = document.querySelector('#ai-msgs > div[style*="justify-content:center"]');
+  if (welcome) welcome.remove();
+
+  addAIMsg('user', txt);
+  inp.value = ''; inp.style.height = 'auto';
+  document.getElementById('ai-typing').style.display = 'block';
+  document.getElementById('ai-send-btn').disabled = true;
+  scrollAI();
+
+  try {
+    // Sessiya yo'q bo'lsa — yangi yaratish
+    if (!currentSID) {
+      const r = await fetch('/ai/new/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+        body: 'mode=' + currentAIMode,
+        redirect: 'manual'
+      });
+      // Redirect URL dan session ID olish
+      const loc = r.headers.get('location') || r.url;
+      const m = loc.match(/\/ai\/(\d+)\//);
+      if (m) currentSID = parseInt(m[1]);
+    }
+
+    if (!currentSID) {
+      document.getElementById('ai-typing').style.display = 'none';
+      addAIMsg('assistant', '❌ Sessiya yaratishda xato.');
+      return;
+    }
+
+    const res = await fetch('/ai/' + currentSID + '/send/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+      body: JSON.stringify({message: txt})
+    });
+    const data = await res.json();
+    document.getElementById('ai-typing').style.display = 'none';
+    addAIMsg('assistant', data.error ? '❌ ' + data.error : data.answer);
+
+    // Sidebar tarixini yangilash
+    if (data.session_title) {
+      const url = new URL(window.location);
+      url.searchParams.set('sid', currentSID);
+      window.history.replaceState({}, '', url);
+    }
+  } catch(e) {
+    document.getElementById('ai-typing').style.display = 'none';
+    addAIMsg('assistant', '❌ Tarmoq xatosi.');
+  }
+  document.getElementById('ai-send-btn').disabled = false;
+  scrollAI();
+}
+
+function addAIMsg(role, content) {
+  const box = document.getElementById('ai-msgs');
+  if (!box) return;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;' + (role==='user'?'flex-direction:row-reverse;':'');
+  if (role === 'user') {
+    div.innerHTML = `<div style="max-width:75%;background:rgba(108,99,255,.18);border:1px solid rgba(108,99,255,.25);border-radius:18px 18px 4px 18px;padding:11px 16px;font-size:.9rem;line-height:1.65;color:var(--text);">${esc(content)}</div>`;
+  } else {
+    div.innerHTML = `<div style="width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;color:#fff;font-weight:700;">✦</div><div style="flex:1;font-size:.9rem;line-height:1.75;color:var(--text);" class="ai-md">${md(content)}</div>`;
+  }
+  box.insertBefore(div, document.getElementById('ai-typing'));
+  scrollAI();
+}
+
+function scrollAI() {
+  const b = document.getElementById('ai-msgs');
+  if (b) b.scrollTop = b.scrollHeight;
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function md(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    .replace(/^[-*] (.+)$/gm,'<li>$1</li>').replace(/(<li>[\s\S]+?<\/li>)/g,'<ul>$1</ul>')
+    .replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
 }
 
 function toggleSb() {

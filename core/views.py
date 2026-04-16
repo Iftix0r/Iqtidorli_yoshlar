@@ -609,26 +609,51 @@ def portal_view(request, section='home'):
 
     from .forms import ProfileForm, SkillForm, ProjectForm, CertificateForm
     from .models import (CourseEnrollment, MarketOrder, Badge,
-                         UserStreak, XPLog, AIChatSession)
+                         UserStreak, XPLog, AIChatSession, AIChatMessage, AI_MODES)
+
+    # AI sessiya
+    ai_session_id = None
+    ai_messages   = []
+    ai_mode       = 'general'
+    if section == 'ai':
+        sid = request.GET.get('sid')
+        if sid:
+            try:
+                ai_sess = AIChatSession.objects.get(pk=sid, user=user)
+                ai_session_id = ai_sess.pk
+                ai_messages   = list(ai_sess.messages.all())
+                ai_mode       = ai_sess.mode
+            except AIChatSession.DoesNotExist:
+                pass
 
     ctx = {
-        'section':       section,
-        'profile_form':  ProfileForm(instance=user),
-        'skill_form':    SkillForm(),
-        'project_form':  ProjectForm(),
-        'cert_form':     CertificateForm(),
-        'skills':        user.skills.all(),
-        'projects':      user.projects.order_by('-created_at'),
-        'certificates':  user.certificates.order_by('-issued_date'),
-        'activities':    user.activities.all()[:20],
-        'login_history': user.login_history.all()[:10],
-        'notifs':        user.notifications.all()[:15],
-        'enrollments':   CourseEnrollment.objects.filter(user=user).select_related('course'),
-        'orders':        MarketOrder.objects.filter(user=user).select_related('item')[:10],
-        'badges':        user.badges.all(),
-        'ai_sessions':   AIChatSession.objects.filter(user=user)[:5],
+        'section':        section,
+        'profile_form':   ProfileForm(instance=user),
+        'skill_form':     SkillForm(),
+        'project_form':   ProjectForm(),
+        'cert_form':      CertificateForm(),
+        'skills':         user.skills.all(),
+        'projects':       user.projects.order_by('-created_at'),
+        'certificates':   user.certificates.order_by('-issued_date'),
+        'activities':     user.activities.all()[:20],
+        'login_history':  user.login_history.all()[:10],
+        'notifs':         user.notifications.all()[:15],
+        'enrollments':    CourseEnrollment.objects.filter(user=user).select_related('course'),
+        'orders':         MarketOrder.objects.filter(user=user).select_related('item')[:10],
+        'badges':         user.badges.all(),
+        'ai_sessions':    AIChatSession.objects.filter(user=user).order_by('-updated_at')[:20],
+        'ai_session_id':  ai_session_id,
+        'ai_messages':    ai_messages,
+        'ai_mode':        ai_mode,
+        'ai_modes':       AI_MODES,
         'mentor_requests': user.received_requests.filter(status='pending'),
     }
+
+    # Market mahsulotlari
+    from .models import MarketItem
+    ctx['market_items'] = MarketItem.objects.filter(is_active=True)
+    ctx['market_categories'] = MarketItem.CATEGORIES
+
     try:
         ctx['streak'] = user.streak
     except Exception:
