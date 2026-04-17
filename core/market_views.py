@@ -37,24 +37,27 @@ def market_buy(request, pk):
     if request.method != 'POST':
         return render(request, 'market/confirm.html', {'item': item})
 
-    # Tekshiruvlar
-    if not item.in_stock():
-        messages.error(request, "Bu mahsulot tugagan.")
-        return redirect('market')
-
-    if user.score < item.price:
-        messages.error(request, f"Balingiz yetarli emas. Kerak: {item.price}, sizda: {user.score}.")
-        return redirect('market')
-
     # Allaqachon kutilayotgan buyurtma bormi?
     if MarketOrder.objects.filter(user=user, item=item, status='pending').exists():
         messages.info(request, "Bu mahsulot uchun buyurtmangiz allaqachon kutilmoqda.")
         return redirect('market')
 
     with transaction.atomic():
+        item = MarketItem.objects.select_for_update().get(pk=item.pk)
+        user_locked = user.__class__.objects.select_for_update().get(pk=user.pk)
+
+        if not item.in_stock():
+            messages.error(request, "Bu mahsulot tugagan.")
+            return redirect('market')
+
+        if user_locked.score < item.price:
+            messages.error(request, f"Balingiz yetarli emas. Kerak: {item.price}, sizda: {user_locked.score}.")
+            return redirect('market')
+
         # Ball ayirish
-        user.score -= item.price
-        user.save(update_fields=['score'])
+        user_locked.score -= item.price
+        user_locked.save(update_fields=['score'])
+        user.score = user_locked.score
 
         # Buyurtma yaratish
         order = MarketOrder.objects.create(

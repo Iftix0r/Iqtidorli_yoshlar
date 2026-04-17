@@ -1,4 +1,4 @@
-import random
+import secrets
 import string
 import urllib.request
 import urllib.parse
@@ -36,7 +36,7 @@ def send_telegram(chat_id: str, text: str) -> tuple[bool, str]:
 
 def generate_code() -> str:
     """6 xonali raqamli kod"""
-    return ''.join(random.choices(string.digits, k=6))
+    return ''.join(secrets.choice(string.digits) for _ in range(6))
 
 
 def parse_user_agent(user_agent: str) -> dict:

@@ -20,6 +20,7 @@ SECURE_HSTS_PRELOAD         = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER   = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+SECURE_REFERRER_POLICY      = 'same-origin'
 
 # Cookie xavfsizligi
 SESSION_COOKIE_SECURE   = os.getenv('COOKIE_SECURE', 'False') == 'True'
@@ -31,7 +32,7 @@ CSRF_COOKIE_SECURE   = os.getenv('COOKIE_SECURE', 'False') == 'True'
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-# Parol siyosati (kamida 12 belgi, murakkab)
+# Parol siyosati (kamida 8 belgi)
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
@@ -210,25 +211,6 @@ CACHES = {
 ADMIN_URL = os.getenv('ADMIN_URL', 'admin')
 PANEL_URL = os.getenv('PANEL_URL', 'panel')
 TIZIM_URL = os.getenv('TIZIM_URL', 'tizim')
-
-# ── XAVFSIZLIK (SECURITY HEADERS) ──────────────────────────────────────────
-# HTTPS orqali bog'lanishni majburiy qilish
-SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL', 'False') == 'True'
-SECURE_HSTS_SECONDS = int(os.getenv('HSTS_SECONDS', 0))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-
-# Brauzer himoyasi
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-SECURE_REFERRER_POLICY = 'same-origin'
-
-# Session va Cookie xavfsizligi
-SESSION_COOKIE_SECURE = os.getenv('COOKIE_SECURE', 'False') == 'True'
-CSRF_COOKIE_SECURE = os.getenv('COOKIE_SECURE', 'False') == 'True'
-SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = True
 
 # 2FA — Telegram ishlayotgan bo'lsa True qiling
 TFA_ENABLED   = os.getenv('TFA_ENABLED', 'False') == 'True'

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 — Kirish taqiqlangan</title>
+    <link rel="icon" type="image/svg+xml" href="/static/assets/favicon.svg"/>
+    <script src="/static/js/lucide.min.js"></script>
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --bg: #0F0E17;
+            --text: #FFFFFE;
+            --muted: #A7A9BE;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        .error-code {
+            font-size: 10rem;
+            font-weight: 900;
+            margin: 0;
+            background: linear-gradient(135deg, #FF6363, #FF9F43);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        h1 { font-size: 2rem; margin: 20px 0 10px; }
+        p { color: var(--muted); margin-bottom: 30px; font-size: 1.1rem; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(108, 99, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-code">403</div>
+        <h1>Kirish taqiqlangan</h1>
+        <p>Bu sahifaga kirish huquqingiz yo'q.</p>
+        <a href="/" class="btn">
+            <i data-lucide="home"></i> Asosiy sahifaga qaytish
+        </a>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

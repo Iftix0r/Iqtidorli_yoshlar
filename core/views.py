@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.db.models import Q, Max
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import User, Project, Contest, MentorRequest, Message, Notification, Resource, Certificate, ContestApplication, Job, ProfileView, ActivityLog
 from .forms  import (RegisterForm, ProfileForm, SkillForm, ProjectForm,
@@ -61,7 +62,7 @@ def index(request):
     # agar filtr ishlamasa fallback qilamiz)
     try:
         startups = Project.objects.filter(is_startup=True).order_by('-created_at')[:6]
-    except:
+    except Exception:
         startups = Project.objects.all().order_by('-created_at')[:6]
 
     return render(request, 'index.html', {
@@ -115,7 +116,10 @@ def login_view(request):
                 from .utils import update_streak, award_badge
                 update_streak(user)
                 award_badge(user, 'first_login')
-                return redirect(request.GET.get('next', 'profile'))
+                next_url = request.GET.get('next', '')
+                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=request.get_host()):
+                    return redirect(next_url)
+                return redirect('profile')
             else:
                 record_failed_attempt(phone, ip)
                 error = "Telefon raqam yoki parol noto'g'ri."
@@ -260,6 +264,10 @@ def contests_view(request):
 @login_required
 def apply_contest(request, pk):
     contest = get_object_or_404(Contest, pk=pk)
+    from django.utils import timezone as tz
+    if contest.deadline and contest.deadline < tz.now().date():
+        messages.error(request, "Bu tanlov muddati tugagan.")
+        return redirect('contests')
     if ContestApplication.objects.filter(contest=contest, user=request.user).exists():
         messages.info(request, "Siz allaqachon ariza topshirgansiz.")
         return redirect('contests')
@@ -302,7 +310,7 @@ def send_mentor_request(request, pk):
     if created:
         notify(receiver, 'mentor_req',
                f"{request.user} mentor so'rovi yubordi.",
-               f"/profile/user/{receiver.pk}/")
+               f"/profile/user/{request.user.pk}/")
         messages.success(request, "So'rov yuborildi.")
     else:
         messages.info(request, "So'rov allaqachon yuborilgan.")
@@ -509,6 +517,7 @@ def course_enroll(request, pk):
 
 
 @login_required
+@require_POST
 def lesson_done(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
     course = lesson.course
@@ -574,7 +583,7 @@ def error_500(request):
 
 
 def error_403(request, exception):
-    return render(request, '404.html', status=403)
+    return render(request, '403.html', status=403)
 
 
 # ── PORTAL ────────────────────────────────────────────────────────────────────

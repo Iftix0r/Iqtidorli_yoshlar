@@ -143,7 +143,7 @@ def ai_send_message(request, session_id):
         session.title = user_text[:60]
         session.save(update_fields=['title'])
 
-    history = list(session.messages.order_by('created_at')[:20])
+    history = list(reversed(list(session.messages.order_by('-created_at')[:20])))
     msgs    = [{'role': 'system', 'content': _system_prompt(session.mode, request.user)}]
 
     ctx = _context_message(session.mode, request.user)

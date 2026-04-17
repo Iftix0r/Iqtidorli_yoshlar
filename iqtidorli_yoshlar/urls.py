@@ -36,8 +36,6 @@ def admin_stats(request):
 from core import panel_views, system_views, tfa_views
 from core import ai_views
 
-from django.conf.urls import handler400, handler403, handler404, handler500
-
 handler404 = 'core.views.error_404'
 handler500 = 'core.views.error_500'
 handler403 = 'core.views.error_403'
